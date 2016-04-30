@@ -137,6 +137,7 @@ export default class Chart extends React.Component {
     }
 
     // init, render, and draw chart!
+    options.labelsUTC = true;
     options.dateWindow = this._chartRange;  // update viewport of range selector
     options.axes.y.valueRange = [metaData.min, metaData.max];  // lock y-axis
     this._previousDataSize = data.length;

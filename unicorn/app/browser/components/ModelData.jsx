@@ -122,7 +122,7 @@ export default class ModelData extends React.Component {
             axisLabelWidth: 0,
             drawAxis: false,
             drawGrid: false,
-            valueFormatter: (time) => moment(time).format('llll')
+            valueFormatter: (time) => moment(time).utc().format('llll')
           },
           y: {
             axisLabelOverflow: false,
