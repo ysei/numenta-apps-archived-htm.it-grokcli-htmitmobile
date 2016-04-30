@@ -15,7 +15,8 @@
       "export": "Export",
       "summary": "Results"
     },
-    "okay": "OK"
+    "okay": "OK",
+    "analyze": "Analyze"
   },
   "chart": {
     "showNonAgg": "Show non-aggregated data",
@@ -35,7 +36,18 @@
     "model": {
       "create": {
         "loading": "Preparing to create an HTM model. This might take a few seconds.",
-        "raw": "No, please use original data."
+        "title": "HTM analysis for %s",
+        "recommendAggregate": "We found the best parameters for the HTM ​and your data will be aggregated​. We recommend that you proceed with these parameters for the analysis. If you are an advanced user, you can tweak them in the settings below.",
+        "recommendRaw": "We found the best parameters for the HTM. We recommend that you proceed with these parameters for the analysis. If you are an advanced user, you can tweak them in the settings below.",
+        "advanced": {
+          "tooltip": "Aggregation will reduce the amount of noise and help the HTM to learn faster.",
+          "buttonText": "Advanced settings",
+          "aggData": "Aggregate data",
+          "aggWindow": "Aggregation window",
+          "aggMethod": "Aggregation method",
+          "daily": "Recognize daily patterns",
+          "weekly": "Recognize weekly patterns"
+        }
       },
       "delete": {
         "title": "Delete Model Results",
