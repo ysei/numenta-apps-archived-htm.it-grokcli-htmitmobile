@@ -902,7 +902,8 @@ export class DatabaseService {
               if (field.type === 'number') {
                 let metricData = {
                   metric_uid: field.uid,
-                  timestamp: moment(data[timestampField.index], timestampField.format).valueOf(), // eslint-disable-line
+                  timestamp: moment.utc(data[timestampField.index],
+                                        timestampField.format).valueOf(), // eslint-disable-line
                   metric_value: parseFloat(data[field.index])
                 };
                 // Save data
