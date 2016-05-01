@@ -208,11 +208,11 @@ const EXPECTED_MODEL_DATA = Array.from([
 
 
 const EXPECTED_EXPORTED_RESULTS =
-`timestamp,metric_value,anomaly_score
-2015-08-26T02:47:31.000Z,1,1
-2015-08-26T02:48:31.000Z,1,1
-2015-08-26T02:49:31.000Z,1,1
-2015-08-26T02:50:31.000Z,1,1`;
+`timestamp,metric_value,anomaly_level,raw_anomaly_score
+2015-08-26T02:47:31.000Z,1,HIGH,1
+2015-08-26T02:48:31.000Z,1,HIGH,1
+2015-08-26T02:49:31.000Z,1,HIGH,1
+2015-08-26T02:50:31.000Z,1,HIGH,1`;
 
 const TEMP_DIR = path.join(os.tmpDir(), 'unicorn_db');
 const EXPORTED_FILENAME = path.join(TEMP_DIR, 'file.csv');
