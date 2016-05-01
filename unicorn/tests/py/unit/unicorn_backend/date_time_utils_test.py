@@ -389,7 +389,7 @@ class DateTimeUtilsTestCase(unittest.TestCase):
       os.path.pardir,
       os.path.pardir,
       os.path.pardir,
-      "js",
+      "app",
       "config",
       "momentjs_to_datetime_strptime.json"
     )
