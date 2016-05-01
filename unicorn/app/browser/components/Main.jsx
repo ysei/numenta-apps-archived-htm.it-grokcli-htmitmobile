@@ -78,7 +78,13 @@ export default class Main extends React.Component {
         fontWeight: muiTheme.rawTheme.font.weight.medium
       },
       models: {
-        marginLeft: 256,
+        position: 'fixed',
+        overflowX: 'hidden',
+        overflowY: 'auto',
+        top: 0,
+        bottom: 0,
+        right: 0,
+        left: muiTheme.leftNav.width,
         padding: '1rem'
       }
     };
