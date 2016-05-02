@@ -78,7 +78,7 @@ function receiveModelData(modelId, data) {
   let [timestamp, value, score] = data; // eslint-disable-line
   let metricData = {
     metric_uid: modelId,
-    timestamp: moment(timestamp).valueOf(),
+    timestamp: moment.utc(timestamp).valueOf(),
     metric_value: value,
     anomaly_score: score
   };

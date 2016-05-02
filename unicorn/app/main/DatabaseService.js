@@ -81,6 +81,29 @@ function stringifyResultsCallback(callback) {
   return (error, data) => callback(error, JSON.stringify(data));
 }
 
+/**
+ * Parse the timestamp as if it doesn't contain a time zone.
+ *
+ * This is a way of having "naive" datetimes, as in Python. JavaScript condenses
+ * the day/hour with the timezone by simply storing the UTC timestamp. We want
+ * to preserve the parsed day/hour -- it's what we render -- so we preserve it
+ * by throwing out time zone info.
+ *
+ * @param {string} timestamp a timestamp string intended for moment.js
+ * @param {string} format a format intended for moment.js
+ * @return {Date} a JavaScript date corresponding to the timestamp's time in
+ *                UTC, ignoring the timestamp's specified time zone.
+ */
+function parseTimestampIgnoreZone(timestamp, format) {
+  if (format.indexOf('Z') === -1) {
+    return moment.utc(timestamp, format).valueOf();
+  }
+
+  let noZoneFormat = 'YYYY-MM-DDTHH:mm:ss.ssss';
+  let strippedZone = moment.parseZone(timestamp, format).format(noZoneFormat);
+  return moment.utc(strippedZone, noZoneFormat).valueOf();
+}
+
 
 /**
  * HTM Studio: DatabaseService - Respond to a DatabaseClient over IPC.
@@ -555,7 +578,10 @@ export class DatabaseService {
     })
     .on('data', (result) => {
       let data = {
-        timestamp: moment(result.timestamp).toDate(),
+        // Don't include time zone. The model runner doesn't send time zone
+        // info, and the time zone may not be UTC.
+        timestamp: moment.utc(result.timestamp)
+              .format('YYYY-MM-DDTHH:mm:ss.ssss'),
         metric_value: result.metric_value,
         anomaly_level: mapAnomalyText(result.anomaly_score),
         raw_anomaly_score: result.anomaly_score
@@ -902,8 +928,8 @@ export class DatabaseService {
               if (field.type === 'number') {
                 let metricData = {
                   metric_uid: field.uid,
-                  timestamp: moment.utc(data[timestampField.index],
-                                        timestampField.format).valueOf(), // eslint-disable-line
+                  timestamp: parseTimestampIgnoreZone(
+                    data[timestampField.index], timestampField.format),
                   metric_value: parseFloat(data[field.index])
                 };
                 // Save data

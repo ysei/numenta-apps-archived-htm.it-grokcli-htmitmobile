@@ -15,7 +15,6 @@
 //
 // http://numenta.org/licenses/
 
-var moment = require('moment');  // eslint-disable-line no-var
 var Transform = require('stream').Transform; // eslint-disable-line no-var
 var util = require('util'); // eslint-disable-line no-var
 
@@ -45,7 +44,7 @@ util.inherits(TimeAggregator, Transform);
 
 TimeAggregator.prototype._transform = function (data, encoding, done) {
   if (this._timefield in data) {
-    let timestamp = moment(data[this._timefield]).valueOf();
+    let timestamp = new Date(data[this._timefield]);
     if (this._timebucket === 0) {
       this._timebucket = timestamp + this._interval;
     } else if (timestamp >= this._timebucket) {
