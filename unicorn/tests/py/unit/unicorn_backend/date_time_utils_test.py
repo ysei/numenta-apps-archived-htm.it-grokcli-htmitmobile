@@ -403,9 +403,8 @@ class DateTimeUtilsTestCase(unittest.TestCase):
 
     for bundle in mapList:
       for fmt in bundle["mappings"].itervalues():
-        self.assertNotIn(fmt, formatsToCategoryMap)
-
-        formatsToCategoryMap[fmt] = bundle["category"]
+        if fmt not in formatsToCategoryMap:
+          formatsToCategoryMap[fmt] = bundle["category"]
 
     self.assertGreater(len(formatsToCategoryMap), 0)
 
