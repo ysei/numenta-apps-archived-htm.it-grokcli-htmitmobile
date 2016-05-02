@@ -115,11 +115,11 @@ def _selfCheck(xigniteApiToken):
   # NOTE: "WAG" used to be the symbol of "Walgreen Co"
   expectedUnknownSymbols = ["WAG", "ZZZZZZ"]
   expectedKnownSymbols = ["AAPL", "F"]
-  allSymbols = expectedUnknownSymbols + expectedKnownSymbols
 
   failedSelfCheckFlag = ".SELFCHECK"
   try:
-    unknownSymbols = _validateSymbols(allSymbols, xigniteApiToken)
+    unknownSymbols = _validateSymbols(expectedUnknownSymbols, xigniteApiToken,
+                                      negativeTest=True)
     if set(unknownSymbols) != set(expectedUnknownSymbols):
       raise _SelfCheckError(
         "Unknown symbol self-check failed: "
@@ -206,11 +206,15 @@ def _httpGetWithRetries(url, params):
 
 
 
-def _validateSymbols(symbols, xigniteApiToken):
+def _validateSymbols(symbols, xigniteApiToken, negativeTest=False):
   """ Checks which of the symbols are valid
 
   :param symbols: company symbols of interest (e.g., ["AAPL", "F", ...])
   :param str xigniteApiToken: Xignite API Token
+  :param bool negativeTest: True if known invalid symbols are passed in
+    self-check mode to check that invalid symbols are not treated as valid.
+    Turns on additional logging for false positive diagnostics.
+
   :returns: a sequence of invalid symbols
   """
   baseUrl = ("http://globalquotes.xignite.com/v3/xGlobalQuotes.json/"
@@ -230,16 +234,25 @@ def _validateSymbols(symbols, xigniteApiToken):
   invalidSymbols = []
 
   for i, quote in enumerate(quotes):
-    if quote["Outcome"] == "RequestError":
-      message = quote.get("Message")
+    sym = quote["Security"]["Symbol"]
+    message = quote.get("Message")
+    outcome = quote["Outcome"]
+
+    if outcome == "RequestError":
       if message:
+
         # HACK: Xignite doesn't provide a specific error code at this time, so
         # we're peeking inside the message
         if ("no data available for this symbol" in message.lower() or
             "no match found for this symbol" in message.lower()):
-          sym = quote["Security"]["Symbol"]
           assert sym.lower() == symbols[i].lower(), (sym, symbols[i])
           invalidSymbols.append(symbols[i])
+          continue
+
+    if negativeTest:
+      g_log.error("Negative self-check: unexpected outcome or error message "
+                  "for symbol %s: outcome=%s; message=%r",
+                  sym, outcome, message)
 
   return invalidSymbols
 
@@ -254,7 +267,7 @@ def _parseArgs():
     "%prog\n"
     "Periodically checks and sends email notifications to report invalid "
     "company security symbols, if they haven't already been reported.\n\n"
-    "/!\ This script depends on the following environment variables:\n"
+    "/!\\ This script depends on the following environment variables:\n"
     "* XIGNITE_API_TOKEN: XIgnite API Token.\n"
     "* ERROR_REPORT_EMAIL_AWS_REGION: AWS region for error report email.\n"
     "* ERROR_REPORT_EMAIL_SES_ENDPOINT: SES endpoint for error report email.\n"

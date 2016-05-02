@@ -4963,39 +4963,6 @@
     "stockExchange": "NYSE", 
     "symbol": "PX"
   }, 
-  "Precision Castparts": {
-    "metrics": {
-      "TWITTER.TWEET.HANDLE.PCP.VOLUME": {
-        "metricType": "TwitterVolume", 
-        "metricTypeName": "Twitter Volume", 
-        "modelParams": {
-          "minResolution": 0.6
-        }, 
-        "provider": "twitter", 
-        "screenNames": []
-      }, 
-      "XIGNITE.PCP.CLOSINGPRICE": {
-        "metricType": "StockPrice", 
-        "metricTypeName": "Stock Price", 
-        "modelParams": {
-          "minResolution": 0.2
-        }, 
-        "provider": "xignite", 
-        "sampleKey": "Close"
-      }, 
-      "XIGNITE.PCP.VOLUME": {
-        "metricType": "StockVolume", 
-        "metricTypeName": "Stock Volume", 
-        "modelParams": {
-          "minResolution": 0.2
-        }, 
-        "provider": "xignite", 
-        "sampleKey": "Volume"
-      }
-    }, 
-    "stockExchange": "NYSE", 
-    "symbol": "PCP"
-  }, 
   "Priceline Group": {
     "metrics": {
       "TWITTER.TWEET.HANDLE.PCLN.VOLUME": {
