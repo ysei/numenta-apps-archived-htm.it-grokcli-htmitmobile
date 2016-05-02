@@ -16,7 +16,6 @@
 // http://numenta.org/licenses/
 
 import crypto from 'crypto';
-import moment from 'moment';
 
 
 /**
@@ -61,7 +60,7 @@ export function generateMetricId(filename, metric) {
  */
 export function generateMetricDataId(metricId, timestamp) {
   if (!(timestamp instanceof Date)) {
-    timestamp = moment(timestamp);
+    timestamp = new Date(timestamp);
   }
   return `${metricId}!${timestamp.valueOf()}`;
 }

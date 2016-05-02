@@ -93,12 +93,24 @@ const EXPECTED_TIMESTAMP =  Object.assign({}, INSTANCES.Metric, {
 const EXPECTED_METRICS = [EXPECTED_TIMESTAMP, EXPECTED_METRIC];
 
 const EXPECTED_METRIC_DATA = [
-  {metric_uid: EXPECTED_METRIC_ID, timestamp: 1440557191000, metric_value: 21},
-  {metric_uid: EXPECTED_METRIC_ID, timestamp: 1440557251000, metric_value: 17},
-  {metric_uid: EXPECTED_METRIC_ID, timestamp: 1440557311000, metric_value: 22},
-  {metric_uid: EXPECTED_METRIC_ID, timestamp: 1440557371000, metric_value: 21},
-  {metric_uid: EXPECTED_METRIC_ID, timestamp: 1440557431000, metric_value: 16},
-  {metric_uid: EXPECTED_METRIC_ID, timestamp: 1440557491000, metric_value: 19}
+  {metric_uid: EXPECTED_METRIC_ID,
+   timestamp: Date.parse('2015-08-26T19:46:31Z'),
+   metric_value: 21},
+  {metric_uid: EXPECTED_METRIC_ID,
+   timestamp: Date.parse('2015-08-26T19:47:31Z'),
+   metric_value: 17},
+  {metric_uid: EXPECTED_METRIC_ID,
+   timestamp: Date.parse('2015-08-26T19:48:31Z'),
+   metric_value: 22},
+  {metric_uid: EXPECTED_METRIC_ID,
+   timestamp: Date.parse('2015-08-26T19:49:31Z'),
+   metric_value: 21},
+  {metric_uid: EXPECTED_METRIC_ID,
+   timestamp: Date.parse('2015-08-26T19:50:31Z'),
+   metric_value: 16},
+  {metric_uid: EXPECTED_METRIC_ID,
+   timestamp: Date.parse('2015-08-26T19:51:31Z'),
+   metric_value: 19}
 ];
 
 const NO_HEADER_CSV_FILE = path.join(FIXTURES, 'no-header.csv');

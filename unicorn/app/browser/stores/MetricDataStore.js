@@ -16,7 +16,6 @@
 // http://numenta.org/licenses/
 
 import BaseStore from 'fluxible/addons/BaseStore';
-import moment from 'moment';
 import {DATA_FIELD_INDEX} from '../lib/Constants';
 
 
@@ -60,7 +59,7 @@ export default class MetricDataStore extends BaseStore {
     let metric, newData;
     if (payload && 'metricId' in payload) {
       // Convert timestamp to Date
-      newData = payload.data.map((row) => [moment(row[0]).toDate(), row[1]]);
+      newData = payload.data.map((row) => [new Date(row[0]), row[1]]);
       metric = this._metrics.get(payload._metrics);
       if (metric) {
         // Append payload data to existing metric

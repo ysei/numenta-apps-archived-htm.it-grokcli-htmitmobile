@@ -64,7 +64,7 @@ SCHEMAS.forEach((schema) => {
  */
 function guessTimestampFormat(timestamp) {
   return TIMESTAMP_FORMATS.find((format) => {
-    return moment(timestamp, format, true).isValid();
+    return moment.utc(timestamp, format, true).isValid();
   });
 }
 
@@ -564,7 +564,7 @@ export class FileService {
               message += ' instead of having a format matching ' +
                          `'${field.format}'. For example: '${current}'`;
             }
-            return moment(value, field.format).isValid();
+            return moment.utc(value, field.format).isValid();
           default:
             return true;
           }

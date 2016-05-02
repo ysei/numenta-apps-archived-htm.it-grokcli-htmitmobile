@@ -16,7 +16,6 @@
 // http://numenta.org/licenses/
 
 import CircularProgress from 'material-ui/lib/circular-progress';
-import moment from 'moment';
 import Paper from 'material-ui/lib/paper';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -123,8 +122,8 @@ export default class Chart extends React.Component {
     let {data, metaData, options} = this.props;
     let {metric, model} = metaData;
     let element = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
-    let first = moment(data[0][DATA_INDEX_TIME]).valueOf();
-    let second = moment(data[1][DATA_INDEX_TIME]).valueOf();
+    let first = data[0][DATA_INDEX_TIME].getTime();
+    let second = data[1][DATA_INDEX_TIME].getTime();
     let unit = second - first; // each datapoint
     let rangeWidth = unit * this._displayPointCount;
     let rangeEl;
@@ -137,6 +136,7 @@ export default class Chart extends React.Component {
     }
 
     // init, render, and draw chart!
+    options.labelsUTC = true;
     options.dateWindow = this._chartRange;  // update viewport of range selector
     options.axes.y.valueRange = [metaData.min, metaData.max];  // lock y-axis
     this._previousDataSize = data.length;
@@ -155,7 +155,7 @@ export default class Chart extends React.Component {
     let {data, metaData, options} = this.props;
     let {model} = metaData;
     let modelIndex = Math.abs(model.dataSize - 1);
-    let first = moment(data[0][DATA_INDEX_TIME]).valueOf();
+    let first = data[0][DATA_INDEX_TIME].getTime();
     let [rangeMin, rangeMax] = this._chartRange;
     let rangeWidth = rangeMax - rangeMin;
     let scrollLock = false;
@@ -170,7 +170,7 @@ export default class Chart extends React.Component {
 
     // scroll along with fresh anomaly model data input.
     if (scrollLock) {
-      rangeMax = moment(data[modelIndex][DATA_INDEX_TIME]).valueOf();
+      rangeMax = data[modelIndex][DATA_INDEX_TIME].getTime();
       rangeMin = rangeMax - rangeWidth;
       if (rangeMin < first) {
         rangeMin = first;

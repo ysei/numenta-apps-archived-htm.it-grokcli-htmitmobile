@@ -102,7 +102,7 @@ export default function (context, canvas, area, dygraph) {
   canvas.strokeStyle = new RGBColor(muiTheme.palette.disabledColor).toRGB();
   for (let x=1; x<(xValues.length - 1); x++) {
     let xWidth = area.w - (x * xFactor);
-    let when = moment(xValues[x]);
+    let when = moment.utc(xValues[x]);
     let date = when.format('ll');
     let time = when.format('LT');
 
