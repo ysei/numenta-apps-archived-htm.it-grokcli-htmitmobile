@@ -13,7 +13,12 @@
       "YYYY-MM-DDTHH:mmZ": "%Y-%m-%dT%H:%M%z",
       "YYYY-MM-DDTHH:mm": "%Y-%m-%dT%H:%M",
       "YYYY-MM-DDTHHZ": "%Y-%m-%dT%H%z",
-      "YYYY-MM-DDTHH": "%Y-%m-%dT%H",
+      "YYYY-MM-DDTHH": "%Y-%m-%dT%H"
+    }
+  },
+  {
+    "category": "Variation of ISO 8601",
+    "mappings": {
       "YYYY/MM/DDTHH:mm:ss.SSSZ": "%Y/%m/%dT%H:%M:%S.%f%z",
       "YYYY/MM/DDTHH:mm:ss.SSZ": "%Y/%m/%dT%H:%M:%S.%f%z",
       "YYYY/MM/DDTHH:mm:ss.SZ": "%Y/%m/%dT%H:%M:%S.%f%z",
@@ -42,7 +47,12 @@
       "YYYY-MM-DD HH:mmZ": "%Y-%m-%d %H:%M%z",
       "YYYY-MM-DD HH:mm": "%Y-%m-%d %H:%M",
       "YYYY-MM-DD HHZ": "%Y-%m-%d %H%z",
-      "YYYY-MM-DD HH": "%Y-%m-%d %H",
+      "YYYY-MM-DD HH": "%Y-%m-%d %H"
+    }
+  },
+  {
+    "category": "Variation of ISO 8601 no T",
+    "mappings": {
       "YYYY/MM/DD HH:mm:ss.SSSZ": "%Y/%m/%d %H:%M:%S.%f%z",
       "YYYY/MM/DD HH:mm:ss.SSZ": "%Y/%m/%d %H:%M:%S.%f%z",
       "YYYY/MM/DD HH:mm:ss.SZ": "%Y/%m/%d %H:%M:%S.%f%z",
@@ -56,7 +66,7 @@
       "YYYY/MM/DD HHZ": "%Y/%m/%d %H%z",
       "YYYY/MM/DD HH": "%Y/%m/%d %H"
     }
-  },
+  },  
   {
     "category": "US Date, 12h AM/PM time",
     "mappings": {
