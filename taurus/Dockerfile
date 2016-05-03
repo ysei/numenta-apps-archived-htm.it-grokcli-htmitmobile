@@ -30,7 +30,10 @@ RUN apt-get update && \
                        software-properties-common \
                        libmysqlclient-dev \
                        python-dev \
+                       libffi-dev \
+                       libssl-dev \
                        nginx
+
 
 # Copy taurus-relevant numenta-apps subdirs to image
 COPY infrastructure /opt/numenta/infrastructure
