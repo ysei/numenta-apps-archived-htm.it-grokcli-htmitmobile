@@ -29,7 +29,9 @@ RUN apt-get update && \
                        python-software-properties \
                        software-properties-common \
                        libmysqlclient-dev \
-                       python-dev
+                       python-dev \
+                       libffi-dev \
+                       libssl-dev
 
 # Copy taurus.metric_collectors-relevant numenta-apps subdirs to image
 COPY infrastructure /opt/numenta/infrastructure
