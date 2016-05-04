@@ -1,60 +1,109 @@
 [
   {
-
     "category": "ISO 8601",
     "mappings": {
+      "YYYY-MM-DDTHH:mm:ss.SSSZ": "%Y-%m-%dT%H:%M:%S.%f%z",
+      "YYYY-MM-DDTHH:mm:ss.SSZ": "%Y-%m-%dT%H:%M:%S.%f%z",
       "YYYY-MM-DDTHH:mm:ss.SZ": "%Y-%m-%dT%H:%M:%S.%f%z",
+      "YYYY-MM-DDTHH:mm:ss.SSS": "%Y-%m-%dT%H:%M:%S.%f",
+      "YYYY-MM-DDTHH:mm:ss.SS": "%Y-%m-%dT%H:%M:%S.%f",
       "YYYY-MM-DDTHH:mm:ss.S": "%Y-%m-%dT%H:%M:%S.%f",
       "YYYY-MM-DDTHH:mm:ssZ": "%Y-%m-%dT%H:%M:%S%z",
       "YYYY-MM-DDTHH:mm:ss": "%Y-%m-%dT%H:%M:%S",
       "YYYY-MM-DDTHH:mmZ": "%Y-%m-%dT%H:%M%z",
-      "YYYY-MM-DDTHH:mm": "%Y-%m-%dT%H:%M"
+      "YYYY-MM-DDTHH:mm": "%Y-%m-%dT%H:%M",
+      "YYYY-MM-DDTHHZ": "%Y-%m-%dT%H%z",
+      "YYYY-MM-DDTHH": "%Y-%m-%dT%H"
     }
   },
-
+  {
+    "category": "Variation of ISO 8601",
+    "mappings": {
+      "YYYY/MM/DDTHH:mm:ss.SSSZ": "%Y/%m/%dT%H:%M:%S.%f%z",
+      "YYYY/MM/DDTHH:mm:ss.SSZ": "%Y/%m/%dT%H:%M:%S.%f%z",
+      "YYYY/MM/DDTHH:mm:ss.SZ": "%Y/%m/%dT%H:%M:%S.%f%z",
+      "YYYY/MM/DDTHH:mm:ss.SSS": "%Y/%m/%dT%H:%M:%S.%f",
+      "YYYY/MM/DDTHH:mm:ss.SS": "%Y/%m/%dT%H:%M:%S.%f",
+      "YYYY/MM/DDTHH:mm:ss.S": "%Y/%m/%dT%H:%M:%S.%f",
+      "YYYY/MM/DDTHH:mm:ssZ": "%Y/%m/%dT%H:%M:%S%z",
+      "YYYY/MM/DDTHH:mm:ss": "%Y/%m/%dT%H:%M:%S",
+      "YYYY/MM/DDTHH:mmZ": "%Y/%m/%dT%H:%M%z",
+      "YYYY/MM/DDTHH:mm": "%Y/%m/%dT%H:%M",
+      "YYYY/MM/DDTHHZ": "%Y/%m/%dT%H%z",
+      "YYYY/MM/DDTHH": "%Y/%m/%dT%H"
+    }
+  },
   {
     "category": "ISO 8601 no T",
     "mappings": {
+      "YYYY-MM-DD HH:mm:ss.SSSZ": "%Y-%m-%d %H:%M:%S.%f%z",
+      "YYYY-MM-DD HH:mm:ss.SSZ": "%Y-%m-%d %H:%M:%S.%f%z",
       "YYYY-MM-DD HH:mm:ss.SZ": "%Y-%m-%d %H:%M:%S.%f%z",
+      "YYYY-MM-DD HH:mm:ss.SSS": "%Y-%m-%d %H:%M:%S.%f",
+      "YYYY-MM-DD HH:mm:ss.SS": "%Y-%m-%d %H:%M:%S.%f",
       "YYYY-MM-DD HH:mm:ss.S": "%Y-%m-%d %H:%M:%S.%f",
       "YYYY-MM-DD HH:mm:ssZ": "%Y-%m-%d %H:%M:%S%z",
       "YYYY-MM-DD HH:mm:ss": "%Y-%m-%d %H:%M:%S",
       "YYYY-MM-DD HH:mmZ": "%Y-%m-%d %H:%M%z",
       "YYYY-MM-DD HH:mm": "%Y-%m-%d %H:%M",
-      "YYYY-MM-DD": "%Y-%m-%d"
+      "YYYY-MM-DD HHZ": "%Y-%m-%d %H%z",
+      "YYYY-MM-DD HH": "%Y-%m-%d %H"
     }
   },
-
+  {
+    "category": "Variation of ISO 8601 no T",
+    "mappings": {
+      "YYYY/MM/DD HH:mm:ss.SSSZ": "%Y/%m/%d %H:%M:%S.%f%z",
+      "YYYY/MM/DD HH:mm:ss.SSZ": "%Y/%m/%d %H:%M:%S.%f%z",
+      "YYYY/MM/DD HH:mm:ss.SZ": "%Y/%m/%d %H:%M:%S.%f%z",
+      "YYYY/MM/DD HH:mm:ss.SSS": "%Y/%m/%d %H:%M:%S.%f",
+      "YYYY/MM/DD HH:mm:ss.SS": "%Y/%m/%d %H:%M:%S.%f",
+      "YYYY/MM/DD HH:mm:ss.S": "%Y/%m/%d %H:%M:%S.%f",
+      "YYYY/MM/DD HH:mm:ssZ": "%Y/%m/%d %H:%M:%S%z",
+      "YYYY/MM/DD HH:mm:ss": "%Y/%m/%d %H:%M:%S",
+      "YYYY/MM/DD HH:mmZ": "%Y/%m/%d %H:%M%z",
+      "YYYY/MM/DD HH:mm": "%Y/%m/%d %H:%M",
+      "YYYY/MM/DD HHZ": "%Y/%m/%d %H%z",
+      "YYYY/MM/DD HH": "%Y/%m/%d %H"
+    }
+  },  
   {
     "category": "US Date, 12h AM/PM time",
     "mappings": {
+      "MM-DD-YYYY hh:mm:ss.SSS A": "%m-%d-%Y %I:%M:%S.%f %p",
+      "MM-DD-YYYY hh:mm:ss.SS A": "%m-%d-%Y %I:%M:%S.%f %p",
       "MM-DD-YYYY hh:mm:ss.S A": "%m-%d-%Y %I:%M:%S.%f %p",
       "MM-DD-YYYY hh:mm:ss A": "%m-%d-%Y %I:%M:%S %p",
-      "MM-DD-YYYY hh:mm A": "%m-%d-%Y %I:%M %p"
+      "MM-DD-YYYY hh:mm A": "%m-%d-%Y %I:%M %p",
+      "MM/DD/YYYY hh:mm:ss.SSS A": "%m/%d/%Y %I:%M:%S.%f %p",
+      "MM/DD/YYYY hh:mm:ss.SS A": "%m/%d/%Y %I:%M:%S.%f %p",
+      "MM/DD/YYYY hh:mm:ss.S A": "%m/%d/%Y %I:%M:%S.%f %p",
+      "MM/DD/YYYY hh:mm:ss A": "%m/%d/%Y %I:%M:%S %p",
+      "MM/DD/YYYY hh:mm A": "%m/%d/%Y %I:%M %p"
     }
   },
-
   {
     "category": "US Date, 24h time",
     "mappings": {
+      "MM-DD-YYYY HH:mm:ss.SSS": "%m-%d-%Y %H:%M:%S.%f",
+      "MM-DD-YYYY HH:mm:ss.SS": "%m-%d-%Y %H:%M:%S.%f",
       "MM-DD-YYYY HH:mm:ss.S": "%m-%d-%Y %H:%M:%S.%f",
       "MM-DD-YYYY HH:mm:ss": "%m-%d-%Y %H:%M:%S",
-      "MM-DD-YYYY HH:mm": "%m-%d-%Y %H:%M"
+      "MM-DD-YYYY HH:mm": "%m-%d-%Y %H:%M",
+      "MM/DD/YYYY HH:mm:ss.SSS": "%m/%d/%Y %H:%M:%S.%f",
+      "MM/DD/YYYY HH:mm:ss.SS": "%m/%d/%Y %H:%M:%S.%f",
+      "MM/DD/YYYY HH:mm:ss.S": "%m/%d/%Y %H:%M:%S.%f",
+      "MM/DD/YYYY HH:mm:ss": "%m/%d/%Y %H:%M:%S",
+      "MM/DD/YYYY HH:mm": "%m/%d/%Y %H:%M"
     }
   },
-
   {
     "category": "US Date, no time",
     "mappings": {
       "MM-DD-YYYY": "%m-%d-%Y",
-      "MM-DD-YY": "%m-%d-%y"
-    }
-  },
-  {
-    "category": "DEBUG",
-    "mappings": {
-      "MM-DD-YY HH:mm": "%m-%d-%y %H:%M"
+      "MM-DD-YY": "%m-%d-%y",
+      "MM/DD/YYYY": "%m/%d/%Y",
+      "MM/DD/YY": "%m/%d/%y"
     }
   }
-
 ]

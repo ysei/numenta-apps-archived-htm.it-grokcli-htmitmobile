@@ -293,7 +293,9 @@ class ModelRunnerTestCase(unittest.TestCase):
       self.assertGreater(len(errorInfo["diagnosticInfo"]), 0)
 
 
+  @unittest.skip("Skipping until UNI-434 is resolved")
   def testModelRunnerFailsWithInvalidInputRecord(self):
+
     modelId = uuid.uuid1().hex
 
     inputOpt = dict(
