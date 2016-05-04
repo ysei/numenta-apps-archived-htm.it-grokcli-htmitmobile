@@ -271,7 +271,9 @@ class _ModelRunner(object):
     :param float anomalyProbability: computed anomaly probability value
     """
 
-    message = "%s\n" % (json.dumps([dataRow[0].isoformat(), dataRow[1], anomalyProbability]),)
+    message = "%s\n" % (json.dumps([dataRow[0].isoformat(),
+                                    dataRow[1],
+                                    anomalyProbability]),)
 
     sys.stdout.write(message)
     sys.stdout.flush()
@@ -387,7 +389,11 @@ class _UnbufferedLineIterInputFile(object):
 def main():
   # Use NullHandler for now to avoid getting the unwanted unformatted warning
   # message from logger on stderr "No handlers could be found for logger".
-  g_log.addHandler(logging.NullHandler())
+  #
+  # NOTE We add the handler to the root logger to avoid having the default
+  # StreamHandler implictly added by python logging when something logs via
+  # `logging.debug`, `logging.info`, etc.
+  g_log.root.addHandler(logging.NullHandler())
 
   inputFileObj = None
   try:
@@ -408,12 +414,12 @@ def main():
   except Exception as ex:  # pylint: disable=W0703
     g_log.exception("ModelRunner failed")
 
-    errorMessage = {
+    errorMessage = json.dumps({
       "errorText": str(ex) or repr(ex),
       "diagnosticInfo": traceback.format_exc()
-    }
+    })
 
-    errorMessage = "%s\n" % (json.dumps(errorMessage))
+    errorMessage = "{}\n".format(errorMessage)
 
     try:
       sys.stderr.write(errorMessage)
