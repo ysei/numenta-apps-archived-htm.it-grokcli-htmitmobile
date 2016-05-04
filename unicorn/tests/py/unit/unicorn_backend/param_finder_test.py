@@ -48,14 +48,11 @@ class ParamFinderTestCase(unittest.TestCase):
 
 
   def testGetAggregationFunction(self):
-    aggFunc = param_finder._getAggregationFunction(numpy.timedelta64(300, 's'),
-                                                   numpy.timedelta64(0, 's'),
-                                                   aggregationFuncThresh=0.2)
+    aggFunc = param_finder._getAggregationFunction(numpy.random.rand(100, 1))
     self.assertEqual(aggFunc, 'mean')
 
-    aggFunc = param_finder._getAggregationFunction(numpy.timedelta64(300, 's'),
-                                                   numpy.timedelta64(100, 's'),
-                                                   aggregationFuncThresh=0.2)
+    # use sum aggregation for binary data
+    aggFunc = param_finder._getAggregationFunction(numpy.ones((100, 1)))
     self.assertEqual(aggFunc, 'sum')
 
 
@@ -197,11 +194,7 @@ class ParamFinderTestCase(unittest.TestCase):
       random.seed(42)
       samples = []
       for i in xrange(2000):
-        if dataType == "transaction":
-          timestamp += datetime.timedelta(
-            seconds=random.randint(1, 2*timeStepSeconds))
-        else:
-          timestamp += timeStep
+        timestamp += timeStep
 
         if dataType == "flat":
           value = 10.0
@@ -209,15 +202,15 @@ class ParamFinderTestCase(unittest.TestCase):
           value = numpy.sin(2 * numpy.pi * (timeStep.seconds * i) / dayPeriod)
         elif dataType == "weekly":
           value = numpy.sin(2 * numpy.pi * (timeStep.seconds * i) / weekPeriod)
-        elif dataType == "transaction":
-          value = 10.0
+        elif dataType == "binaryTransaction":
+          value = 1 if int(i / 100) % 2 else 0
 
         samples.append((timestamp, value))
       return samples
 
     outputInfo = param_finder.findParameters(createTestData("flat", 300))
     self.assertGreater(outputInfo["aggInfo"]["windowSize"], 300)
-    self.assertEqual(outputInfo["aggInfo"]["func"], "mean")
+    self.assertEqual(outputInfo["aggInfo"]["func"], "sum")
     # Exclude timeOfDay and dayOfWeek encoder for flat line
     self.assertIsNone(outputInfo["modelInfo"]["modelConfig"]["modelParams"]
                       ["sensorParams"]["encoders"]["c0_timeOfDay"])
@@ -242,7 +235,8 @@ class ParamFinderTestCase(unittest.TestCase):
     self.assertIsNone(outputInfo["modelInfo"]["modelConfig"]["modelParams"]
                       ["sensorParams"]["encoders"]["c0_dayOfWeek"])
 
-    outputInfo = param_finder.findParameters(createTestData("transaction", 300))
+    outputInfo = param_finder.findParameters(
+      createTestData("binaryTransaction", 300))
     self.assertGreaterEqual(outputInfo["aggInfo"]["windowSize"], 300)
     self.assertEqual(outputInfo["aggInfo"]["func"], "sum")
     # Use dayOfWeek but not timeOfDay encoder for dataSet with daily period

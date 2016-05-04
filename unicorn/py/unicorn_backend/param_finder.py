@@ -29,9 +29,7 @@ Implements param finder, which automatically
 """
 
 import datetime
-import json
 import numpy
-import os
 
 from pkg_resources import resource_stream
 
@@ -43,6 +41,13 @@ _CORRELATION_MODE_SAME = 1
 _CORRELATION_MODE_FULL = 2
 
 _AGGREGATION_WINDOW_THRESH = 0.03
+
+_ONE_DAY_IN_SEC = 86400.0
+_ONE_WEEK_IN_SEC = 604800.0
+
+# Maximum time scale for wavelet analysis. The longer time scale will be ignored
+# in unit of seconds
+MAX_WAVELET_TIME_WINDOW_SEC = _ONE_WEEK_IN_SEC * 20
 
 # Maximum number of rows param_finder will process
 # If the input data exceeds MAX_NUM_ROWS, the first MAX_NUM_ROWS will be used
@@ -249,9 +254,7 @@ def findParameters(samples):
   (useTimeOfDay, useDayOfWeek) = _determineEncoderTypes(cwtVar, timeScale)
 
   # decide the aggregation function ("mean" or "sum")
-  aggFunc = _getAggregationFunction(medianSamplingInterval,
-                                    medianAbsoluteDevSamplingInterval,
-                                    _AGGREGATION_WINDOW_THRESH)
+  aggFunc = _getAggregationFunction(values)
 
   return {
     "aggInfo": _getAggInfo(medianSamplingInterval,
@@ -383,7 +386,10 @@ def _calculateContinuousWaveletTransform(samplingInterval, values):
     "timeScale" (numpy array) Stores the corresponding time scales
   """
 
-  widths = numpy.logspace(0, numpy.log10(len(values) / 10), 50)
+  maxTimeScaleN = min(float(MAX_WAVELET_TIME_WINDOW_SEC)/
+                      samplingInterval.astype("float32"),
+                      len(values)/10)
+  widths = numpy.logspace(0, numpy.log10(maxTimeScaleN), 50)
   timeScale = widths * samplingInterval * 4
 
   # continuous wavelet transformation with ricker wavelet
@@ -488,19 +494,21 @@ def _determineEncoderTypes(cwtVar, timeScale):
           "useDayOfWeek" (bool) indicating whether to use dayOfWeek encoder
   """
 
+  # discard slow time scale (> 4 weeks ) before peak detection
+  timeScale = timeScale.astype("float32")
+  selectedIdx = numpy.where(timeScale < 4*_ONE_WEEK_IN_SEC)[0]
+  cwtVar = cwtVar[selectedIdx]
+  timeScale = timeScale[selectedIdx]
+
   # Detect all local minima and maxima when the first difference reverse sign
   signOfFirstDifference = numpy.sign(numpy.diff(cwtVar))
   localMin = (numpy.diff(signOfFirstDifference) > 0).nonzero()[0] + 1
   localMax = (numpy.diff(signOfFirstDifference) < 0).nonzero()[0] + 1
 
-  baselineValue = 1.0 / len(cwtVar)
+  baselineValue = numpy.mean(cwtVar)
 
-  dayPeriod = 86400.0
-  weekPeriod = 604800.0
-  timeScale = timeScale.astype("float32")
-
-  cwtVarAtDayPeriod = numpy.interp(dayPeriod, timeScale, cwtVar)
-  cwtVarAtWeekPeriod = numpy.interp(weekPeriod, timeScale, cwtVar)
+  cwtVarAtDayPeriod = numpy.interp(_ONE_DAY_IN_SEC, timeScale, cwtVar)
+  cwtVarAtWeekPeriod = numpy.interp(_ONE_WEEK_IN_SEC, timeScale, cwtVar)
 
   useTimeOfDay = False
   useDayOfWeek = False
@@ -527,46 +535,35 @@ def _determineEncoderTypes(cwtVar, timeScale):
     nearestLocalMinValue = numpy.max(leftLocalMinValue, rightLocalMinValue)
 
     if ((localMaxValue - nearestLocalMinValue) / localMaxValue > 0.1 and
-            localMaxValue > baselineValue):
+        localMaxValue > baselineValue):
       strongLocalMax.append(localMax[i])
 
-      if (timeScale[leftLocalMin] < dayPeriod < timeScale[rightLocalMin]
+      if (timeScale[leftLocalMin] < _ONE_DAY_IN_SEC < timeScale[rightLocalMin]
           and cwtVarAtDayPeriod > localMaxValue * 0.5):
         useTimeOfDay = True
 
-      if DISABLE_DAY_OF_WEEK_ENCODER is False:
-        if (timeScale[leftLocalMin] < weekPeriod < timeScale[rightLocalMin]
-            and cwtVarAtWeekPeriod > localMaxValue * 0.5):
+      if not DISABLE_DAY_OF_WEEK_ENCODER:
+        if (timeScale[leftLocalMin] < _ONE_WEEK_IN_SEC <
+            timeScale[rightLocalMin] and
+            cwtVarAtWeekPeriod > localMaxValue * 0.5):
           useDayOfWeek = True
 
   return useTimeOfDay, useDayOfWeek
 
 
 
-def _getAggregationFunction(medianSamplingInterval,
-                            medianAbsoluteDevSamplingInterval,
-                            aggregationFuncThresh):
+def _getAggregationFunction(values):
   """
   Return the aggregation function type:
     ("sum" for transactional data types
      "mean" for non-transactional data types)
 
-  The data type is determined via a data type indicator, defined as the
-  ratio between median absolute deviation and median of the sampling interval.
-  @param medianSamplingInterval, numpy timedelta64 in unit of seconds
-
-  @param medianAbsoluteDev (timedelta64) the median absolute deviation of
-          sampling interval
-
-  @param aggregationFuncThresh (float) a positive number indication the
-        threshold between transactional and non-transactional data types
-        A higher threshold will lead to a bias towards non-transactional data
+  Use "sum" for binary transactional data, and "mean" otherwise
+  @param values, numpy data values
 
   @return aggFunc (string) "sum" or "mean"
   """
-  dataTypeIndicator = (medianAbsoluteDevSamplingInterval /
-                       medianSamplingInterval)
-  if dataTypeIndicator > aggregationFuncThresh:
+  if len(numpy.unique(values)) <= 2:
     aggFunc = "sum"  # "transactional"
   else:
     aggFunc = "mean"  # "non-transactional"
