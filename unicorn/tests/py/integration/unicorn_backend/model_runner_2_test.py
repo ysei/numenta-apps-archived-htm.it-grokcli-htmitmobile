@@ -32,7 +32,6 @@ import tempfile
 import types
 import unittest
 import uuid
-import pytest
 
 import dateutil.parser
 import dateutil.tz
@@ -294,8 +293,9 @@ class ModelRunnerTestCase(unittest.TestCase):
       self.assertGreater(len(errorInfo["diagnosticInfo"]), 0)
 
 
+  @unittest.skip("Skipping until UNI-434 is resolved")
   def testModelRunnerFailsWithInvalidInputRecord(self):
-    pytest.skip("Skipping until UNI-434 is resolved")
+
     modelId = uuid.uuid1().hex
 
     inputOpt = dict(
