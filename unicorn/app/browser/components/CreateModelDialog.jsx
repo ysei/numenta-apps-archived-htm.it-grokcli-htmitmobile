@@ -25,7 +25,6 @@ import React from 'react';
 
 import ChartUpdateViewpoint from '../actions/ChartUpdateViewpoint';
 import CreateModelStore from '../stores/CreateModelStore';
-import HideCreateModelDialogAction from '../actions/HideCreateModelDialog';
 import StartModelAction from '../actions/StartModel';
 import {trims} from '../../common/common-utils';
 
@@ -38,7 +37,6 @@ import {trims} from '../../common/common-utils';
   inputOpts: context.getStore(CreateModelStore).inputOpts,
   metricId: context.getStore(CreateModelStore).metricId,
   metricName: context.getStore(CreateModelStore).metricName,
-  open: context.getStore(CreateModelStore).open,
   paramFinderResults: context.getStore(CreateModelStore).paramFinderResults
 }))
 export default class CreateModelDialog extends React.Component {
@@ -84,7 +82,8 @@ export default class CreateModelDialog extends React.Component {
       viewpoint: null
     });
 
-    this.context.executeAction(HideCreateModelDialogAction);
+    this.props.dismiss();
+
     this.context.executeAction(StartModelAction, payload);
   }
 
@@ -95,7 +94,7 @@ export default class CreateModelDialog extends React.Component {
 
   render() {
     let {
-      fileName, inputOpts, metricId, metricName, paramFinderResults
+      fileName, inputOpts, metricId, metricName, paramFinderResults, open
     } = this.props;
     let body = null;
     let actions = [];
@@ -138,8 +137,21 @@ export default class CreateModelDialog extends React.Component {
             />
         );
       } else {
-        // No aggregation required, just start the model
-        this._startModel(rawPayload);
+        body = (
+          <div>
+            We determined that no aggregation is needed. The analysis will
+            continue using your raw data.
+          </div>
+        );
+
+        actions.push(
+          <RaisedButton
+            label={this._config.get('button:okay')}
+            onTouchTap={this._startModel.bind(this, rawPayload)}
+            primary={true}
+            style={this._styles.agg}
+          />
+        );
       }
     } else {
       body = (
@@ -155,7 +167,7 @@ export default class CreateModelDialog extends React.Component {
     }
 
     return (
-      <Dialog actions={actions} open={this.props.open} title={title}>
+      <Dialog actions={actions} open={open} title={title}>
         {body}
       </Dialog>
     );

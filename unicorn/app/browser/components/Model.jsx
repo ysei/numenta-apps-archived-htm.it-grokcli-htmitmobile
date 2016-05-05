@@ -43,6 +43,7 @@ import ModelProgress from './ModelProgress';
 import ModelStore from '../stores/ModelStore';
 import ModelDataStore from '../stores/ModelDataStore';
 import ShowCreateModelDialogAction from '../actions/ShowCreateModelDialog';
+import HideCreateModelDialogAction from '../actions/HideCreateModelDialog';
 import StartParamFinderAction from '../actions/StartParamFinder';
 import {TIMESTAMP_FORMAT_PY_MAPPING} from '../../common/timestamp';
 import {
@@ -90,6 +91,7 @@ export default class Model extends React.Component {
     // init state
     this.state = {
       modalDialog: null,
+      showCreateModelDialog: false,
       showSnackbar: false,
       snackbarMessage: '',
       showNonAgg: false  // show raw data overlay on top of aggregate chart?
@@ -197,6 +199,19 @@ export default class Model extends React.Component {
     });
   }
 
+  _openCreateModelDialog(file, valueField) {
+    this.context.executeAction(ShowCreateModelDialogAction, {
+      fileName: file.name,
+      metricName: valueField.name
+    });
+    this.setState({showCreateModelDialog: true});
+  }
+
+  _dismissCreateModelDialog() {
+    this.setState({showCreateModelDialog: false});
+    this.context.executeAction(HideCreateModelDialogAction);
+  }
+
   _createModel(model, file, valueField, timestampField) {
     let inputOpts = {
       csv: file.filename,
@@ -205,10 +220,8 @@ export default class Model extends React.Component {
       valueIndex: valueField.index,
       datetimeFormat: TIMESTAMP_FORMAT_PY_MAPPING[timestampField.format]
     };
-    this.context.executeAction(ShowCreateModelDialogAction, {
-      fileName: file.name,
-      metricName: valueField.name
-    });
+
+    this._openCreateModelDialog(file, valueField);
 
     this.context.executeAction(StartParamFinderAction, {
       metricId: model.modelId,
@@ -473,7 +486,10 @@ export default class Model extends React.Component {
           title={modalDialog.title}>
             {modalDialog.body}
         </Dialog>
-        <CreateModelDialog ref="createModelWindow"/>
+        <CreateModelDialog
+          open={this.state.showCreateModelDialog}
+          dismiss={::this._dismissCreateModelDialog.bind(this)}
+          ref="createModelWindow"/>
         <Snackbar
           open={this.state.showSnackbar}
           message={this.state.snackbarMessage}

@@ -43,7 +43,6 @@ export default class CreateModelStore extends BaseStore {
     this.fileName = null;
     this.metricId = null;
     this.metricName = null;
-    this.open = false;
     // Param Finder
     this.paramFinderResults = null;
     this.inputOpts = null;
@@ -59,7 +58,6 @@ export default class CreateModelStore extends BaseStore {
   _handleShowCreateModelDialog(payload) {
     this.fileName = payload.fileName;
     this.metricName = payload.metricName;
-    this.open = true;
     this.emitChange();
   }
 
