@@ -129,8 +129,8 @@ function insertIntoGaps(data, vals) {
  */
 function prepareData(
   metricRecords, modelRecords, aggregated, rawDataInBackground) {
-  let minVal = Math.POSITIVE_INFINITY;
-  let maxVal = Math.NEGATIVE_INFINITY;
+  let minVal = Number.POSITIVE_INFINITY;
+  let maxVal = Number.NEGATIVE_INFINITY;
 
   let aggregatedChartData = null;
   if (modelRecords.length && aggregated) {
