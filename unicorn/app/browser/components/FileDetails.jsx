@@ -59,7 +59,9 @@ const STYLES = {
   data: {
     display: 'flex',
     flexDirection: 'row',
-    flexGrow: 1,
+    justifyContent: 'flex-start',
+    width: '100%',
+    overflowX: 'auto',
     margin: 'auto',
     border: '1px solid gray'
   },
@@ -67,12 +69,18 @@ const STYLES = {
     height: '2rem'
   },
   tableHeader: {
+    flexGrow: 0,
+    flexShrink: 0,
     overflow: 'hidden',
+    width: '200px',
     height: '2rem',
     textOverflow: 'ellipsis'
   },
   tableColumn: {
+    flexGrow: 0,
+    flexShrink: 0,
     overflow: 'hidden',
+    width: '200px',
     height: '2rem',
     textOverflow: 'ellipsis'
   }
@@ -157,11 +165,11 @@ export default class FileDetails extends React.Component {
   _renderDataTable() {
     let {fields, data} = this.state;
     if (fields.length > 0  && data.length > 0) {
-      let columnHeader;
+      let columnHeaders;
       let tableRows = [];
       let tableHeight = this.props.error ? 200 : 250;
 
-      columnHeader = fields.map((field) => {
+      columnHeaders = fields.map((field) => {
         return (
           <TableHeaderColumn key={field.index} style={STYLES.tableHeader}>
             {field.name}
@@ -181,18 +189,20 @@ export default class FileDetails extends React.Component {
 
       return (
         <div style={STYLES.data}>
-          <Table fixedHeader={true} height={tableHeight.toString()}
-              selectable={false}>
-            <TableHeader adjustForCheckbox={false} displaySelectAll={false}
-                         enableSelectAll={false}>
-              <TableRow style={STYLES.tableRow}>
-                {columnHeader}
-              </TableRow>
-            </TableHeader>
-            <TableBody stripedRows={true} displayRowCheckbox={false}>
-              {tableRows}
-            </TableBody>
-          </Table>
+          <div>
+            <Table fixedHeader={true} height={tableHeight.toString()}
+                selectable={false}>
+              <TableHeader adjustForCheckbox={false} displaySelectAll={false}
+                           enableSelectAll={false}>
+                <TableRow style={STYLES.tableRow}>
+                  {columnHeaders}
+                </TableRow>
+              </TableHeader>
+              <TableBody stripedRows={true} displayRowCheckbox={false}>
+                {tableRows}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       );
     }
