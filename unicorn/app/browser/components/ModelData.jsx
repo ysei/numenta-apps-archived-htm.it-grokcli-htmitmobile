@@ -21,6 +21,7 @@ import React from 'react';
 
 import anomalyBarChartUnderlay from '../lib/Dygraphs/AnomalyBarChartUnderlay';
 import axesCustomLabelsUnderlay from '../lib/Dygraphs/AxesCustomLabelsUnderlay';
+import highlightedProbationUnderlay from '../lib/Dygraphs/HighlightedProbationUnderlay';
 import Chart from './Chart';
 import {DATA_FIELD_INDEX} from '../lib/Constants';
 import Dygraph from '../lib/Dygraphs/DygraphsExtended';
@@ -106,6 +107,7 @@ export default class ModelData extends React.Component {
         rangeSelectorPlotStrokeColor: muiTheme.rawTheme.palette.primary1Color,
         showRangeSelector: true,
         underlayCallback: function (context, ...args) {
+          highlightedProbationUnderlay(context, ...args);
           axesCustomLabelsUnderlay(context, ...args);
           anomalyBarChartUnderlay(context, ...args);
         }.bind(null, this),

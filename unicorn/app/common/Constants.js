@@ -28,3 +28,8 @@ export const ANOMALY_RED_VALUE = 0.5125976562500002;
  * @type {Number}
  */
 export const ANOMALY_YELLOW_VALUE = 0.4;
+
+/** Number of records under which the metric is considered probationary
+ * @type {Number}
+ */
+export const PROBATION_LENGTH = 390;
