@@ -15,10 +15,11 @@
 //
 // http://numenta.org/licenses/
 
+import muiTheme from '../MaterialUI/HTMStudioTheme';
 import RGBColor from 'rgbcolor';
 
 import {
-  DATA_FIELD_INDEX, ANOMALY_YELLOW_VALUE
+  DATA_FIELD_INDEX, ANOMALY_YELLOW_VALUE, PROBATION_LENGTH
 } from '../Constants';
 import Dygraph from './DygraphsExtended';
 import {mapAnomalyColor} from '../browser-utils';
@@ -138,6 +139,18 @@ export default class {
   }
 
   /**
+   * Draws a rectangle highlighting probationary period
+   * @param {Object} context - Dygraph drawing context object
+   * @param {Number} width - Width of rectangle
+   * @param {Number} height - Height of rectangle
+   * @param {String} color - String of color to use for fillRect()
+   */
+  _drawProbationPeriod(context, width, height, color) {
+    context.fillStyle = new RGBColor(color).toRGB();
+    context.fillRect(0, height+2, width, -height);
+  }
+
+  /**
    * Draws the mini plot on the canvas.
    */
   _drawMiniPlot() {
@@ -151,11 +164,20 @@ export default class {
     let previous = {x: null, value: null};
     let stroke = this._getOption('rangeSelectorPlotLineWidth');
     let data = this._getOption('modelData') || [];
-    let barWidth, color, point, value, x;
+    let probationColor = muiTheme.palette.accent3Color;
+    let barWidth, color, point, probationWidth, value, x;
 
     if (!data.length) {
       return;  // no data, no draw.
     }
+
+    // Calculate dimensions for, and highlight probation period
+    probationWidth = (
+      canvasWidth * (Math.min(PROBATION_LENGTH, data.length) / data.length)
+    );
+    this._drawProbationPeriod(
+      context, probationWidth, canvasHeight, probationColor
+    );
 
     barWidth = Math.ceil(data.length / canvasWidth);
 
