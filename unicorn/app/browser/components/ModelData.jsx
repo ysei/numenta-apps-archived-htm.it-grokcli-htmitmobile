@@ -77,32 +77,8 @@ function sortedMerge(a, b, compareFunction) {
  * @returns {Array} - data with gap values inserted
  */
 function insertIntoGaps(data, vals) {
-  let deltas = [];
-  for (let i = 1; i < data.length; i++) {
-    deltas.push(data[i][DATA_INDEX_TIME].getTime() -
-                data[i-1][DATA_INDEX_TIME].getTime());
-  }
-  deltas.sort();
-
-  let percentile = 0.75;
-  let gapThreshold = 1.5 * deltas[Math.floor(deltas.length*percentile)];
-
-  let newData = [];
-  data.forEach((item, rowid) => {
-    newData.push(item);
-
-    if (rowid + 1 < data.length) {
-      let curr = item[DATA_INDEX_TIME].getTime();
-      let next = data[rowid+1][DATA_INDEX_TIME].getTime();
-      let delta = next - curr;
-      if (delta > gapThreshold) {
-        let gapItem = [new Date(curr + delta/2)].concat(vals);
-        newData.push(gapItem);
-      }
-    }
-  });
-
-  return newData;
+  // Heuristic: do nothing.
+  return data;
 }
 
 /**
@@ -247,13 +223,6 @@ export default class ModelData extends React.Component {
       options: {
         axisLineColor: muiTheme.rawTheme.palette.accent4Color,
         connectSeparatedPoints: true,  // required for raw+agg overlay
-
-        // We want these, but it causes problems.
-        // https://github.com/danvk/dygraphs/issues/745
-        //
-        // drawGapEdgePoints: true,
-        // pointSize: 3,
-
         includeZero: true,
         interactionModel: Dygraph.Interaction.dragIsPanInteractionModel,
         labelsShowZeroValues: true,
