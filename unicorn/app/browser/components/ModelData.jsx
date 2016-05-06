@@ -39,6 +39,132 @@ const {
   DATA_INDEX_TIME, DATA_INDEX_VALUE, DATA_INDEX_ANOMALY
 } = DATA_FIELD_INDEX;
 
+/**
+ * Merge two sorted arrays to create a new sorted array.
+ * @param {Array} a - sorted array
+ * @param {Array} b - sorted array
+ * @param {Function} compareFunction - returns a negative number if arg1 < arg2
+ * @returns {Array} - new sorted array
+ */
+function sortedMerge(a, b, compareFunction) {
+  if (!a && !b) return [];
+  if (!a) return b;
+  if (!b) return a;
+
+  let ret = [];
+  let j = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    for (; compareFunction(b[j], a[i]) < 0; j++) {
+      ret.push(b[j]);
+    }
+    ret.push(a[i]);
+  }
+
+  for (; j < b.length; j++) {
+    ret.push(b[j]);
+  }
+
+  return ret;
+}
+
+/**
+ * Use a heuristic to detect gaps in timestamps in the data.
+ *
+ * At each gap, insert [midpointOfGap, vals[0], vals[1], ...] as a new datum.
+ *
+ * @param {Array} data - Array of arrays: [[Date, ...], [Date, ...], ...]
+ * @param {Array} vals - Values concatenated to timestamp at every single gap
+ * @returns {Array} - data with gap values inserted
+ */
+function insertIntoGaps(data, vals) {
+  // Heuristic: do nothing.
+  return data;
+}
+
+/**
+ * Compute Dygraphs input from the metric and model data.
+ *
+ * If aggregated, the return value will contain properly formatted model
+ * records, possibly with nonaggregated raw metric records inserted.
+ *
+ * If not aggregated, or if there are no modelRecords, the return value will
+ * contain properly formatted raw metric records.
+ *
+ * In all cases, gaps are detected. NaN values are inserted to designate gaps.
+ *
+ * @param {Array} metricRecords - Input data record list, raw metric data.
+ * @param {Array} modelRecords - Input data record list, model data.
+ * @param {boolean} aggregated - Whether the model is aggregated.
+ * @param {boolean} rawDataInBackground - Whether the raw data should be drawn
+ *                                        (in addition to the aggregated data)
+ * @returns {Array} - Tuple:
+ *                    Array: Dygraphs multi-dimensional array
+ *                    boolean: minVal
+ *                    boolean: maxVal
+ * @see http://dygraphs.com/tests/independent-series.html
+ */
+function prepareData(
+  metricRecords, modelRecords, aggregated, rawDataInBackground) {
+  let minVal = Number.POSITIVE_INFINITY;
+  let maxVal = Number.NEGATIVE_INFINITY;
+
+  let aggregatedChartData = null;
+  if (modelRecords.length && aggregated) {
+    modelRecords.forEach((item) => {
+      minVal = Math.min(minVal, item[DATA_INDEX_VALUE]);
+      maxVal = Math.max(maxVal, item[DATA_INDEX_VALUE]);
+    });
+
+    if (rawDataInBackground) {
+      aggregatedChartData = modelRecords.map(
+        (item) => [item[DATA_INDEX_TIME],
+                   item[DATA_INDEX_VALUE],
+                   null]);
+
+      aggregatedChartData = insertIntoGaps(aggregatedChartData,
+                                           [NaN, null]);
+    } else {
+      aggregatedChartData = modelRecords.map(
+        (item) => [item[DATA_INDEX_TIME],
+                   item[DATA_INDEX_VALUE]]);
+
+      aggregatedChartData = insertIntoGaps(aggregatedChartData,
+                                           [NaN]);
+    }
+  }
+
+  let rawChartData = null;
+  if (metricRecords.length && (!aggregated || rawDataInBackground)) {
+    metricRecords.forEach((item) => {
+      minVal = Math.min(minVal, item[DATA_INDEX_VALUE]);
+      maxVal = Math.max(maxVal, item[DATA_INDEX_VALUE]);
+    });
+
+    if (rawDataInBackground) {
+      rawChartData = metricRecords.map(
+        (item) => [item[DATA_INDEX_TIME],
+                   null,
+                   item[DATA_INDEX_VALUE]]);
+
+      rawChartData = insertIntoGaps(rawChartData,
+                                    [null, NaN]);
+    } else {
+      rawChartData = metricRecords.map(
+        (item) => [item[DATA_INDEX_TIME],
+                   item[DATA_INDEX_VALUE]]);
+
+      rawChartData = insertIntoGaps(rawChartData,
+                                    [NaN]);
+    }
+  }
+
+  let data = sortedMerge(
+    aggregatedChartData, rawChartData,
+    (a, b) => a[DATA_INDEX_TIME].getTime() - b[DATA_INDEX_TIME].getTime());
+
+  return [data, minVal, maxVal];
+}
 
 /**
  * React Component for sending Model Data from Model component to
@@ -222,39 +348,6 @@ export default class ModelData extends React.Component {
     return displayValue;
   }
 
-  /**
-   * Transform two indepdent time-series datasets into a single Dygraphs
-   *  data matrix, overlaid on top of each other.
-   * @param {Array} dataSeries - Input Dygraph data series matrix for overlay.
-   * @param {Array} metricData - Input data record list, raw metric data.
-   * @returns {Array} - Output Dygraph Multi-dimensional array matrix Data
-   *                    Series for charting: data[ts][series].
-   * @see http://dygraphs.com/tests/independent-series.html
-   */
-  _overlayDataSeries(dataSeries, metricData) {
-    let dataId = 0;
-    let dataStamp = dataSeries[dataId][DATA_INDEX_TIME];
-    let newData = [];
-
-    metricData.forEach((item, rowid) => {
-      let metricStamp = item[DATA_INDEX_TIME];
-      if (metricStamp.getTime() < dataStamp.getTime()) {
-        // merge in raw metric data record
-        newData.push([metricStamp, null, item[DATA_INDEX_VALUE]]);
-      } else {
-        // merge in agg+anom data record
-        let aggregate = dataSeries[dataId][DATA_INDEX_VALUE];
-        newData.push([dataStamp, aggregate, null]);
-        if (dataId < dataSeries.length - 1) {
-          dataId++; // increment pointer to data[]
-          dataStamp = dataSeries[dataId][DATA_INDEX_TIME];
-        }
-      }
-    });
-
-    return newData;
-  }
-
   shouldComponentUpdate(nextProps, nextState) {
     let {model, modelData, showNonAgg} = this.props;
 
@@ -278,43 +371,31 @@ export default class ModelData extends React.Component {
     let {options, raw, value} = this._chartOptions;
     let {axes, labels, series} = value;
     let metaData = {metric, model, min: -Infinity, max: Infinity};
-    let data = [];  // actual matrix of data to plot w/dygraphs
-    let values = [];  // used to find chart value min/max to lock Y-axis
 
-    // 1. Raw metric data on Series 1
     if (metricData.length) {
-      data = Array.from(metricData);
       metaData.metric.dataSize = metricData.length;
-      values = data.map((item) => item[DATA_INDEX_VALUE]);
     }
-    // 2. Model anomaly data on Underlay
+
     if (modelData.data.length) {
       options.modelData = modelData.data;
       metaData.model.dataSize = modelData.data.length;
-      values = modelData.data.map((item) => item[DATA_INDEX_VALUE])
-                .concat(values);
-
-      // 2a. Aggregated Model metric data on Series 1
-      if (model.aggregated) {
-        data = Array.from(modelData.data).map((item) => {
-          return item.slice(DATA_INDEX_TIME, DATA_INDEX_ANOMALY);
-        });
-      }
     }
-    // 3. Overlay: Aggregated on Series 1. Raw on Series 2.
-    if (modelData.data.length && showNonAgg) {
-      // switch to use merged array
-      data = this._overlayDataSeries(data, metricData);
 
-      // Format non-aggregated overlay series
+    const rawDataInBackground = (modelData.data.length &&
+                                 model.aggregated &&
+                                 showNonAgg);
+    if (rawDataInBackground) {
       labels = labels.concat(raw.labels);
       Object.assign(axes, raw.axes);
       Object.assign(series, raw.series);
     }
 
-    // find Y value min+max for locking chart Y-axis in place
-    metaData.min = Math.min(...values);
-    metaData.max = Math.max(...values);
+    let [data, minVal, maxVal] = prepareData(metricData, modelData.data,
+                                             model.aggregated,
+                                             rawDataInBackground);
+
+    metaData.min = minVal;
+    metaData.max = maxVal;
 
     // RENDER
     Object.assign(options, {axes, labels, series});
