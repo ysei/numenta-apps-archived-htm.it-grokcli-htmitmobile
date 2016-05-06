@@ -33,14 +33,14 @@ export default function (context, canvas, area, dygraph) {
   let modelData = dygraph.getOption('modelData') || [];
   let disabledColor = context.context.muiTheme.rawTheme.palette.disabledColor;
   let height = area.h;
-  let dataLength, time, width;
+  let probationIndex, time, width;
 
   if (!(modelData.length)) {
     return;  // no anomaly data
   }
 
-  dataLength = Math.min(PROBATION_LENGTH, modelData.length);
-  time = modelData[dataLength][DATA_INDEX_TIME].getTime();
+  probationIndex = Math.min(PROBATION_LENGTH, modelData.length);
+  time = modelData[probationIndex - 1][DATA_INDEX_TIME].getTime();
   width = Math.round(dygraph.toDomXCoord(time));
 
   // draw rectangle
