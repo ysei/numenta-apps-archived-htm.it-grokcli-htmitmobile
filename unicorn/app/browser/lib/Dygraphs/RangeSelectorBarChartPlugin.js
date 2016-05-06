@@ -343,7 +343,7 @@ export default class {
    */
   _xValueToPixel(x, xMax, xFactor) {
     if (x !== null) {
-      return Math.round((x - xMax) * xFactor, 10);
+      return Math.round((x - xMax) * xFactor);
     }
     return NaN;
   }
@@ -358,7 +358,7 @@ export default class {
    */
   _yValueToPixel(y, yMin, yMax, yFactor) {
     if (y !== null) {
-      return Math.round(yMax - ((y - yMin) * yFactor), 10);
+      return Math.round(yMax - ((y - yMin) * yFactor));
     }
     return NaN;
   }

@@ -22,7 +22,10 @@ import ReactDOM from 'react-dom';
 
 import ChartUpdateViewpoint from '../actions/ChartUpdateViewpoint';
 import Dygraph from '../lib/Dygraphs/DygraphsExtended';
-import {DATA_FIELD_INDEX} from '../lib/Constants';
+import {
+  DATA_FIELD_INDEX,
+  ANOMALY_BAR_WIDTH
+} from '../lib/Constants';
 
 const {DATA_INDEX_TIME} = DATA_FIELD_INDEX;
 const RANGE_SELECTOR_CLASS = 'dygraph-rangesel-fgcanvas';
@@ -67,7 +70,6 @@ export default class Chart extends React.Component {
     // DyGraphs chart container
     this._dygraph = null;
     this._chartRange = [null, null];
-    this._displayPointCount = this._config.get('chart:points');
     this._previousDataSize = 0;
 
     // dynamic styles
@@ -83,6 +85,10 @@ export default class Chart extends React.Component {
   }
 
   componentDidMount() {
+    let {model} = this.props.metaData;
+    // Get chart actual width used to calculate the initial number of bars
+    let chart = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
+    this._displayPointCount = Math.ceil(chart.offsetWidth / ANOMALY_BAR_WIDTH);
     if (this.props.data.length) {
       this._chartInitalize();
     }

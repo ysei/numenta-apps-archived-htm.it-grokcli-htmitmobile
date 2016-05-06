@@ -202,8 +202,6 @@ export default class ModelData extends React.Component {
     this._config = this.context.getConfigClient();
 
     let muiTheme = this.context.muiTheme;
-    let displayPointCount = this._config.get('chart:points');
-
     this._styles = {
       container: {
         position: 'relative'
@@ -216,7 +214,6 @@ export default class ModelData extends React.Component {
         float: 'left'
       }
     }
-    this._anomalyBarWidth = Math.round(displayPointCount / 16, 10);
 
     // Dygraphs Chart Options: Global and per-Series/Axis settings.
     this._chartOptions = {
@@ -329,7 +326,7 @@ export default class ModelData extends React.Component {
         anomalyValue = modelData[anomalyIdx][DATA_INDEX_ANOMALY];
       } else {
         // Get max value from neighboring points
-        let first = -anomalyIdx;
+        let first = ~anomalyIdx;
         let second = first + 1;
         if (second >= modelData.length - 1) {
           second = modelData.length - 1;
