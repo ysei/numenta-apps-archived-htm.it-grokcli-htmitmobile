@@ -31,15 +31,15 @@ import {ACTIONS} from '../lib/Constants';
  */
 export default function (actionContext, payload) {
   return new Promise((resolve, reject) => {
-    let {modelId, filename} = payload;
+    let {modelId, filename, timestampFormat} = payload;
     let database = actionContext.getDatabaseClient();
-    database.exportModelData(modelId, filename, (error) => {
+    database.exportModelData(modelId, filename, timestampFormat, (error) => {
       if (error) {
         actionContext.dispatch(ACTIONS.EXPORT_MODEL_RESULTS_FAILED, error);
         reject(error);
       } else {
         actionContext.dispatch(ACTIONS.EXPORT_MODEL_RESULTS, {
-          modelId, filename
+          modelId, filename, timestampFormat
         });
         resolve();
       }

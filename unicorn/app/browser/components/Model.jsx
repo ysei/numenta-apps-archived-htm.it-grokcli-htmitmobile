@@ -243,14 +243,14 @@ export default class Model extends React.Component {
       dialogActions);
   }
 
-  _exportModelResults(modelId) {
+  _exportModelResults(modelId, timestampFormat) {
     dialog.showSaveDialog({
       title: this._config.get('dialog:model:export:title'),
       defaultPath: this._config.get('dialog:model:export:path')
     }, (filename) => {
       if (filename) {
         this.context.executeAction(ExportModelResultsAction, {
-          modelId, filename
+          modelId, filename, timestampFormat
         });
       } else {
         // @TODO trigger error about "bad file"
@@ -359,6 +359,13 @@ export default class Model extends React.Component {
     let {model, file, valueField, timestampField} = this.props;
     let title = model.metric;
 
+    // The convention is to ignore timezones when rendering or exporting time
+    // in the app.
+    let exportedTimestampFormat = timestampField.format;
+    if (exportedTimestampFormat.slice(-1) === 'Z') {
+      exportedTimestampFormat = timestampField.format.slice(0, -1);
+    }
+
     // prep UI
     let muiTheme = this.context.muiTheme;
     let checkboxColor = muiTheme.rawTheme.palette.primary1Color;
@@ -411,7 +418,8 @@ export default class Model extends React.Component {
             labelPosition="after"
             labelStyle={this._styles.actionButtonLabel}
             style={this._styles.actionButton}
-            onTouchTap={this._exportModelResults.bind(this, model.modelId)}
+            onTouchTap={this._exportModelResults.bind(this, model.modelId,
+             exportedTimestampFormat)}
             />
           <RaisedButton
             label={this._config.get('button:model:delete')}

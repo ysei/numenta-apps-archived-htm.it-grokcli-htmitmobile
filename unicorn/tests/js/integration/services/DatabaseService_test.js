@@ -94,26 +94,26 @@ const EXPECTED_METRICS = [EXPECTED_TIMESTAMP, EXPECTED_METRIC];
 
 const EXPECTED_METRIC_DATA = [
   {metric_uid: EXPECTED_METRIC_ID,
-   timestamp: Date.parse('2015-08-26T19:46:31Z'),
-   metric_value: 21},
+    timestamp: Date.parse('2015-08-26T19:46:09'),
+    metric_value: 21},
   {metric_uid: EXPECTED_METRIC_ID,
-   timestamp: Date.parse('2015-08-26T19:47:31Z'),
-   metric_value: 17},
+    timestamp: Date.parse('2015-08-26T19:47:31'),
+    metric_value: 17},
   {metric_uid: EXPECTED_METRIC_ID,
-   timestamp: Date.parse('2015-08-26T19:48:31Z'),
-   metric_value: 22},
+    timestamp: Date.parse('2015-08-26T19:48:31'),
+    metric_value: 22},
   {metric_uid: EXPECTED_METRIC_ID,
-   timestamp: Date.parse('2015-08-26T19:49:31Z'),
-   metric_value: 21},
+    timestamp: Date.parse('2015-08-26T19:49:31'),
+    metric_value: 21},
   {metric_uid: EXPECTED_METRIC_ID,
-   timestamp: Date.parse('2015-08-26T19:50:31Z'),
-   metric_value: 16},
+    timestamp: Date.parse('2015-08-26T19:50:31'),
+    metric_value: 16},
   {metric_uid: EXPECTED_METRIC_ID,
-   timestamp: Date.parse('2015-08-26T19:51:31Z'),
-   metric_value: 19}
+    timestamp: Date.parse('2015-08-26T19:51:31'),
+    metric_value: 19}
 ];
 
-const NO_HEADER_CSV_FILE = path.join(FIXTURES, 'no-header.csv');
+const NO_HEADER_CSV_FILE = path.join(FIXTURES, 'no-header-no-tz.csv');
 const NO_HEADER_CSV_FILE_ID = generateFileId(NO_HEADER_CSV_FILE);
 const EXPECTED_NO_HEADER_CSV_FILE = Object.assign({}, INSTANCES.File, {
   filename: NO_HEADER_CSV_FILE,
@@ -130,7 +130,7 @@ const EXPECTED_FIELDS_NO_HEADER_CSV_FILE = [
     name: 'timestamp',
     index: 0,
     type: 'date',
-    format: 'YYYY-MM-DDTHH:mm:ssZ'
+    format: 'YYYY-MM-DDTHH:mm:ss'
   }),
   Object.assign({}, INSTANCES.Metric, {
     uid: generateMetricId(NO_HEADER_CSV_FILE, 'metric2'),
@@ -198,7 +198,7 @@ const EXPECTED_METRIC_WITH_INPUT_AGG_MODEL = Object.assign({}, EXPECTED_METRIC, 
 });
 
 const BATCH_MODEL_DATA = Array.from([
-  1440557251000,
+  1440557229000,
   1440557311000,
   1440557371000,
   1440557431000
@@ -212,7 +212,7 @@ const BATCH_MODEL_DATA = Array.from([
 });
 
 const EXPECTED_MODEL_DATA = Array.from([
-  1440557251000,
+  1440557229000,
   1440557311000,
   1440557371000,
   1440557431000
@@ -220,11 +220,11 @@ const EXPECTED_MODEL_DATA = Array.from([
 
 
 const EXPECTED_EXPORTED_RESULTS =
-`timestamp,metric_value,anomaly_level,raw_anomaly_score
-2015-08-26T02:47:31.000Z,1,HIGH,1
-2015-08-26T02:48:31.000Z,1,HIGH,1
-2015-08-26T02:49:31.000Z,1,HIGH,1
-2015-08-26T02:50:31.000Z,1,HIGH,1`;
+  `timestamp,metric_value,anomaly_level,raw_anomaly_score
+2015-08-26T02:47:09,1,HIGH,1
+2015-08-26T02:48:31,1,HIGH,1
+2015-08-26T02:49:31,1,HIGH,1
+2015-08-26T02:50:31,1,HIGH,1`;
 
 const TEMP_DIR = path.join(os.tmpDir(), 'unicorn_db');
 const EXPORTED_FILENAME = path.join(TEMP_DIR, 'file.csv');
@@ -781,7 +781,14 @@ describe('DatabaseService:', () => {
       });
       service.putModelDataBatch(BATCH_MODEL_DATA, (error) => {
         assert.ifError(error);
-        service.exportModelData(EXPECTED_METRIC_ID, EXPORTED_FILENAME, (error, res) => {
+
+        // The convention is to ignore timezones when rendering or exporting time
+        // in the app.
+        let exportedTimestampFormat = EXPECTED_TIMESTAMP.format;
+        if (exportedTimestampFormat.slice(-1) === 'Z') {
+          exportedTimestampFormat = EXPECTED_TIMESTAMP.format.slice(0, -1);
+        }
+        service.exportModelData(EXPECTED_METRIC_ID, EXPORTED_FILENAME, exportedTimestampFormat, (error, res) => {
           assert.ifError(error);
           fs.readFile(EXPORTED_FILENAME, 'utf8', (error, data) => {
             assert.ifError(error);
@@ -791,6 +798,7 @@ describe('DatabaseService:', () => {
         });
       });
     });
+
     it('should delete ModelData from the database', (done) => {
       // Add data
       service.putModelDataBatch(BATCH_MODEL_DATA, (error) => {
