@@ -138,7 +138,7 @@ export default class Chart extends React.Component {
     // init, render, and draw chart!
     options.labelsUTC = true;
     options.dateWindow = this._chartRange;  // update viewport of range selector
-    options.axes.y.valueRange = [metaData.min, metaData.max];  // lock y-axis
+    options.axes.y.valueRange = [metaData.min, metaData.max];
     this._previousDataSize = data.length;
     this._dygraph = new Dygraph(element, data, options);
 
@@ -149,7 +149,7 @@ export default class Chart extends React.Component {
   }
 
   /**
-   * DyGrpahs Chart Update Logic and Re-Render
+   * DyGraphs Chart Update Logic and Re-Render
    */
   _chartUpdate() {
     let {data, metaData, options} = this.props;
@@ -180,6 +180,7 @@ export default class Chart extends React.Component {
     }
 
     // update chart
+    options.axes.y.valueRange = [metaData.min, metaData.max];
     options.dateWindow = this._chartRange;
     options.file = data;  // new data
     this._previousDataSize = data.length;
