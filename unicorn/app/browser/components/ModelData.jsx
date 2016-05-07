@@ -21,10 +21,10 @@ import React from 'react';
 
 import anomalyBarChartUnderlay from '../lib/Dygraphs/AnomalyBarChartUnderlay';
 import axesCustomLabelsUnderlay from '../lib/Dygraphs/AxesCustomLabelsUnderlay';
+import chartInteraction from '../lib/Dygraphs/ChartInteraction.js';
 import highlightedProbationUnderlay from '../lib/Dygraphs/HighlightedProbationUnderlay';
 import Chart from './Chart';
 import {DATA_FIELD_INDEX} from '../lib/Constants';
-import Dygraph from '../lib/Dygraphs/DygraphsExtended';
 import {
   formatDisplayValue, mapAnomalyColor
 } from '../lib/browser-utils';
@@ -225,7 +225,7 @@ export default class ModelData extends React.Component {
         axisLineColor: muiTheme.rawTheme.palette.accent4Color,
         connectSeparatedPoints: true,  // required for raw+agg overlay
         includeZero: true,
-        interactionModel: Dygraph.Interaction.dragIsPanInteractionModel,
+        interactionModel: chartInteraction,
         labelsShowZeroValues: true,
         labelsDiv: `legend-${props.modelId}`,
         plugins: [RangeSelectorBarChart],
