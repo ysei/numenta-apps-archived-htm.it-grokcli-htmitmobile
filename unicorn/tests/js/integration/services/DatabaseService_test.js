@@ -94,22 +94,22 @@ const EXPECTED_METRICS = [EXPECTED_TIMESTAMP, EXPECTED_METRIC];
 
 const EXPECTED_METRIC_DATA = [
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:46:09'),
+    timestamp: Date.parse('2015-08-26T19:46:09Z'),
     metric_value: 21},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:47:31'),
+    timestamp: Date.parse('2015-08-26T19:47:31Z'),
     metric_value: 17},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:48:31'),
+    timestamp: Date.parse('2015-08-26T19:48:31Z'),
     metric_value: 22},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:49:31'),
+    timestamp: Date.parse('2015-08-26T19:49:31Z'),
     metric_value: 21},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:50:31'),
+    timestamp: Date.parse('2015-08-26T19:50:31Z'),
     metric_value: 16},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:51:31'),
+    timestamp: Date.parse('2015-08-26T19:51:31Z'),
     metric_value: 19}
 ];
 
