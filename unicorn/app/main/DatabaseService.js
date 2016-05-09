@@ -559,10 +559,11 @@ export class DatabaseService {
    * Exports model results into a CSV file
    * @param  {string}   metricId The metric from which to export results
    * @param  {string}   filename Full path name for the destination file (.csv)
+   * @param  {string}   timestampFormat Format of the timestamp
    * @param  {Function} callback called when the export operation is complete,
    *                             with a possible error argument
    */
-  exportModelData(metricId, filename, callback) {
+  exportModelData(metricId, filename, timestampFormat, callback) {
     const output = fs.createWriteStream(filename);
     const parser = json2csv();
     parser.pipe(output);
@@ -581,7 +582,7 @@ export class DatabaseService {
         // Don't include time zone. The model runner doesn't send time zone
         // info, and the time zone may not be UTC.
         timestamp: moment.utc(result.timestamp)
-              .format('YYYY-MM-DDTHH:mm:ss.ssss'),
+              .format(timestampFormat),
         metric_value: result.metric_value,
         anomaly_level: mapAnomalyText(result.anomaly_score),
         raw_anomaly_score: result.anomaly_score
