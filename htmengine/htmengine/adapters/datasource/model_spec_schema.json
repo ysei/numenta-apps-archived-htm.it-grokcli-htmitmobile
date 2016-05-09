@@ -14,7 +14,7 @@
       "type": "object"
     },
     "modelParams": {
-      "description" : "Model-creation parameter overrides",
+      "description" : "Model creation parameter overrides for encoder min, max, and, minResolution only.",
       "required": false,
       "type": "object",
       "additionalProperties":false,
@@ -32,6 +32,11 @@
           "type": "number"
         }
       }
+    },
+    "completeModelParams": {
+      "description": "Model creation parameter overrides for entire model.",
+      "required": false,
+      "type": "object"
     }
   }
 }

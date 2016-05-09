@@ -98,6 +98,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
       htmengine.utils.validate(modelSpec, g_model_spec_schema)
       htmengine.utils.validate(modelSpec["metricSpec"],
                                g_custom_metric_spec_schema)
+
     except Exception:
       g_log.exception("Failed validation of custom modelSpec=%r", modelSpec)
       raise
@@ -397,6 +398,57 @@ class CustomDatasourceAdapterTest(TestCaseBase):
     g_log.info("Waiting for model to become active")
     self.checkModelIsActive(metricId)
     self.checkEncoderResolution(metricId, 0, 100)
+
+
+  def _getPathToData(self, filename):
+    """ Returns the absolute path to a file that lives in the relative data/directory """
+    basePath = os.path.split(os.path.abspath(__file__))[0]
+    dataDirPath = os.path.join(basePath, "../../../data")
+    knownDataFilePath = os.path.join(dataDirPath, filename)
+    return knownDataFilePath
+
+
+  def testMonitorMetricWithCompleteModelParams(self):
+    """ Test monitorMetric with complete set of user-provided model parameters that activates a model """
+    metricName = "test-" + uuid.uuid1().hex
+
+    adapter = datasource_adapter_factory.createCustomDatasourceAdapter()
+
+    g_log.info("Creating htmengine custom metric; name=%s", metricName)
+    metricId = adapter.createMetric(metricName)
+    self.addCleanup(adapter.deleteMetricByName, metricName)
+
+    modelParamsPath = self._getPathToData("example_model_params.json")
+    with open(modelParamsPath, "rb") as f:
+        completeModelParams = json.load(f)
+
+    # Turn on monitoring
+    modelSpec = {
+      "datasource": "custom",
+
+      "metricSpec": {
+        "metric": metricName
+      },
+
+      "completeModelParams": completeModelParams
+    }
+
+    adapter.monitorMetric(modelSpec)
+
+    with self.engine.connect() as conn:
+      metricObj = repository.getMetric(conn,
+                                       metricId,
+                                       fields=[schema.metric.c.status,
+                                               schema.metric.c.parameters])
+
+    self._validateModelSpec(json.loads(metricObj.parameters))
+
+    self.assertIn(metricObj.status, (MetricStatus.CREATE_PENDING,
+                                     MetricStatus.ACTIVE))
+    self.assertEqual(json.loads(metricObj.parameters), modelSpec)
+
+    g_log.info("Waiting for model to become active")
+    self.checkModelIsActive(metricId)
 
 
   def testMonitorMetricWithMinResolution(self):
