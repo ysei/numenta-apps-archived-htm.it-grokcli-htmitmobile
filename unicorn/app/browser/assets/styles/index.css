@@ -113,5 +113,5 @@ div.loading > div > svg > circle {
 img.dygraph-rangesel-zoomhandle {
   /* do not set display:none, it'll break dygraps range selector */
   cursor: pointer !important;
-  opacity: 0 !important;
+  z-index: 30 !important;
 }

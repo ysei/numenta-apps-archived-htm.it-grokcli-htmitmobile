@@ -22,10 +22,7 @@ import ReactDOM from 'react-dom';
 
 import ChartUpdateViewpoint from '../actions/ChartUpdateViewpoint';
 import Dygraph from '../lib/Dygraphs/DygraphsExtended';
-import {
-  DATA_FIELD_INDEX,
-  ANOMALY_BAR_WIDTH
-} from '../lib/Constants';
+import {DATA_FIELD_INDEX} from '../lib/Constants';
 
 const {DATA_INDEX_TIME} = DATA_FIELD_INDEX;
 const RANGE_SELECTOR_CLASS = 'dygraph-rangesel-fgcanvas';
@@ -85,10 +82,6 @@ export default class Chart extends React.Component {
   }
 
   componentDidMount() {
-    let {model} = this.props.metaData;
-    // Get chart actual width used to calculate the initial number of bars
-    let chart = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
-    this._displayPointCount = Math.ceil(chart.offsetWidth / ANOMALY_BAR_WIDTH);
     if (this.props.data.length) {
       this._chartInitalize();
     }
@@ -126,20 +119,26 @@ export default class Chart extends React.Component {
    */
   _chartInitalize() {
     let {data, metaData, options} = this.props;
-    let {metric, model} = metaData;
+    let {metric, model, displayPointCount} = metaData;
     let element = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
     let first = data[0][DATA_INDEX_TIME].getTime();
     let second = data[1][DATA_INDEX_TIME].getTime();
+    let last = data[data.length - 1][DATA_INDEX_TIME].getTime();
     let unit = second - first; // each datapoint
-    let rangeWidth = unit * this._displayPointCount;
+    let rangeWidth = unit * displayPointCount;
     let rangeEl;
 
-    this._chartRange = [first, first + rangeWidth]; // float left
-
-    // move chart back to last valid display position from previous viewing?
+    let rangeMin = first;
+    // move chart back to last valid display position from previous viewing
     if ('viewpoint' in metric && metric.viewpoint) {
-      this._chartRange = [metric.viewpoint, metric.viewpoint + rangeWidth];
+      rangeMin = metric.viewpoint;
     }
+    let rangeMax = rangeMin + rangeWidth;
+    if (rangeMax > last) {
+      rangeMax = last;
+      rangeMin = last - rangeWidth;
+    }
+    this._chartRange = [rangeMin, rangeMax];
 
     // init, render, and draw chart!
     options.labelsUTC = true;
@@ -159,11 +158,20 @@ export default class Chart extends React.Component {
    */
   _chartUpdate() {
     let {data, metaData, options} = this.props;
-    let {model} = metaData;
+    let {model, displayPointCount} = metaData;
     let modelIndex = Math.abs(model.dataSize - 1);
     let first = data[0][DATA_INDEX_TIME].getTime();
+    let second = data[1][DATA_INDEX_TIME].getTime();
+    let last = data[data.length - 1][DATA_INDEX_TIME].getTime();
     let [rangeMin, rangeMax] = this._chartRange;
-    let rangeWidth = rangeMax - rangeMin;
+    let unit = second - first; // each datapoint
+    let rangeWidth = unit * displayPointCount;
+    rangeMax = rangeMin + rangeWidth;
+    if (rangeMax > last) {
+      rangeMax = last;
+      rangeMin = last - rangeWidth;
+    }
+    this._chartRange = [rangeMin, rangeMax];
     let scrollLock = false;
 
     // should we scroll along with incoming model data?

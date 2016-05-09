@@ -18,12 +18,16 @@
 import connectToStores from 'fluxible-addons-react/connectToStores';
 import moment from 'moment';
 import React from 'react';
+import ReactDOM from 'react-dom';
 
 import anomalyBarChartUnderlay from '../lib/Dygraphs/AnomalyBarChartUnderlay';
 import axesCustomLabelsUnderlay from '../lib/Dygraphs/AxesCustomLabelsUnderlay';
 import highlightedProbationUnderlay from '../lib/Dygraphs/HighlightedProbationUnderlay';
 import Chart from './Chart';
-import {DATA_FIELD_INDEX} from '../lib/Constants';
+import {
+  DATA_FIELD_INDEX,
+  ANOMALY_BAR_WIDTH
+} from '../lib/Constants';
 import Dygraph from '../lib/Dygraphs/DygraphsExtended';
 import {
   formatDisplayValue, mapAnomalyColor
@@ -206,12 +210,38 @@ export default class ModelData extends React.Component {
       container: {
         position: 'relative'
       },
-      legendSection: {
-        height: '1rem',
-        fontSize: 12
-      },
       legend: {
-        float: 'left'
+        section: {
+          height: '1rem',
+          fontSize: 12
+        },
+        label: {
+          float: 'left'
+        }
+      },
+      zoom: {
+        section: {
+          height: '1rem',
+          fontSize: 12,
+          float: 'right'
+        },
+        label: {
+          color: muiTheme.rawTheme.palette.accent3Color,
+          paddingRight: '1rem',
+          fontWeight: 'bold'
+        },
+        link: {
+          color: muiTheme.rawTheme.palette.primary1Color,
+          paddingRight: '0.5rem',
+          textDecoration: 'underline',
+          cursor: 'pointer'
+        },
+        linkActive: {
+          color: muiTheme.rawTheme.palette.textColor,
+          paddingRight: '0.5rem',
+          textDecoration: 'none',
+          cursor: 'default'
+        }
       }
     }
 
@@ -291,6 +321,11 @@ export default class ModelData extends React.Component {
         }
       }
     }; // chartOptions
+
+    this.state = {
+      zoomLevel: 0,
+      points: 0
+    }
   } // constructor
 
   /**
@@ -345,11 +380,66 @@ export default class ModelData extends React.Component {
     return displayValue;
   }
 
+  _handleZoom(zoomLevel) {
+    this.setState({zoomLevel});
+  }
+
+  /**
+   * Get the total of points to display based on the zoom level and metric data
+   * @param  {number} zoomLevel Percentage of data to display. [0..1]
+   * @return {number}           Total points to dispay
+   */
+  _getDisplayPoints(zoomLevel) {
+    // Max zoom level
+    let points = this.state.points;
+    if (zoomLevel > 0) {
+      let metricData = this.props.metricData;
+      if (metricData && metricData.length > 0) {
+        points = Math.floor(metricData.length * zoomLevel) - 1;
+      }
+    }
+    return points;
+  }
+
+  /**
+   * Describe time zoom level rounding time rounded to the closest time
+   * description (minute,  hour, day, week, month, ...) based on metric data.
+   * @param  {number} zoomLevel Percentage of data to display. [0..1]
+   * @return {string}           Human readable time period description.
+   *                            For example:
+   *                              All
+   *                            	15 minutes
+   *                            	8 hours
+   *                            	1 day
+   *                            	2 weeks
+   *                            	6 months
+   */
+  _describeZoomLevel(zoomLevel) {
+    if (zoomLevel === 1) {
+      // No zoom
+      return this._config.get('chart:zoom:all');
+    }
+
+    let metricData = this.props.metricData;
+    if (metricData && metricData.length > 0) {
+      let first = metricData[0][DATA_INDEX_TIME];
+      let zoomIndex = this._getDisplayPoints(zoomLevel);
+      let last = metricData[zoomIndex][DATA_INDEX_TIME];
+      return moment(first).to(last, true);
+    }
+  }
+
   shouldComponentUpdate(nextProps, nextState) {
     let {model, modelData, showNonAgg} = this.props;
 
     // allow chart to switch between "show non-agg data" toggle states
     if (showNonAgg !== nextProps.showNonAgg) {
+      return true;
+    }
+    if (nextState.zoomLevel !== this.state.zoomLevel) {
+      return true;
+    }
+    if (nextState.points !== this.state.points) {
       return true;
     }
 
@@ -360,11 +450,18 @@ export default class ModelData extends React.Component {
 
     return true;
   }
+  componentDidMount() {
+    // Get chart actual width used to calculate the initial number of bars
+    let modelId = this.props.modelId;
+    let chart = ReactDOM.findDOMNode(this.refs[`chart-${modelId}`]);
+    this.setState({points: Math.ceil(chart.offsetWidth / ANOMALY_BAR_WIDTH)});
+  }
 
   render() {
     let {
       metric, metricData, model, modelData, showNonAgg, modelId
     } = this.props;
+    let zoomLevel = this.state.zoomLevel;
     let {options, raw, value} = this._chartOptions;
     let {axes, labels, series} = value;
     let metaData = {metric, model, min: -Infinity, max: Infinity};
@@ -393,16 +490,36 @@ export default class ModelData extends React.Component {
 
     metaData.min = minVal;
     metaData.max = maxVal;
+    metaData.displayPointCount = this._getDisplayPoints(zoomLevel);
 
-    // RENDER
+    // Render Zoom buttons
+    let zoomButtons = [0, 0.25, 1].map((level) => {
+      let style;
+      if (level === zoomLevel) {
+        style = this._styles.zoom.linkActive;
+      } else {
+        style = this._styles.zoom.link;
+      }
+      // Generate friendly zoom level description
+      let label = this._describeZoomLevel(level);
+      return (<a style={style} onClick={this._handleZoom.bind(this, level)}>
+                 {label}</a>);
+    });
     Object.assign(options, {axes, labels, series});
     return (
       <div style={this._styles.container}>
-        <section style={this._styles.legendSection}>
-          <span id={`legend-${modelId}`} style={this._styles.legend}></span>
+        <section style={this._styles.zoom.section}>
+          <span style={this._styles.zoom.label}>Zoom:</span>
+          {zoomButtons}
+        </section>
+        <section style={this._styles.legend.section}>
+          <span id={`legend-${modelId}`} style={this._styles.legend.label}/>
         </section>
         <section>
-          <Chart data={data} metaData={metaData} options={options} />
+          <Chart ref={`chart-${modelId}`}
+            data={data}
+            metaData={metaData}
+            options={options} />
         </section>
       </div>
     );

@@ -19,7 +19,10 @@
   },
   "chart": {
     "showNonAgg": "Show non-aggregated data",
-    "loading": "Loading chart..."
+    "loading": "Loading chart...",
+    "zoom": {
+      "all" : "All"
+    }
   },
   "dialog": {
     "file": {
