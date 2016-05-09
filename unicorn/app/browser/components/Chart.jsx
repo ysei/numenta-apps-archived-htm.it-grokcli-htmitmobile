@@ -21,7 +21,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import ChartUpdateViewpoint from '../actions/ChartUpdateViewpoint';
-import Dygraph from '../lib/Dygraphs/DygraphsExtended';
+import Dygraph from 'dygraphs';
+import '../lib/Dygraphs/Plugins';
+import CustomDygraph from '../lib/Dygraphs/CustomDygraph';
 import {DATA_FIELD_INDEX} from '../lib/Constants';
 
 const {DATA_INDEX_TIME} = DATA_FIELD_INDEX;
@@ -83,12 +85,28 @@ export default class Chart extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.data.length) {
-      this._chartInitalize();
-    }
+    this._chartInitalize();
   }
 
   componentWillUnmount() {
+    this._removeDygraph();
+  }
+
+  componentDidUpdate() {
+    if (!this._dygraph) {
+      this._chartInitalize();
+    } else {
+      this._chartUpdate();
+    }
+  }
+
+  componentWillUpdate() {
+    if (this.props.data.length < this._previousDataSize) {
+      this._removeDygraph();
+    }
+  }
+
+  _removeDygraph() {
     let {model} = this.props.metaData;
     let element = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
     let range = element.getElementsByClassName(RANGE_SELECTOR_CLASS)[0];
@@ -101,25 +119,14 @@ export default class Chart extends React.Component {
     }
   }
 
-  componentDidUpdate() {
-    if (this._dygraph && this.props.data.length > 1) {
-      this._chartUpdate();
-    } else if (this.props.data.length) {
-      this._chartInitalize();
-    }
-  }
-
-  componentWillUpdate() {
-    if (this.props.data.length < this._previousDataSize) {
-      this.componentWillUnmount();
-    }
-  }
-
   /**
    * DyGrpahs Chart Initalize and Render
    */
   _chartInitalize() {
     let {data, metaData, options} = this.props;
+
+    if (data.length < 2) return;
+
     let {metric, model} = metaData;
     let element = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
     let first = data[0][DATA_INDEX_TIME].getTime();
@@ -138,9 +145,9 @@ export default class Chart extends React.Component {
     // init, render, and draw chart!
     options.labelsUTC = true;
     options.dateWindow = this._chartRange;  // update viewport of range selector
-    options.axes.y.valueRange = [metaData.min, metaData.max];
     this._previousDataSize = data.length;
-    this._dygraph = new Dygraph(element, data, options);
+    this._dygraph = new CustomDygraph(element, data, options,
+                                      this.props.yScaleCalculate);
 
     // after: track chart viewport position changes
     rangeEl = element.getElementsByClassName(RANGE_SELECTOR_CLASS)[0];
@@ -153,8 +160,11 @@ export default class Chart extends React.Component {
    */
   _chartUpdate() {
     let {data, metaData, options} = this.props;
-    let {model} = metaData;
-    let modelIndex = Math.abs(model.dataSize - 1);
+
+    if (data.length < 1) return;
+
+    let {model, modelData} = metaData;
+    let modelIndex = Math.abs(modelData.data.length - 1);
     let first = data[0][DATA_INDEX_TIME].getTime();
     let [rangeMin, rangeMax] = this._chartRange;
     let rangeWidth = rangeMax - rangeMin;
@@ -180,7 +190,6 @@ export default class Chart extends React.Component {
     }
 
     // update chart
-    options.axes.y.valueRange = [metaData.min, metaData.max];
     options.dateWindow = this._chartRange;
     options.file = data;  // new data
     this._previousDataSize = data.length;

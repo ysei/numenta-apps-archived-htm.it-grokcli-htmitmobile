@@ -18,17 +18,16 @@
 import connectToStores from 'fluxible-addons-react/connectToStores';
 import moment from 'moment';
 import React from 'react';
-
 import anomalyBarChartUnderlay from '../lib/Dygraphs/AnomalyBarChartUnderlay';
 import axesCustomLabelsUnderlay from '../lib/Dygraphs/AxesCustomLabelsUnderlay';
 import highlightedProbationUnderlay from '../lib/Dygraphs/HighlightedProbationUnderlay';
 import Chart from './Chart';
 import {DATA_FIELD_INDEX} from '../lib/Constants';
-import Dygraph from '../lib/Dygraphs/DygraphsExtended';
+import Dygraph from 'dygraphs';
 import {
   formatDisplayValue, mapAnomalyColor
 } from '../lib/browser-utils';
-import {binarySearch, mapAnomalyText} from '../../common/common-utils';
+import {anomalyScale, binarySearch, mapAnomalyText} from '../../common/common-utils';
 import MetricStore from '../stores/MetricStore';
 import MetricDataStore from '../stores/MetricDataStore';
 import ModelStore from '../stores/ModelStore';
@@ -100,20 +99,20 @@ function insertIntoGaps(data, vals) {
  *                                        (in addition to the aggregated data)
  * @returns {Array} - Tuple:
  *                    Array: Dygraphs multi-dimensional array
- *                    boolean: minVal
- *                    boolean: maxVal
+ *                    Array: The x values in the prepared data
+ *                    Array: The y values in the prepared data
  * @see http://dygraphs.com/tests/independent-series.html
  */
 function prepareData(
   metricRecords, modelRecords, aggregated, rawDataInBackground) {
-  let minVal = Number.POSITIVE_INFINITY;
-  let maxVal = Number.NEGATIVE_INFINITY;
+  let xValues = [];
+  let yValues = [];
 
   let aggregatedChartData = null;
   if (modelRecords.length && aggregated) {
     modelRecords.forEach((item) => {
-      minVal = Math.min(minVal, item[DATA_INDEX_VALUE]);
-      maxVal = Math.max(maxVal, item[DATA_INDEX_VALUE]);
+      xValues.push(item[DATA_INDEX_TIME]);
+      yValues.push(item[DATA_INDEX_VALUE]);
     });
 
     if (rawDataInBackground) {
@@ -137,8 +136,8 @@ function prepareData(
   let rawChartData = null;
   if (metricRecords.length && (!aggregated || rawDataInBackground)) {
     metricRecords.forEach((item) => {
-      minVal = Math.min(minVal, item[DATA_INDEX_VALUE]);
-      maxVal = Math.max(maxVal, item[DATA_INDEX_VALUE]);
+      xValues.push(item[DATA_INDEX_TIME]);
+      yValues.push(item[DATA_INDEX_VALUE]);
     });
 
     if (rawDataInBackground) {
@@ -163,7 +162,66 @@ function prepareData(
     aggregatedChartData, rawChartData,
     (a, b) => a[DATA_INDEX_TIME].getTime() - b[DATA_INDEX_TIME].getTime());
 
-  return [data, minVal, maxVal];
+  return [data, xValues, yValues];
+}
+
+/**
+ * Determine a y scale using the seen and unseen y values.
+ *
+ * If we base the y scale on the maximum and minimum for the entire time series,
+ * datasets that have large spikes become mostly unreadable. The y scale should
+ * change based on the range of visible values.
+ *
+ * If we base the y scale on the visible minimum and maximum, the chart is
+ * deceptive. As you view different part of the time series, the fact that the
+ * data's peaks and troughs are changing is obscured.
+ *
+ * Current strategy: by default, use a fixed scale, but make sure the visible
+ * data is using at least 20% of the vertical space. If it's not, change the
+ * scale so that it is.
+ *
+ * Additionally, make room for green anomaly bars.
+ *
+ * @param {Object} context - a ModelData instance
+ * @param {Dygraph} g - a Dygraph instance
+ * @returns {Array} the new y extent [min, max]
+ */
+function yScaleCalculate(context, g) {
+  let xExtentVisible = g.xAxisRange();
+  let xValues = context._xValues;
+  let yValues = context._yValues;
+  let yExtentVisible = [Infinity, -Infinity];
+  for (let i = 0; i < xValues.length; i++) {
+    if (xValues[i] < xExtentVisible[0]) continue;
+    if (xValues[i] > xExtentVisible[1]) break;
+
+    yExtentVisible[0] = Math.min(yExtentVisible[0], yValues[i]);
+    yExtentVisible[1] = Math.max(yExtentVisible[1], yValues[i]);
+  }
+
+  let ySpread = context._yExtent[1] - context._yExtent[0];
+  let ySpreadVisible = yExtentVisible[1] - yExtentVisible[0];
+  let spreadCovered = ySpreadVisible / ySpread;
+  let minVerticalSpaceUsage = 1/5;
+
+  let yExtentAdjusted;
+
+  if (spreadCovered < minVerticalSpaceUsage) {
+    let adjustment = spreadCovered / minVerticalSpaceUsage;
+    yExtentAdjusted = [
+      yExtentVisible[0] -
+        (yExtentVisible[0] - context._yExtent[0]) * adjustment,
+      yExtentVisible[1] +
+        (context._yExtent[1] - yExtentVisible[1]) * adjustment
+    ];
+  } else {
+    yExtentAdjusted = [context._yExtent[0], context._yExtent[1]];
+  }
+
+  yExtentAdjusted[0] -= (yExtentAdjusted[1] -
+                         yExtentAdjusted[0])*anomalyScale(0);
+
+  return yExtentAdjusted;
 }
 
 /**
@@ -218,13 +276,16 @@ export default class ModelData extends React.Component {
     }
     this._anomalyBarWidth = Math.round(displayPointCount / 16, 10);
 
+    this._yScaleCalculate = function (context, dygraph) {
+      return yScaleCalculate(context, dygraph);
+    }.bind(null, this);
+
     // Dygraphs Chart Options: Global and per-Series/Axis settings.
     this._chartOptions = {
       // Dygraphs global chart options
       options: {
         axisLineColor: muiTheme.rawTheme.palette.accent4Color,
         connectSeparatedPoints: true,  // required for raw+agg overlay
-        includeZero: true,
         interactionModel: Dygraph.Interaction.dragIsPanInteractionModel,
         labelsShowZeroValues: true,
         labelsDiv: `legend-${props.modelId}`,
@@ -238,7 +299,7 @@ export default class ModelData extends React.Component {
           anomalyBarChartUnderlay(context, ...args);
         }.bind(null, this),
         xRangePad: 0,
-        yRangePad: 0
+        yRangePad: 4
       },
 
       // main value data chart line (could be either Raw OR Aggregated data)
@@ -364,48 +425,64 @@ export default class ModelData extends React.Component {
     return true;
   }
 
-  render() {
-    let {
-      metric, metricData, model, modelData, showNonAgg, modelId
-    } = this.props;
+  _calculateState(props) {
+    let {metric, metricData, model, modelData, showNonAgg} = props;
     let {options, raw, value} = this._chartOptions;
-    let {axes, labels, series} = value;
-    let metaData = {metric, model, min: -Infinity, max: Infinity};
 
-    if (metricData.length) {
-      metaData.metric.dataSize = metricData.length;
-    }
+    metric.dataSize = metricData.length;
+    model.dataSize = modelData.data.length;
 
-    if (modelData.data.length) {
+    if (model.dataSize) {
       options.modelData = modelData.data;
-      metaData.model.dataSize = modelData.data.length;
     }
 
     const rawDataInBackground = (modelData.data.length &&
                                  model.aggregated &&
                                  showNonAgg);
+
+    // Calculate axes, labels, and series. Grab them from the "value" options,
+    // maybe insert the "raw" options, then overwrite the actual "options" that
+    // get passed into Dygraphs.
+    let {axes, labels, series} = value;
     if (rawDataInBackground) {
       labels = labels.concat(raw.labels);
       Object.assign(axes, raw.axes);
       Object.assign(series, raw.series);
     }
-
-    let [data, minVal, maxVal] = prepareData(metricData, modelData.data,
-                                             model.aggregated,
-                                             rawDataInBackground);
-
-    metaData.min = minVal;
-    metaData.max = maxVal;
-
-    // RENDER
     Object.assign(options, {axes, labels, series});
+
+    let [data, xValues, yValues] = prepareData(metricData, modelData.data,
+                                               model.aggregated,
+                                               rawDataInBackground);
+
+    this._data = data;
+    this._xValues = xValues;
+    this._yValues = yValues;
+    this._yExtent = [Math.min(...yValues),
+                     Math.max(...yValues)];
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+    this._calculateState(nextProps);
+  }
+
+  componentWillMount() {
+    this._calculateState(this.props);
+  }
+
+  render() {
+    let {metric, model, modelData, modelId} = this.props;
+    let metaData = {metric, model, modelData};
+
     return (
       <div style={this._styles.container}>
         <section style={this._styles.legendSection}>
           <span id={`legend-${modelId}`} style={this._styles.legend}></span>
         </section>
         <section>
-          <Chart data={data} metaData={metaData} options={options} />
+          <Chart data={this._data} metaData={metaData}
+                 options={this._chartOptions.options}
+                 yScaleCalculate={this._yScaleCalculate}/>
         </section>
       </div>
     );
