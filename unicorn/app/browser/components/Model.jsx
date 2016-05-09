@@ -359,8 +359,9 @@ export default class Model extends React.Component {
     let {model, file, valueField, timestampField} = this.props;
     let title = model.metric;
 
+    // Fixme: UNI-440
     // The convention is to ignore timezones when rendering or exporting time
-    // in the app.
+    // in the app until UNI-440 is fixed.
     let exportedTimestampFormat = timestampField.format;
     if (exportedTimestampFormat.slice(-1) === 'Z') {
       exportedTimestampFormat = timestampField.format.slice(0, -1);

@@ -782,8 +782,9 @@ describe('DatabaseService:', () => {
       service.putModelDataBatch(BATCH_MODEL_DATA, (error) => {
         assert.ifError(error);
 
+        // Fixme: UNI-440
         // The convention is to ignore timezones when rendering or exporting time
-        // in the app.
+        // in the app until UNI-440 is fixed.
         let exportedTimestampFormat = EXPECTED_TIMESTAMP.format;
         if (exportedTimestampFormat.slice(-1) === 'Z') {
           exportedTimestampFormat = EXPECTED_TIMESTAMP.format.slice(0, -1);
