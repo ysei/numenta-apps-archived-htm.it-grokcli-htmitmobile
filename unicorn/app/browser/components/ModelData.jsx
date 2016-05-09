@@ -408,11 +408,11 @@ export default class ModelData extends React.Component {
    * @return {string}           Human readable time period description.
    *                            For example:
    *                              All
-   *                            	15 minutes
-   *                            	8 hours
-   *                            	1 day
-   *                            	2 weeks
-   *                            	6 months
+   *                              15 minutes
+   *                              8 hours
+   *                              1 day
+   *                              2 weeks
+   *                              6 months
    */
   _describeZoomLevel(zoomLevel) {
     if (zoomLevel === 1) {
