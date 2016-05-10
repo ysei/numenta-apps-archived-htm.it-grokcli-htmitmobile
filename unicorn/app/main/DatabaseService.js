@@ -560,13 +560,17 @@ export class DatabaseService {
    * @param  {string}   metricId The metric from which to export results
    * @param  {string}   filename Full path name for the destination file (.csv)
    * @param  {string}   timestampFormat Format of the timestamp
+   * @param  {number}   probationLength Number of records under probation
    * @param  {Function} callback called when the export operation is complete,
    *                             with a possible error argument
    */
-  exportModelData(metricId, filename, timestampFormat, callback) {
+  exportModelData(metricId, filename, timestampFormat, probationLength,
+      callback) {
     const output = fs.createWriteStream(filename);
     const parser = json2csv();
     parser.pipe(output);
+    let idx = 0;
+    let score;
 
     // Metric Data id is based on metric Id. See Util.generateMetricDataId
     this._modelData.createValueStream({
@@ -578,13 +582,18 @@ export class DatabaseService {
       callback(error);
     })
     .on('data', (result) => {
+      if (++idx <= probationLength) {
+        score = null;
+      } else {
+        score = result.anomaly_score;
+      }
       let data = {
         // Don't include time zone. The model runner doesn't send time zone
         // info, and the time zone may not be UTC.
         timestamp: moment.utc(result.timestamp)
               .format(timestampFormat),
         metric_value: result.metric_value,
-        anomaly_level: mapAnomalyText(result.anomaly_score),
+        anomaly_level: mapAnomalyText(score),
         raw_anomaly_score: result.anomaly_score
       };
       parser.write(JSON.stringify(data));

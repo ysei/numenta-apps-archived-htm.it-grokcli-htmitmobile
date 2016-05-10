@@ -18,7 +18,7 @@
 import RGBColor from 'rgbcolor';
 
 import {anomalyScale} from '../../../common/common-utils';
-import {DATA_FIELD_INDEX} from '../Constants';
+import {DATA_FIELD_INDEX, PROBATION_LENGTH} from '../Constants';
 import {mapAnomalyColor} from '../../lib/browser-utils';
 
 const {DATA_INDEX_TIME, DATA_INDEX_ANOMALY} = DATA_FIELD_INDEX;
@@ -60,10 +60,13 @@ export default function (context, canvas, area, dygraph) {
   let safeColor = context.context.muiTheme.rawTheme.palette.safeColor;
   let height = area.h;
   let halfBarWidth = Math.ceil(barWidth / 2);
+  let barHeight, probationIndex;
 
   if (!(modelData.length)) {
     return;  // no anomaly data, no draw bars.
   }
+
+  probationIndex = Math.min(PROBATION_LENGTH, modelData.length);
 
   for (let index=0; index<modelData.length; index++) {
     (function (i) {  // help data survive loop closure
@@ -77,15 +80,19 @@ export default function (context, canvas, area, dygraph) {
       value = modelData[i][DATA_INDEX_ANOMALY];
       x = Math.round(dygraph.toDomXCoord(time) - halfBarWidth);
 
-      // draw: every point has small green marker "bar" by default
-      _drawRectangle(canvas, x, height - 1, barWidth, -2, safeColor);
-
       if (isFinite(x) && (value >= 0)) {
         // draw: real anomaly bar
-        let barHeight = Math.round(anomalyScale(value) * height);
+        if (index < probationIndex) {
+          barHeight = Math.round(anomalyScale(0) * height);
+          value = null;
+        } else {
+          barHeight = Math.round(anomalyScale(value) * height);
+        }
         y = 0 - barHeight;
         color = mapAnomalyColor(value);
         _drawRectangle(canvas, x, height - 1, barWidth, y, color);
+      } else {
+        _drawRectangle(canvas, x, height - 1, barWidth, -2, safeColor);
       }
     }(index));  // help data survive loop closure
   }  // for loop modelData
