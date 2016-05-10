@@ -221,8 +221,8 @@ const EXPECTED_MODEL_DATA = Array.from([
 
 const EXPECTED_EXPORTED_RESULTS =
   `timestamp,metric_value,anomaly_level,raw_anomaly_score
-2015-08-26T02:47:09,1,HIGH,1
-2015-08-26T02:48:31,1,HIGH,1
+2015-08-26T02:47:09,1,N/A,1
+2015-08-26T02:48:31,1,N/A,1
 2015-08-26T02:49:31,1,HIGH,1
 2015-08-26T02:50:31,1,HIGH,1`;
 
@@ -789,7 +789,7 @@ describe('DatabaseService:', () => {
         if (exportedTimestampFormat.slice(-1) === 'Z') {
           exportedTimestampFormat = EXPECTED_TIMESTAMP.format.slice(0, -1);
         }
-        service.exportModelData(EXPECTED_METRIC_ID, EXPORTED_FILENAME, exportedTimestampFormat, (error, res) => {
+        service.exportModelData(EXPECTED_METRIC_ID, EXPORTED_FILENAME, exportedTimestampFormat, 2, (error, res) => {
           assert.ifError(error);
           fs.readFile(EXPORTED_FILENAME, 'utf8', (error, data) => {
             assert.ifError(error);

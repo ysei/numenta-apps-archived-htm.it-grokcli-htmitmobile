@@ -16,7 +16,7 @@
 // http://numenta.org/licenses/
 
 
-import {ACTIONS} from '../lib/Constants';
+import {ACTIONS, PROBATION_LENGTH} from '../lib/Constants';
 
 
 /**
@@ -33,16 +33,17 @@ export default function (actionContext, payload) {
   return new Promise((resolve, reject) => {
     let {modelId, filename, timestampFormat} = payload;
     let database = actionContext.getDatabaseClient();
-    database.exportModelData(modelId, filename, timestampFormat, (error) => {
-      if (error) {
-        actionContext.dispatch(ACTIONS.EXPORT_MODEL_RESULTS_FAILED, error);
-        reject(error);
-      } else {
-        actionContext.dispatch(ACTIONS.EXPORT_MODEL_RESULTS, {
-          modelId, filename, timestampFormat
-        });
-        resolve();
-      }
-    });
+    database.exportModelData(
+      modelId, filename, timestampFormat, PROBATION_LENGTH, (error) => {
+        if (error) {
+          actionContext.dispatch(ACTIONS.EXPORT_MODEL_RESULTS_FAILED, error);
+          reject(error);
+        } else {
+          actionContext.dispatch(ACTIONS.EXPORT_MODEL_RESULTS, {
+            modelId, filename, timestampFormat
+          });
+          resolve();
+        }
+      });
   })
 }
