@@ -32,6 +32,9 @@ rm /usr/local/share/man/man1/brew-cask.1
 sudo -u vagrant -i brew tap --repair
 sudo -u vagrant -i brew update
 
+# Install cmake with homebrew
+sudo -u vagrant -i brew install cmake
+
 # Install NVM
 sudo -u vagrant -i brew uninstall node
 sudo -u vagrant -i brew install nvm
