@@ -333,18 +333,9 @@ export default class ModelData extends React.Component {
       // non-aggregated line chart overlay on top of aggregated data line chart
       raw: {
         labels: ['NonAggregated'],
-        axes: {
-          y2: {
-            axisLabelOverflow: false,
-            axisLabelWidth: 0,
-            drawAxis: false,
-            drawGrid: false,
-            valueFormatter: ::this._legendValueFormatter
-          }
-        },
         series: {
           NonAggregated: {
-            axis: 'y2',
+            axis: 'y',
             color: muiTheme.rawTheme.palette.primary1Color,  // light blue
             independentTicks: false,
             showInRangeSelector: false,
