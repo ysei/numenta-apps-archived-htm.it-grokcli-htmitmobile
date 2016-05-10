@@ -20,9 +20,9 @@ import moment from 'moment';
 import React from 'react';
 import anomalyBarChartUnderlay from '../lib/Dygraphs/AnomalyBarChartUnderlay';
 import axesCustomLabelsUnderlay from '../lib/Dygraphs/AxesCustomLabelsUnderlay';
+import chartInteraction from '../lib/Dygraphs/ChartInteraction.js';
 import Chart from './Chart';
 import {DATA_FIELD_INDEX, PROBATION_LENGTH} from '../lib/Constants';
-import Dygraph from 'dygraphs';
 import {
   formatDisplayValue, mapAnomalyColor
 } from '../lib/browser-utils';
@@ -285,7 +285,7 @@ export default class ModelData extends React.Component {
       options: {
         axisLineColor: muiTheme.rawTheme.palette.accent4Color,
         connectSeparatedPoints: true,  // required for raw+agg overlay
-        interactionModel: Dygraph.Interaction.dragIsPanInteractionModel,
+        interactionModel: chartInteraction,
         labelsShowZeroValues: true,
         labelsDiv: `legend-${props.modelId}`,
         plugins: [RangeSelectorBarChart],
