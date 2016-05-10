@@ -20,9 +20,8 @@ import moment from 'moment';
 import React from 'react';
 import anomalyBarChartUnderlay from '../lib/Dygraphs/AnomalyBarChartUnderlay';
 import axesCustomLabelsUnderlay from '../lib/Dygraphs/AxesCustomLabelsUnderlay';
-import highlightedProbationUnderlay from '../lib/Dygraphs/HighlightedProbationUnderlay';
 import Chart from './Chart';
-import {DATA_FIELD_INDEX} from '../lib/Constants';
+import {DATA_FIELD_INDEX, PROBATION_LENGTH} from '../lib/Constants';
 import Dygraph from 'dygraphs';
 import {
   formatDisplayValue, mapAnomalyColor
@@ -294,7 +293,6 @@ export default class ModelData extends React.Component {
         rangeSelectorPlotStrokeColor: muiTheme.rawTheme.palette.primary1Color,
         showRangeSelector: true,
         underlayCallback: function (context, ...args) {
-          highlightedProbationUnderlay(context, ...args);
           axesCustomLabelsUnderlay(context, ...args);
           anomalyBarChartUnderlay(context, ...args);
         }.bind(null, this),
@@ -385,7 +383,9 @@ export default class ModelData extends React.Component {
         return current[DATA_INDEX_TIME].getTime() - key;
       });
       let anomalyValue;
-      if (anomalyIdx >= 0) {
+      if (anomalyIdx < PROBATION_LENGTH) {
+        anomalyValue = null;
+      } else if (anomalyIdx >= 0) {
         // Found exact value
         anomalyValue = modelData[anomalyIdx][DATA_INDEX_ANOMALY];
       } else {
@@ -399,7 +399,7 @@ export default class ModelData extends React.Component {
                                 modelData[second][DATA_INDEX_ANOMALY]);
       }
       // Format anomaly value
-      if (anomalyValue) {
+      if (anomalyValue || anomalyValue === null) {
         let color = mapAnomalyColor(anomalyValue);
         let anomalyText = mapAnomalyText(anomalyValue);
         displayValue += ` <font color="${color}"><b>Anomaly: ${anomalyText}` +
