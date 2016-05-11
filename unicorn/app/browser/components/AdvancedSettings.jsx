@@ -94,11 +94,14 @@ export default class AdvancedSettings extends React.Component {
         tooltipIcon: {
           display: 'inline-block',
           verticalAlign: 'middle',
-          width: '24px',
-          padding: '12px 0'
+          width: '20px',
+          height: '20px',
+          padding: '0 0 0 10px',
+          fill: muiTheme.rawTheme.palette.accent3Color
         },
         tooltip: {
-          fontSize: 14
+          fontSize: 14,
+          zIndex: '1000px'
         },
         listItemWrapper: {
           display: 'inline-block',
@@ -237,23 +240,32 @@ export default class AdvancedSettings extends React.Component {
                                            />}
                           />}
             primaryText={
-              this._config.get('dialog:model:create:advanced:aggData')}
+              this._config.get('dialog:model:create:advanced:aggData:label')}
             style={this._styles.checkbox.label}
           />
         </div>
         <IconButton
           style={this._styles.aggregateData.tooltipIcon}
           tooltipStyles={this._styles.aggregateData.tooltip}
-          tooltip={this._config.get('dialog:model:create:advanced:tooltip')}
-          tooltipPosition="bottom-right"
+          tooltip={this._config.get('dialog:model:create:advanced:' +
+                                    'aggData:tooltip')}
+          tooltipPosition="top-right"
         >
           <img src="assets/images/tooltip.svg" alt="Tooltip" />
         </IconButton>
         <div style={this._styles.aggregateData}>
           <label style={labelStyle}>
-            {this._config.get('dialog:model:create:advanced:aggWindow')}
+            {this._config.get('dialog:model:create:advanced:aggWindow:label')}
+            <IconButton
+              style={this._styles.aggregateData.tooltipIcon}
+              tooltipStyles={this._styles.aggregateData.tooltip}
+              tooltip={this._config.get('dialog:model:create:advanced:' +
+                                        'aggWindow:tooltip')}
+              tooltipPosition="top-right"
+            >
+              <img src="assets/images/tooltip.svg" alt="Tooltip" />
+            </IconButton>
           </label>
-
           <div style={windowSizeStyle}>
             <TextField
               style={this._styles.aggregateData.aggWindowField}
@@ -294,7 +306,16 @@ export default class AdvancedSettings extends React.Component {
           </div>
 
           <label style={labelStyle}>
-            {this._config.get('dialog:model:create:advanced:aggMethod')}
+            {this._config.get('dialog:model:create:advanced:aggMethod:label')}
+            <IconButton
+              style={this._styles.aggregateData.tooltipIcon}
+              tooltipStyles={this._styles.aggregateData.tooltip}
+              tooltip={this._config.get('dialog:model:create:advanced:' +
+                                        'aggMethod:tooltip')}
+              tooltipPosition="top-right"
+            >
+              <img src="assets/images/tooltip.svg" alt="Tooltip" />
+            </IconButton>
           </label>
           <RadioButtonGroup name="aggregationMethod"
                             defaultSelected="mean"

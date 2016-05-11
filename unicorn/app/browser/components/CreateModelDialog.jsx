@@ -19,12 +19,8 @@ import AdvancedSettings from './AdvancedSettings'
 import CircularProgress from 'material-ui/lib/circular-progress';
 import connectToStores from 'fluxible-addons-react/connectToStores';
 import Dialog from 'material-ui/lib/dialog';
-import FlatButton from 'material-ui/lib/flat-button';
 import path from 'path';
 import RaisedButton from 'material-ui/lib/raised-button';
-import IconButton from 'material-ui/lib/icon-button';
-import IconClose from 'material-ui/lib/svg-icons/hardware/keyboard-arrow-down';
-import IconOpen from 'material-ui/lib/svg-icons/hardware/keyboard-arrow-up';
 import React from 'react';
 
 
@@ -75,12 +71,15 @@ export default class CreateModelDialog extends React.Component {
         top: 16
       },
       advancedButton: {
-        display: 'inline-block',
-        verticalAlign: 'middle',
+        position: 'absolute',
+        bottom: '18px',
+        left: '25px',
+        cursor: 'pointer',
         color: muiTheme.rawTheme.palette.primary1Color,
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: muiTheme.rawTheme.font.weight.normal,
-        textTransform: 'none'
+        textTransform: 'none',
+        textDecoration: 'none'
       },
       toggle: {
         padding: '12px 0',
@@ -136,22 +135,27 @@ export default class CreateModelDialog extends React.Component {
         aggOpts: aggregateData ? modelRunnerParams.aggInfo : {}
       };
 
-      let AdvancedSection, toggleIcon;
-      
+      let AdvancedSection, advancedButtonText;
+
       // choose file visibility toggle icon
       if (this.state.showAdvanced) {
-        toggleIcon = (<IconOpen />);
         AdvancedSection = (<AdvancedSettings
                               aggregateData={aggregateData}
                               modelRunnerParams={modelRunnerParams}
                            />);
+        advancedButtonText = this._config.get('dialog:model:create:' +
+                                              'advanced:hideAdvanced')
       } else {
-        toggleIcon = (<IconClose />);
         AdvancedSection = (<div></div>);
+        advancedButtonText = this._config.get('dialog:model:create:' +
+                                              'advanced:showAdvanced')
       }
 
       let description = '';
-      if (recommendAgg) {
+      if (this.state.showAdvanced) {
+        description = this._config.get('dialog:model:create:' +
+                                       'advanced:description')
+      } else if (recommendAgg) {
         description = this._config.get('dialog:model:create:recommendAggregate')
       } else {
         description = this._config.get('dialog:model:create:recommendRaw')
@@ -161,23 +165,16 @@ export default class CreateModelDialog extends React.Component {
         <div>
           {description}
           {AdvancedSection}
+          <a className="advancedButtonLink"
+             href="#"
+             style={this._styles.advancedButton}
+             onClick={this._handleAdvancedOptions.bind(this)}
+          >
+            {advancedButtonText}
+          </a>
         </div>
       );
 
-      actions.push(
-        <FlatButton
-          label={this._config.get('dialog:model:create:advanced:buttonText')}
-          onTouchTap={this._handleAdvancedOptions.bind(this)}
-          linkButton={true}
-          secondary={true}
-          style={this._styles.advancedButton}
-          icon={<IconButton style={this._styles.toggle}
-                            iconStyle={this._styles.toggleIcon}
-                >
-                  {toggleIcon}
-                </IconButton>}
-        />
-      );
       actions.push(
         <RaisedButton
           label={this._config.get('button:cancel')}
