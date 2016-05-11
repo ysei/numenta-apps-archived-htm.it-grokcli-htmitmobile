@@ -225,18 +225,7 @@ function prepareData(
 /**
  * Determine a y scale using the seen and unseen y values.
  *
- * If we base the y scale on the maximum and minimum for the entire time series,
- * datasets that have large spikes become mostly unreadable. The y scale should
- * change based on the range of visible values.
- *
- * If we base the y scale on the visible minimum and maximum, the chart is
- * deceptive. As you view different part of the time series, the fact that the
- * data's peaks and troughs are changing is obscured.
- *
- * Current strategy: by default, use a fixed scale, but make sure the visible
- * data is using at least 20% of the vertical space. If it's not, change the
- * scale so that it is.
- *
+ * Current strategy: use the minimum and maximum for the entire time series.
  * Additionally, make room for green anomaly bars.
  *
  * @param {Object} context - a ModelData instance
@@ -244,39 +233,11 @@ function prepareData(
  * @returns {Array} the new y extent [min, max]
  */
 function yScaleCalculate(context, g) {
-  let xExtentVisible = g.xAxisRange();
-  let xValues = context._xValues;
-  let yValues = context._yValues;
-  let yExtentVisible = [Infinity, -Infinity];
-  for (let i = 0; i < xValues.length; i++) {
-    if (xValues[i] < xExtentVisible[0]) continue;
-    if (xValues[i] > xExtentVisible[1]) break;
+  let yExtentAdjusted = [context._yExtent[0], context._yExtent[1]];
 
-    yExtentVisible[0] = Math.min(yExtentVisible[0], yValues[i]);
-    yExtentVisible[1] = Math.max(yExtentVisible[1], yValues[i]);
-  }
-
-  let ySpread = context._yExtent[1] - context._yExtent[0];
-  let ySpreadVisible = yExtentVisible[1] - yExtentVisible[0];
-  let spreadCovered = ySpreadVisible / ySpread;
-  let minVerticalSpaceUsage = 1/5;
-
-  let yExtentAdjusted;
-
-  if (spreadCovered < minVerticalSpaceUsage) {
-    let adjustment = spreadCovered / minVerticalSpaceUsage;
-    yExtentAdjusted = [
-      yExtentVisible[0] -
-        (yExtentVisible[0] - context._yExtent[0]) * adjustment,
-      yExtentVisible[1] +
-        (context._yExtent[1] - yExtentVisible[1]) * adjustment
-    ];
-  } else {
-    yExtentAdjusted = [context._yExtent[0], context._yExtent[1]];
-  }
-
-  yExtentAdjusted[0] -= (yExtentAdjusted[1] -
-                         yExtentAdjusted[0])*anomalyScale(0);
+  // Add space for green anomaly bars.
+  yExtentAdjusted[0] -= anomalyScale(0) * (yExtentAdjusted[1] -
+                                           yExtentAdjusted[0]);
 
   return yExtentAdjusted;
 }
