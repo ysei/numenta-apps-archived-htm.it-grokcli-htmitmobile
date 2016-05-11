@@ -15,6 +15,7 @@
 //
 // http://numenta.org/licenses/
 import BaseStore from 'fluxible/addons/BaseStore';
+import _ from 'lodash';
 
 export default class CreateModelStore extends BaseStore {
   static get storeName() {
@@ -31,22 +32,46 @@ export default class CreateModelStore extends BaseStore {
       SHOW_CREATE_MODEL_DIALOG: '_handleShowCreateModelDialog',
       HIDE_CREATE_MODEL_DIALOG: '_handleHideCreateModelDialog',
       START_PARAM_FINDER: '_handleStartParamFinder',
-      RECEIVE_PARAM_FINDER_DATA: '_handleReceiveParamFinderData'
+      RECEIVE_PARAM_FINDER_DATA: '_handleReceiveParamFinderData',
+      OVERRIDE_PARAM_FINDER_RESULTS: '_handleOverrideParamFinderResults',
+      TOGGLE_AGGREGATE_DATA: '_handleToggleAggregateData'
     }
   }
   constructor(dispatcher) {
     super(dispatcher);
     this._reset();
   }
+
+  modelRunnerParams() {
+    return _.merge({}, this.paramFinderResults, this.userParamOverrides);
+  }
+
+  recommendAggregation() {
+    return Boolean(_.get(this.paramFinderResults, 'aggInfo'));
+  }
+
   _reset() {
     // CreateModelDialog
     this.fileName = null;
     this.metricId = null;
     this.metricName = null;
-    this.open = false;
+    this.aggregateData = false;
     // Param Finder
     this.paramFinderResults = null;
+    this.userParamOverrides = null;
     this.inputOpts = null;
+  }
+
+  _setDefaultOverrides() {
+    let defaultOverrides = {
+      aggInfo: {
+        windowSize: 0,
+        func: 'mean'
+      }
+    };
+    this.userParamOverrides = _.merge({},
+                                      this.userParamOverrides,
+                                      defaultOverrides)
   }
 
 
@@ -59,7 +84,6 @@ export default class CreateModelStore extends BaseStore {
   _handleShowCreateModelDialog(payload) {
     this.fileName = payload.fileName;
     this.metricName = payload.metricName;
-    this.open = true;
     this.emitChange();
   }
 
@@ -71,6 +95,20 @@ export default class CreateModelStore extends BaseStore {
   _handleReceiveParamFinderData(payload) {
     this.paramFinderResults = JSON.parse(payload.paramFinderResults);
     this.metricId = payload.metricId;
+    this.emitChange();
+  }
+
+  _handleOverrideParamFinderResults(payload) {
+    if (!_.get(this.paramFinderResults, 'aggInfo') &&
+        !_.get(this.userParamOverrides, 'aggInfo')) {
+      this._setDefaultOverrides();
+    }
+    this.userParamOverrides = _.merge({}, this.userParamOverrides, payload);
+    this.emitChange();
+  }
+
+  _handleToggleAggregateData(payload) {
+    this.aggregateData = payload.aggregateData;
     this.emitChange();
   }
 }

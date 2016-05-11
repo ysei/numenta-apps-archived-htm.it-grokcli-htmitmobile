@@ -64,6 +64,7 @@ export default class Chart extends React.Component {
 
   constructor(props, context) {
     super(props, context);
+    this._scrollLock = true;
     this._config = this.context.getConfigClient();
 
     // DyGraphs chart container
@@ -163,31 +164,19 @@ export default class Chart extends React.Component {
 
     if (data.length < 1) return;
 
-    let {model, modelData} = metaData;
-    let modelIndex = Math.abs(modelData.data.length - 1);
-    let first = data[0][DATA_INDEX_TIME].getTime();
+    let {model} = metaData;
     let [rangeMin, rangeMax] = this._chartRange;
-    let rangeWidth = rangeMax - rangeMin;
-    let scrollLock = false;
 
-    // should we scroll along with incoming model data?
-    if (model.active && (modelIndex < data.length) && (
-      (model.aggregated && (data.length !== this._previousDataSize)) ||
-      (!model.aggregated)
-    )) {
-      scrollLock = true;
-    }
-
-    // scroll along with fresh anomaly model data input.
-    if (scrollLock) {
-      rangeMax = data[modelIndex][DATA_INDEX_TIME].getTime();
-      rangeMin = rangeMax - rangeWidth;
-      if (rangeMin < first) {
-        rangeMin = first;
-        rangeMax = rangeMin + rangeWidth;
+    if (model.active && this._scrollLock) {
+      let rangeWidth = rangeMax - rangeMin;
+      if (model.aggregated) {
+        rangeMax = data[data.length - 1][DATA_INDEX_TIME].getTime();
+      } else if (model.dataSize > 0) {
+        rangeMax = data[model.dataSize - 1][DATA_INDEX_TIME].getTime();
       }
-      this._chartRange = [rangeMin, rangeMax];
+      rangeMin = rangeMax - rangeWidth;
     }
+    this._chartRange = [rangeMin, rangeMax];
 
     // update chart
     options.dateWindow = this._chartRange;
@@ -202,7 +191,8 @@ export default class Chart extends React.Component {
    * @param {Object} event - DOM `mousedown` event object
    */
   _handleMouseDown(event) {
-    if (! this._dygraph) return;
+    if (!this._dygraph) return;
+    this._scrollLock = false;
 
     let eventX = this._dygraph.eventToDomCoords(event)[0];
     let {w: canvasWidth} = this._dygraph.getArea();
@@ -241,7 +231,8 @@ export default class Chart extends React.Component {
    * @param {Object} event - DOM `mouseup` event object
    */
   _handleMouseUp(event) {
-    if (! this._dygraph) return;
+    if (!this._dygraph) return;
+    this._scrollLock = false;
     let range = this._dygraph.xAxisRange();
     this._chartRange = range;
 
@@ -260,20 +251,15 @@ export default class Chart extends React.Component {
     let {model} = this.props.metaData;
 
     if (model.aggregated) {
-      this._styles.root.marginTop = '1rem';  // make room for: ☑ ShowNonAgg?
+      this._styles.root.marginTop = '1rem';  // make room for: ☑ ShowNonAgg
     }
 
     return (
-      <Paper
-        className="dygraph-chart"
-        ref={`chart-${model.modelId}`}
-        style={this._styles.root}
-        zDepth={this.props.zDepth}
-        >
+      <Paper className="dygraph-chart" ref={`chart-${model.modelId}`}
+        style={this._styles.root} zDepth={this.props.zDepth}>
           <CircularProgress className="loading" size={0.5} />
           {this._config.get('chart:loading')}
       </Paper>
     );
   }
-
 }
