@@ -289,23 +289,27 @@ export default class Model extends React.Component {
     let aggOpts = valueField.aggregation_options;
 
     // More info section
-    let recognizeWeeklyPatterns = Boolean(encoders.c0_timeOfWeek);
+    let recognizeWeeklyPatterns = Boolean(encoders.c0_dayOfWeek);
     let recognizeDailyPatterns = Boolean(encoders.c0_timeOfDay);
-    let dataAggregated = Boolean(aggOpts);
+    let dataIsAggregated = Boolean(aggOpts);
 
     let aggregationMessage = 'The data is not aggregated';
-    if (dataAggregated) {
-      let window = moment.duration(aggOpts.windowSize, 'seconds');
+    if (dataIsAggregated) {
+
       let aggregationMethod;
       if (aggOpts.func === 'mean') {
         aggregationMethod = 'average';
-      } else if (aggOpts.fun === 'sum') {
+      } else if (aggOpts.func === 'sum') {
         aggregationMethod = 'sum'
       }
-      aggregationMessage = `The data is aggregated with an aggregation window of
-      ${window.hours()} hours ${window.minutes()} minutes ${window.seconds()}
-      seconds and the aggregation method "${aggregationMethod}" is used to
-      combine the points in each window.`
+
+      if (aggregationMethod) {
+        let window = moment.duration(aggOpts.windowSize, 'seconds');
+        aggregationMessage = `The data is aggregated with an aggregation window
+        of ${window.hours()} hours ${window.minutes()} minutes
+        ${window.seconds()} seconds and the aggregation method
+        "${aggregationMethod}" is used to combine the points in each window.`
+      }
     }
 
     let patternMessage = 'Daily and weekly pattern recognition is disabled.';
