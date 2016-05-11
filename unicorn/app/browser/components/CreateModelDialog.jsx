@@ -15,17 +15,17 @@
 //
 // http://numenta.org/licenses/
 
+import AdvancedSettings from './AdvancedSettings'
 import CircularProgress from 'material-ui/lib/circular-progress';
 import connectToStores from 'fluxible-addons-react/connectToStores';
 import Dialog from 'material-ui/lib/dialog';
-import FlatButton from 'material-ui/lib/flat-button';
 import path from 'path';
 import RaisedButton from 'material-ui/lib/raised-button';
 import React from 'react';
 
+
 import ChartUpdateViewpoint from '../actions/ChartUpdateViewpoint';
 import CreateModelStore from '../stores/CreateModelStore';
-import HideCreateModelDialogAction from '../actions/HideCreateModelDialog';
 import StartModelAction from '../actions/StartModel';
 import {trims} from '../../common/common-utils';
 
@@ -38,8 +38,9 @@ import {trims} from '../../common/common-utils';
   inputOpts: context.getStore(CreateModelStore).inputOpts,
   metricId: context.getStore(CreateModelStore).metricId,
   metricName: context.getStore(CreateModelStore).metricName,
-  open: context.getStore(CreateModelStore).open,
-  paramFinderResults: context.getStore(CreateModelStore).paramFinderResults
+  modelRunnerParams: context.getStore(CreateModelStore).modelRunnerParams(),
+  recommendAgg: context.getStore(CreateModelStore).recommendAggregation(),
+  aggregateData: context.getStore(CreateModelStore).aggregateData
 }))
 export default class CreateModelDialog extends React.Component {
 
@@ -53,7 +54,10 @@ export default class CreateModelDialog extends React.Component {
   constructor(props, context) {
     super(props, context);
     this._config = this.context.getConfigClient();
-    this.state = {progress: true};
+    this.state = {
+      progress: true,
+      showAdvanced: false
+    };
 
     let muiTheme = this.context.muiTheme;
     this._styles = {
@@ -66,15 +70,29 @@ export default class CreateModelDialog extends React.Component {
         position: 'relative',
         top: 16
       },
-      raw: {
-        color: muiTheme.rawTheme.palette.accent4Color,
-        fontSize: 13,
+      advancedButton: {
+        position: 'absolute',
+        bottom: '18px',
+        left: '25px',
+        cursor: 'pointer',
+        color: muiTheme.rawTheme.palette.primary1Color,
+        fontSize: 14,
         fontWeight: muiTheme.rawTheme.font.weight.normal,
-        marginRight: '0.5rem',
-        textDecoration: 'underline',
-        textTransform: 'none'
+        textTransform: 'none',
+        textDecoration: 'none'
+      },
+      toggle: {
+        padding: '12px 0',
+        width: '30px'
+      },
+      toggleIcon: {
+        fill: muiTheme.rawTheme.palette.primary1Color
       }
     };
+  }
+
+  _cancelAnalysis() {
+    this.props.dismiss();
   }
 
   _startModel(payload) {
@@ -84,8 +102,13 @@ export default class CreateModelDialog extends React.Component {
       viewpoint: null
     });
 
-    this.context.executeAction(HideCreateModelDialogAction);
+    this.props.dismiss();
+
     this.context.executeAction(StartModelAction, payload);
+  }
+
+  _handleAdvancedOptions() {
+    this.setState({showAdvanced: !this.state.showAdvanced});
   }
 
   componentDidMount() {
@@ -94,53 +117,79 @@ export default class CreateModelDialog extends React.Component {
   }
 
   render() {
-    let {
-      fileName, inputOpts, metricId, metricName, paramFinderResults
-    } = this.props;
+    let {fileName, inputOpts, metricId, metricName, modelRunnerParams,
+          recommendAgg, aggregateData, open} = this.props;
     let body = null;
     let actions = [];
-    let title = trims`Create model for ${metricName}
-                  (${path.basename(fileName)})`;
+    let message = this._config.get('dialog:model:create:title');
+    let title = trims(
+                  message.replace('%s',
+                                  `${metricName} (${path.basename(fileName)})`)
+                );
 
-    if (paramFinderResults && !this.state.progress) {
-      let rawPayload = {
+    if (modelRunnerParams && !this.state.progress) {
+      let modelRunnerPayload = {
         metricId,
         inputOpts,
-        modelOpts: paramFinderResults.modelInfo,
-        aggOpts: {}
+        modelOpts: modelRunnerParams.modelInfo,
+        aggOpts: aggregateData ? modelRunnerParams.aggInfo : {}
       };
-      if (paramFinderResults.aggInfo) {
-        let aggregatePayload = Object.assign({}, rawPayload, {
-          aggOpts: paramFinderResults.aggInfo
-        });
 
-        body = (
-          <div>
-            We determined that you will get the best results if we aggregate
-            your data to {paramFinderResults.aggInfo.windowSize} seconds
-            intervals.
-          </div>
-        );
+      let AdvancedSection, advancedButtonText;
 
-        actions.push(
-          <FlatButton
-            label={this._config.get('dialog:model:create:raw')}
-            onTouchTap={this._startModel.bind(this, rawPayload)}
-            labelStyle={this._styles.raw}
-            />
-        );
-        actions.push(
-          <RaisedButton
-            label={this._config.get('button:okay')}
-            onTouchTap={this._startModel.bind(this, aggregatePayload)}
-            primary={true}
-            style={this._styles.agg}
-            />
-        );
+      // choose file visibility toggle icon
+      if (this.state.showAdvanced) {
+        AdvancedSection = (<AdvancedSettings
+                              aggregateData={aggregateData}
+                              modelRunnerParams={modelRunnerParams}
+                           />);
+        advancedButtonText = this._config.get('dialog:model:create:' +
+                                              'advanced:hideAdvanced')
       } else {
-        // No aggregation required, just start the model
-        this._startModel(rawPayload);
+        AdvancedSection = (<div></div>);
+        advancedButtonText = this._config.get('dialog:model:create:' +
+                                              'advanced:showAdvanced')
       }
+
+      let description = '';
+      if (this.state.showAdvanced) {
+        description = this._config.get('dialog:model:create:' +
+                                       'advanced:description')
+      } else if (recommendAgg) {
+        description = this._config.get('dialog:model:create:recommendAggregate')
+      } else {
+        description = this._config.get('dialog:model:create:recommendRaw')
+      }
+
+      body = (
+        <div>
+          {description}
+          {AdvancedSection}
+          <a className="advancedButtonLink"
+             href="#"
+             style={this._styles.advancedButton}
+             onClick={this._handleAdvancedOptions.bind(this)}
+          >
+            {advancedButtonText}
+          </a>
+        </div>
+      );
+
+      actions.push(
+        <RaisedButton
+          label={this._config.get('button:cancel')}
+          onTouchTap={this._cancelAnalysis.bind(this)}
+          style={this._styles.agg}
+        />
+      );
+      actions.push(
+        <RaisedButton
+          label={this._config.get('button:analyze')}
+          onTouchTap={this._startModel.bind(this, modelRunnerPayload)}
+          primary={true}
+          style={this._styles.agg}
+          />
+      );
     } else {
       body = (
         <div>
@@ -155,7 +204,7 @@ export default class CreateModelDialog extends React.Component {
     }
 
     return (
-      <Dialog actions={actions} open={this.props.open} title={title}>
+      <Dialog actions={actions} open={open} title={title}>
         {body}
       </Dialog>
     );
