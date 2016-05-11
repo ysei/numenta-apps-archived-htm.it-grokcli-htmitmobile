@@ -23,7 +23,7 @@
 require 'json'
 
 # Get required 'node' version from 'package.json'
-package = JSON.parse(File.read(File.expand_path "./package.json"))
+package = JSON.parse(File.read(File.expand_path "../package.json"))
 NODE_VERSION = package["engines"]["node"]
 
 Vagrant.configure(2) do |config|
