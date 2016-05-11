@@ -102,7 +102,7 @@ export default class Chart extends React.Component {
 
   componentDidUpdate() {
     if (this._dygraph && this.props.data.length > 1) {
-      this._chartUpdate();
+      this._chartUpdate(true);
     } else if (this.props.data.length) {
       this._chartInitalize();
     }
@@ -155,8 +155,9 @@ export default class Chart extends React.Component {
 
   /**
    * DyGraphs Chart Update Logic and Re-Render
+   * @param {boolean} resetZoom Whether or not to reset the zoom level
    */
-  _chartUpdate() {
+  _chartUpdate(resetZoom) {
     let {data, metaData, options} = this.props;
     let {model, displayPointCount} = metaData;
     let modelIndex = Math.abs(model.dataSize - 1);
@@ -166,10 +167,12 @@ export default class Chart extends React.Component {
     let [rangeMin, rangeMax] = this._chartRange;
     let unit = second - first; // each datapoint
     let rangeWidth = unit * displayPointCount;
-    rangeMax = rangeMin + rangeWidth;
-    if (rangeMax > last) {
-      rangeMax = last;
-      rangeMin = last - rangeWidth;
+    if (resetZoom) {
+      rangeMax = rangeMin + rangeWidth;
+      if (rangeMax > last) {
+        rangeMax = last;
+        rangeMin = last - rangeWidth;
+      }
     }
     this._chartRange = [rangeMin, rangeMax];
     let scrollLock = false;
@@ -236,7 +239,7 @@ export default class Chart extends React.Component {
 
     // update chart
     this._chartRange = [newMin, newMax];
-    this._chartUpdate();
+    this._chartUpdate(false);
   }
 
   /**
