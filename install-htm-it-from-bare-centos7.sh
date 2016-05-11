@@ -68,7 +68,7 @@ git clone https://github.com/numenta/numenta-apps.git /opt/numenta/numenta-apps
 # Install HTM-IT
 cd /opt/numenta/numenta-apps/
 pip install paver==1.2.4 --user
-pip install uwsgi==2.0.4 --user
+pip install uwsgi==2.0.12 --user
 pip install agamotto==0.5.1 --user
 ./install-htm-it.sh /home/centos/.local
 
