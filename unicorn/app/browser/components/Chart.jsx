@@ -47,6 +47,7 @@ export default class Chart extends React.Component {
       data: React.PropTypes.array.isRequired,
       metaData: React.PropTypes.object,
       options: React.PropTypes.object,
+      canZoom: React.PropTypes.boolean,
       zDepth: React.PropTypes.number
     };
   }
@@ -271,9 +272,10 @@ export default class Chart extends React.Component {
       this._styles.root.marginTop = '1rem';  // make room for: ☑ ShowNonAgg?
     }
 
+    let classSuffix = this.props.canZoom ? 'zoom' : 'nozoom';
     return (
       <Paper
-        className="dygraph-chart"
+        className={`dygraph-chart-${classSuffix}`}
         ref={`chart-${model.modelId}`}
         style={this._styles.root}
         zDepth={this.props.zDepth}

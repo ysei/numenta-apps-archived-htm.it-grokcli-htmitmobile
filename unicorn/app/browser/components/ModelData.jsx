@@ -445,7 +445,8 @@ export default class ModelData extends React.Component {
 
     // Only update if the model is visible and model data has changed
     if (model.visible && modelData.data.length) {
-      return modelData.modified !== nextProps.modelData.modified;
+      return modelData.modified !== nextProps.modelData.modified ||
+             this.props.model.active !== nextProps.model.active;
     }
 
     return true;
@@ -456,7 +457,12 @@ export default class ModelData extends React.Component {
     let chart = ReactDOM.findDOMNode(this.refs[`chart-${modelId}`]);
     this.setState({points: Math.ceil(chart.offsetWidth / ANOMALY_BAR_WIDTH)});
   }
-
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.model.active) {
+      // Reset zoom level
+      this.setState({zoomLevel:0});
+    }
+  }
   render() {
     let {
       metric, metricData, model, modelData, showNonAgg, modelId
@@ -492,26 +498,31 @@ export default class ModelData extends React.Component {
     metaData.max = maxVal;
     metaData.displayPointCount = this._getDisplayPoints(zoomLevel);
 
-    // Render Zoom buttons
-    let zoomButtons = [0, 0.25, 1].map((level) => {
-      let style;
-      if (level === zoomLevel) {
-        style = this._styles.zoom.linkActive;
-      } else {
-        style = this._styles.zoom.link;
-      }
-      // Generate friendly zoom level description
-      let label = this._describeZoomLevel(level);
-      return (<a style={style} onClick={this._handleZoom.bind(this, level)}>
-                 {label}</a>);
-    });
+    let zoomSection;
+    if (!model.active) {
+      // Render Zoom buttons
+      let zoomButtons = [0, 0.25, 1].map((level) => {
+        let style;
+        if (level === zoomLevel) {
+          style = this._styles.zoom.linkActive;
+        } else {
+          style = this._styles.zoom.link;
+        }
+        // Generate friendly zoom level description
+        let label = this._describeZoomLevel(level);
+        return (<a style={style} onClick={this._handleZoom.bind(this, level)}>
+                   {label}</a>);
+      });
+      zoomSection = (<section style={this._styles.zoom.section}>
+                      <span style={this._styles.zoom.label}>Zoom:</span>
+                      {zoomButtons}
+                    </section>);
+    }
+
     Object.assign(options, {axes, labels, series});
     return (
       <div style={this._styles.container}>
-        <section style={this._styles.zoom.section}>
-          <span style={this._styles.zoom.label}>Zoom:</span>
-          {zoomButtons}
-        </section>
+        {zoomSection}
         <section style={this._styles.legend.section}>
           <span id={`legend-${modelId}`} style={this._styles.legend.label}/>
         </section>
@@ -519,6 +530,7 @@ export default class ModelData extends React.Component {
           <Chart ref={`chart-${modelId}`}
             data={data}
             metaData={metaData}
+            canZoom={!model.active}
             options={options} />
         </section>
       </div>
