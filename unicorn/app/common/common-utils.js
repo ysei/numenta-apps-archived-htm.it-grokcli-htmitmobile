@@ -122,6 +122,9 @@ export function binarySearch(array, key, compare) {
  * @returns {String} - Anomaly text
  */
 export function mapAnomalyText(anomaly) {
+  if (anomaly === null) {
+    return 'N/A';
+  }
   if (anomaly >= ANOMALY_RED_VALUE) {
     return 'HIGH';
   } else if (anomaly >= ANOMALY_YELLOW_VALUE) {

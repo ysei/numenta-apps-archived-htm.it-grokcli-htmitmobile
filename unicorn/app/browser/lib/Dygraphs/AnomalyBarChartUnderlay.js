@@ -18,7 +18,9 @@
 import RGBColor from 'rgbcolor';
 
 import {anomalyScale, binarySearch} from '../../../common/common-utils';
-import {ANOMALY_BAR_WIDTH, DATA_FIELD_INDEX} from '../Constants';
+import {
+  ANOMALY_BAR_WIDTH , DATA_FIELD_INDEX, PROBATION_LENGTH
+} from '../Constants';
 import {mapAnomalyColor} from '../../lib/browser-utils';
 
 const {
@@ -136,6 +138,9 @@ export default function (context, canvas, area, dygraph) {
   let initialX = dygraph.toDomXCoord(modelData[0][DATA_INDEX_TIME].getTime());
   let x = initialX + firstBar * barWidth;
 
+  // Find first record after probation period
+  let probationIndex = Math.min(PROBATION_LENGTH, modelData.length);
+
   // Render bars
   let anomaly, bar, color, height;
   for (bar=0; bar <= totalBars; bar++) {
@@ -150,16 +155,23 @@ export default function (context, canvas, area, dygraph) {
       lastPoint = ~lastPoint;
     }
 
-    // Find max anomaly
-    anomaly = modelData
-                .slice(firstPoint, lastPoint)
-                .reduce((prev, current) => {
-                  return Math.max(prev, current[DATA_INDEX_ANOMALY]);
-                }, 0);
+    // Check probation period
+    if (firstPoint >= probationIndex) {
+      // Find max anomaly
+      anomaly = modelData
+                  .slice(firstPoint, lastPoint)
+                  .reduce((prev, current) => {
+                    return Math.max(prev, current[DATA_INDEX_ANOMALY]);
+                  }, 0);
+      // Format anomaly bar
+      height = anomalyScale(anomaly) * area.h;
+      color = mapAnomalyColor(anomaly);
+    } else {
+      // Format probation period bar
+      height = anomalyScale(0) * area.h;
+      color = mapAnomalyColor(null);
+    }
 
-    // Format bar
-    height = anomalyScale(anomaly) * area.h;
-    color = mapAnomalyColor(anomaly);
     _drawRectangle(canvas, x - (barWidth - PADDING) / 2, area.h-1,
                    barWidth - PADDING, -height, color);
     // Next bar

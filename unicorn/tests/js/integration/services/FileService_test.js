@@ -42,7 +42,7 @@ function createFileInstance(filename, properties) {
 // Contents of 'fixture/file.csv'
 const EXPECTED_CONTENT =
 `timestamp,metric
-2015-08-26T19:46:31+17:00,21
+2015-08-26T19:46:09+17:00,21
 2015-08-26T19:47:31+17:00,17
 2015-08-26T19:48:31+17:00,22
 2015-08-26T19:49:31+17:00,21
@@ -52,7 +52,7 @@ const EXPECTED_CONTENT =
 
 // Expected data
 const EXPECTED_DATA = [
-  {timestamp: '2015-08-26T19:46:31+17:00', metric: '21'},
+  {timestamp: '2015-08-26T19:46:09+17:00', metric: '21'},
   {timestamp: '2015-08-26T19:47:31+17:00', metric: '17'},
   {timestamp: '2015-08-26T19:48:31+17:00', metric: '22'},
   {timestamp: '2015-08-26T19:49:31+17:00', metric: '21'},
@@ -94,7 +94,7 @@ const INVALID_DATE_CONTENT_FILE = path.join(FIXTURES, 'invalid-date-content.csv'
 const INVALID_DATE_FORMAT_FILE = path.join(FIXTURES, 'invalid-date-format.csv');
 const INVALID_NUMBER_FILE = path.join(FIXTURES, 'invalid-number.csv');
 const NO_SCALAR_FILE = path.join(FIXTURES, 'no-scalar.csv');
-const NO_HEADER_CSV_FILE = path.join(FIXTURES, 'no-header.csv');
+const NO_HEADER_CSV_FILE = path.join(FIXTURES, 'no-header-no-tz.csv');
 const NO_HEADER_CSV_FILE_ID = generateFileId(NO_HEADER_CSV_FILE);
 const EXPECTED_FIELDS_NO_HEADER_CSV_FILE = [
   Object.assign({}, METRIC_INSTANCE, {
@@ -103,7 +103,7 @@ const EXPECTED_FIELDS_NO_HEADER_CSV_FILE = [
     name: 'timestamp',
     index: 0,
     type: 'date',
-    format: 'YYYY-MM-DDTHH:mm:ssZ'
+    format: 'YYYY-MM-DDTHH:mm:ss'
   }),
   Object.assign({}, METRIC_INSTANCE, {
     uid: generateMetricId(NO_HEADER_CSV_FILE, 'metric1'),
