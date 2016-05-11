@@ -75,8 +75,10 @@ function sortedMerge(a, b, compareFunction) {
  * Heuristic for gap threshold:
  *
  * (1) Compute all the time-deltas between points.
- * (2) Find the smallest timestamp gap and multiply it by the maximum number of
- *     missing anomaly bars (i.e. timestamp gaps in model results).
+ * (2) Find the 10th percentile of non-zero time-deltas and multiply it by the
+ *     maximum number of missing anomaly bars (i.e. timestamp gaps in model
+ *     results). Using the 10th percentile instead of the min time-delta value
+ *     allows to be less sensitive to very small outliers.
  *
  * The result is the gap threshold.
  *
@@ -87,14 +89,18 @@ function computeGapThreshold(data) {
 
   let deltas = [];
   for (let i = 1; i < data.length; i++) {
-    deltas.push(data[i][DATA_INDEX_TIME].getTime() -
-      data[i-1][DATA_INDEX_TIME].getTime());
+    let delta = (data[i][DATA_INDEX_TIME].getTime() -
+                 data[i-1][DATA_INDEX_TIME].getTime());
+    if (delta > 0) {
+      deltas.push(delta);
+    }
   }
   deltas.sort();
 
-  let smallestTimestampGap = deltas[0];
+  let percentile = 0.1;
+  let smallTimestampGap =  deltas[Math.floor(deltas.length*percentile)];
   let maxMissingBars = 2;
-  return (1 + maxMissingBars) * smallestTimestampGap;
+  return (1 + maxMissingBars) * smallTimestampGap;
 }
 
 
