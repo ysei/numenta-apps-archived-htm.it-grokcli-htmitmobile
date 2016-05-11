@@ -154,13 +154,11 @@ export default class Model extends React.Component {
         },
         htmSettings: {
           color: muiTheme.rawTheme.palette.accent3Color,
+          fontStyle: 'italic',
           fontSize: 14,
           marginTop: '30px',
           title: {
             marginBottom: '10px'
-          },
-          body: {
-            marginTop: '10px'
           }
         }
       },
@@ -287,13 +285,14 @@ export default class Model extends React.Component {
       let window = moment.duration(aggOpts.windowSize, 'seconds');
       let aggregationMethod;
       if (aggOpts.func === 'mean') {
-        aggregationMethod = 'Average';
+        aggregationMethod = 'average';
       } else if (aggOpts.fun === 'sum') {
-        aggregationMethod = 'Sum'
+        aggregationMethod = 'sum'
       }
-      aggregationMessage = `The data is aggregated. The aggregation method is
-      "${aggregationMethod}" and the aggregation window is
-      ${window.hours()} h ${window.minutes()} m ${window.seconds()} s.`
+      aggregationMessage = `The data is aggregated with an aggregation window of
+      ${window.hours()} hours ${window.minutes()} minutes ${window.seconds()}
+      seconds and the aggregation method "${aggregationMethod}" is used to
+      combine the points in each window.`
     }
 
     let patternMessage = 'Daily and weekly pattern recognition is disabled.';
@@ -307,9 +306,8 @@ export default class Model extends React.Component {
 
     let MoreSection = (
       <div style={this._styles.summary.htmSettings}>
-        <p style={this._styles.summary.htmSettings.title}><b>HTM settings</b></p>
-        <p style={this._styles.summary.htmSettings.body}>
-          {aggregationMessage} {patternMessage}
+        <p style={this._styles.summary.htmSettings.title}>
+          <b>HTM settings: </b>{aggregationMessage} {patternMessage}
         </p>
       </div>);
 
