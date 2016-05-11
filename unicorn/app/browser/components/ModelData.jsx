@@ -275,13 +275,6 @@ export default class ModelData extends React.Component {
       options: {
         axisLineColor: muiTheme.rawTheme.palette.accent4Color,
         connectSeparatedPoints: true,  // required for raw+agg overlay
-
-        // We want these, but it causes problems.
-        // https://github.com/danvk/dygraphs/issues/745
-        //
-        // drawGapEdgePoints: true,
-        // pointSize: 3,
-
         includeZero: true,
         interactionModel: chartInteraction,
         labelsShowZeroValues: true,
