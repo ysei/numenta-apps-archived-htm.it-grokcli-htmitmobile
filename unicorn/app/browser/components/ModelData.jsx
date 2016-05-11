@@ -375,17 +375,18 @@ export default class ModelData extends React.Component {
   }
 
   /**
-   * Get the total of points to display based on the zoom level and metric data
+   * Get the total of points to display based on the zoom level and given dataset
    * @param  {number} zoomLevel Percentage of data to display. [0..1]
-   * @return {number}           Total points to dispay
+   * @param  {object} data Dataset to calculate total points from.
+   *                       Either modelData or metricData
+   * @return {number}      Total points to dispay
    */
-  _getDisplayPoints(zoomLevel) {
+  _getDisplayPoints(zoomLevel, data) {
     // Max zoom level
     let points = this.state.points;
     if (zoomLevel > 0) {
-      let metricData = this.props.metricData;
-      if (metricData && metricData.length > 0) {
-        points = Math.floor(metricData.length * zoomLevel) - 1;
+      if (data && data.length > 0) {
+        points = Math.floor(data.length * zoomLevel) - 1;
       }
     }
     return points;
@@ -393,8 +394,9 @@ export default class ModelData extends React.Component {
 
   /**
    * Describe time zoom level rounding time rounded to the closest time
-   * description (minute,  hour, day, week, month, ...) based on metric data.
+   * description (minute,  hour, day, week, month, ...) based on given dataset.
    * @param  {number} zoomLevel Percentage of data to display. [0..1]
+   * @param  {array}  data      Dataset to use. Either metricData or modelData
    * @return {string}           Human readable time period description.
    *                            For example:
    *                              All
@@ -404,17 +406,16 @@ export default class ModelData extends React.Component {
    *                              2 weeks
    *                              6 months
    */
-  _describeZoomLevel(zoomLevel) {
+  _describeZoomLevel(zoomLevel, data) {
     if (zoomLevel === 1) {
       // No zoom
       return this._config.get('chart:zoom:all');
     }
 
-    let metricData = this.props.metricData;
-    if (metricData && metricData.length > 0) {
-      let first = metricData[0][DATA_INDEX_TIME];
-      let zoomIndex = this._getDisplayPoints(zoomLevel);
-      let last = metricData[zoomIndex][DATA_INDEX_TIME];
+    if (data && data.length > 0) {
+      let first = data[0][DATA_INDEX_TIME];
+      let zoomIndex = this._getDisplayPoints(zoomLevel, data);
+      let last = data[zoomIndex][DATA_INDEX_TIME];
       return moment(first).to(last, true);
     }
   }
@@ -486,7 +487,7 @@ export default class ModelData extends React.Component {
 
     metaData.min = minVal;
     metaData.max = maxVal;
-    metaData.displayPointCount = this._getDisplayPoints(zoomLevel);
+    metaData.displayPointCount = this._getDisplayPoints(zoomLevel, data);
 
     let zoomSection;
     if (!model.active) {
@@ -499,7 +500,7 @@ export default class ModelData extends React.Component {
           style = this._styles.zoom.link;
         }
         // Generate friendly zoom level description
-        let label = this._describeZoomLevel(level);
+        let label = this._describeZoomLevel(level, data);
         return (<a style={style} onClick={this._handleZoom.bind(this, level)}>
                    {label}</a>);
       });
