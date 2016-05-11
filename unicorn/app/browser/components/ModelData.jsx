@@ -67,19 +67,75 @@ function sortedMerge(a, b, compareFunction) {
   return ret;
 }
 
+
 /**
- * Use a heuristic to detect gaps in timestamps in the data.
+ * Use a heuristic to compute the gap threshold which will be used to represent
+ * timestamp gaps in the data.
+ *
+ * Heuristic for gap threshold:
+ *
+ * (1) Compute all the time-deltas between points.
+ * (2) Find the 10th percentile of non-zero time-deltas and multiply it by the
+ *     maximum number of missing anomaly bars (i.e. timestamp gaps in model
+ *     results). Using the 10th percentile instead of the min time-delta value
+ *     allows to be less sensitive to very small outliers.
+ *
+ * The result is the gap threshold.
+ *
+ * @param {Array} data - Array of arrays: [[Date, ...], [Date, ...], ...]
+ * @returns {Number} - gap threshold.
+ */
+function computeGapThreshold(data) {
+
+  let deltas = [];
+  for (let i = 1; i < data.length; i++) {
+    let delta = (data[i][DATA_INDEX_TIME].getTime() -
+                 data[i-1][DATA_INDEX_TIME].getTime());
+    if (delta > 0) {
+      deltas.push(delta);
+    }
+  }
+  deltas.sort();
+
+  let percentile = 0.1;
+  let smallTimestampGap =  deltas[Math.floor(deltas.length*percentile)];
+  let maxMissingBars = 2;
+  return (1 + maxMissingBars) * smallTimestampGap;
+}
+
+
+/**
+ * Detect gaps in timestamps in the data. Lines will be drawn for every
+ * time-delta that is less than the gap threshold.
  *
  * At each gap, insert [midpointOfGap, vals[0], vals[1], ...] as a new datum.
  *
  * @param {Array} data - Array of arrays: [[Date, ...], [Date, ...], ...]
  * @param {Array} vals - Values concatenated to timestamp at every single gap
+ * @param {Number} gapThreshold - Lines will be drawn for every time-delta that
+ *                                is less than the gap threshold.
  * @returns {Array} - data with gap values inserted
  */
-function insertIntoGaps(data, vals) {
-  // Heuristic: do nothing.
-  return data;
+function insertIntoGaps(data, vals, gapThreshold) {
+
+  let newData = [];
+  data.forEach((item, rowid) => {
+    newData.push(item);
+
+    if (rowid + 1 < data.length) {
+      let curr = item[DATA_INDEX_TIME].getTime();
+      let next = data[rowid+1][DATA_INDEX_TIME].getTime();
+      let delta = next - curr;
+      if (delta > gapThreshold) {
+        let gapItem = [new Date(curr + delta/2)].concat(vals);
+        newData.push(gapItem);
+      }
+    }
+  });
+
+  return newData;
 }
+
 
 /**
  * Compute Dygraphs input from the metric and model data.
@@ -108,6 +164,8 @@ function prepareData(
   let minVal = Number.POSITIVE_INFINITY;
   let maxVal = Number.NEGATIVE_INFINITY;
 
+  let gapThreshold = computeGapThreshold(metricRecords);
+
   let aggregatedChartData = null;
   if (modelRecords.length && aggregated) {
     modelRecords.forEach((item) => {
@@ -122,14 +180,14 @@ function prepareData(
                    null]);
 
       aggregatedChartData = insertIntoGaps(aggregatedChartData,
-                                           [NaN, null]);
+                                           [NaN, null], gapThreshold);
     } else {
       aggregatedChartData = modelRecords.map(
         (item) => [item[DATA_INDEX_TIME],
                    item[DATA_INDEX_VALUE]]);
 
       aggregatedChartData = insertIntoGaps(aggregatedChartData,
-                                           [NaN]);
+                                           [NaN], gapThreshold);
     }
   }
 
@@ -147,14 +205,14 @@ function prepareData(
                    item[DATA_INDEX_VALUE]]);
 
       rawChartData = insertIntoGaps(rawChartData,
-                                    [null, NaN]);
+                                    [null, NaN], gapThreshold);
     } else {
       rawChartData = metricRecords.map(
         (item) => [item[DATA_INDEX_TIME],
                    item[DATA_INDEX_VALUE]]);
 
       rawChartData = insertIntoGaps(rawChartData,
-                                    [NaN]);
+                                    [NaN], gapThreshold);
     }
   }
 
