@@ -92,9 +92,3 @@ Dygraph.Plugins.RangeSelector.prototype.drawInteractiveLayer_ = function () {
     }
   }
 }
-
-
-/**
- * Export customized and extended Dygraphs instance back out for usage.
- */
-export default Dygraph;
