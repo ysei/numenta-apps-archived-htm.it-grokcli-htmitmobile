@@ -39,7 +39,7 @@ RUN apt-get update && \
 COPY infrastructure /opt/numenta/infrastructure
 COPY nta.utils /opt/numenta/nta.utils
 COPY htmengine /opt/numenta/htmengine
-COPY taurus /opt/numenta/taurus
+COPY taurus_engine /opt/numenta/taurus_engine
 COPY install-taurus.sh /opt/numenta/
 
 # Install taurus
@@ -47,7 +47,7 @@ WORKDIR /opt/numenta
 RUN ./install-taurus.sh
 
 # Environment
-ENV APPLICATION_CONFIG_PATH=/opt/numenta/taurus/conf \
+ENV APPLICATION_CONFIG_PATH=/opt/numenta/taurus_engine/conf \
     MYSQL_HOST=mysql \
     MYSQL_USER=root \
     MYSQL_PASSWD="" \
@@ -70,8 +70,8 @@ ENV APPLICATION_CONFIG_PATH=/opt/numenta/taurus/conf \
     AWS_SECRET_ACCESS_KEY=CHANGEME \
     OBLITERATE_DATABASE=""
 
-ENTRYPOINT ["/opt/numenta/taurus/docker/entrypoint.sh"]
-CMD ["/opt/numenta/taurus/docker/run.sh"]
-VOLUME ["/opt/numenta/taurus/logs", \
+ENTRYPOINT ["/opt/numenta/taurus_engine/docker/entrypoint.sh"]
+CMD ["/opt/numenta/taurus_engine/docker/run.sh"]
+VOLUME ["/opt/numenta/taurus_engine/logs", \
         "/root/taurus_model_checkpoints"]
 
