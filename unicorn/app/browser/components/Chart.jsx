@@ -123,11 +123,14 @@ export default class Chart extends React.Component {
     let {metric, model, displayPointCount} = metaData;
     let element = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
     let first = data[0][DATA_INDEX_TIME].getTime();
-    let second = data[1][DATA_INDEX_TIME].getTime();
     let last = data[data.length - 1][DATA_INDEX_TIME].getTime();
-    let unit = second - first; // each datapoint
+    let rangeEl, unit;
+    if (model.ran) {
+      unit = (last - first) / model.dataSize;
+    } else {
+      unit = (last - first) / metric.dataSize;
+    }
     let rangeWidth = unit * displayPointCount;
-    let rangeEl;
 
     let rangeMin = first;
     // move chart back to last valid display position from previous viewing
@@ -160,13 +163,17 @@ export default class Chart extends React.Component {
    */
   _chartUpdate(resetZoom) {
     let {data, metaData, options} = this.props;
-    let {model, displayPointCount} = metaData;
+    let {model, metric, displayPointCount} = metaData;
     let modelIndex = Math.abs(model.dataSize - 1);
     let first = data[0][DATA_INDEX_TIME].getTime();
-    let second = data[1][DATA_INDEX_TIME].getTime();
     let last = data[data.length - 1][DATA_INDEX_TIME].getTime();
     let [rangeMin, rangeMax] = this._chartRange;
-    let unit = second - first; // each datapoint
+    let unit;
+    if (model.ran) {
+      unit = (last - first) / model.dataSize;
+    } else {
+      unit = (last - first) / metric.dataSize;
+    }
     let rangeWidth = unit * displayPointCount;
     if (resetZoom) {
       rangeMax = rangeMin + rangeWidth;
