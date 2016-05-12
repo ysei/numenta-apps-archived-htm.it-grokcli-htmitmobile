@@ -164,7 +164,9 @@ function prepareData(
   let minVal = Number.POSITIVE_INFINITY;
   let maxVal = Number.NEGATIVE_INFINITY;
 
-  let gapThreshold = computeGapThreshold(metricRecords);
+  let gapThreshold = computeGapThreshold(modelRecords.length > 0
+                                         ? modelRecords
+                                         : metricRecords);
 
   let aggregatedChartData = null;
   if (modelRecords.length && aggregated) {
