@@ -69,7 +69,7 @@ Custom metric collectors for HTM-IT for Stocks data providers.
 
 **Languages**: Python
 
-#### [`/taurus.monitoring`](taurus.monitoring)
+#### [`/taurus_monitoring`](taurus_monitoring)
 
 Monitoring scripts and related utilities for monitoring HTM-IT for Stocks
 (Code name: Taurus).
