@@ -9,7 +9,7 @@ provided to support the Taurus Mobile application.
 Installation
 ------------
 
-First, install `nta.utils`, `htmengine` and `taurus.metric_collectors`.  Then, to install `taurus`:
+First, install `nta.utils`, `htmengine` and `taurus_metric_collectors`.  Then, to install `taurus`:
 
     python setup.py develop --install-dir=<site-packages in $PYTHONPATH> --script-dir=<somewhere in $PATH>
 

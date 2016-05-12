@@ -63,7 +63,7 @@ HTM-IT for Stocks mobile client.
 
 **Languages**: Java
 
-#### [`/taurus.metric_collectors`](taurus.metric_collectors)
+#### [`/taurus_metric_collectors`](taurus.metric_collectors)
 
 Custom metric collectors for HTM-IT for Stocks data providers.
 

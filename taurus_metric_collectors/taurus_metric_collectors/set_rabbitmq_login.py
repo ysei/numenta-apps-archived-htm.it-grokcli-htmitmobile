@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2015, Numenta, Inc.  Unless you have purchased from
@@ -20,20 +20,26 @@
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
 
-# Install taurus_metric_collectors and its dependencies
-# ARGS:
-# First position arg: installation prefix;
-#   e.g., Linux: /opt/numenta/anaconda
-#   e.g., Mac OS X: ~/Library/Python/2.7
+"""
+Applies the given rabbitmq login information as overrides for
+rabbitmq.conf.
 
-set -o errexit
+NOTE: this script may be configured as "console script" by the package
+installer.
+"""
 
-function install {
-  pushd $1
-  python setup.py develop --prefix=$2
-  popd
-}
+from nta.utils.tools.set_rabbitmq_login_impl import setRabbitmqLoginScriptImpl
 
-install nta.utils $1
-install infrastructure $1
-install taurus_metric_collectors $1
+from taurus_metric_collectors import logging_support
+
+
+
+def main():
+  logging_support.LoggingSupport().initTool()
+
+  setRabbitmqLoginScriptImpl()
+
+
+
+if __name__ == "__main__":
+  main()

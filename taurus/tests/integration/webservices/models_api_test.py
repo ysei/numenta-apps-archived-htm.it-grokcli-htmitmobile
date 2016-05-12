@@ -50,11 +50,11 @@ class TaurusModelsAPITestCase(unittest.TestCase):
   def testCreateModels(self):
     """ Taurus Models API properly passes incoming model parameters to
     datasource adapter.  This mirrors the path taken by
-    `taurus.metric_collectors.metric_utils.createAllModels()` and tests the
+    `taurus_metric_collectors.metric_utils.createAllModels()` and tests the
     expected API.
     """
 
-    # Snippet from taurus.metric_collectors models.json file
+    # Snippet from taurus_metric_collectors models.json file
     metricsConfiguration = {
       "3M": {
         "metrics": {

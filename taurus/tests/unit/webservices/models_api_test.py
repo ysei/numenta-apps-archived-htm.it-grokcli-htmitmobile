@@ -62,7 +62,7 @@ class TaurusModelsAPITestCase(unittest.TestCase):
 
     datasourceMock.return_value = Mock(spec_set=DatasourceAdapterIface)
 
-    # Snippet from taurus.metric_collectors models.json file
+    # Snippet from taurus_metric_collectors models.json file
     metricsConfiguration = {
       "3M": {
         "metrics": {
