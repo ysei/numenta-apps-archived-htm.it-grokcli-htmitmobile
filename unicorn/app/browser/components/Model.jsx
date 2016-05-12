@@ -295,7 +295,6 @@ export default class Model extends React.Component {
 
     let aggregationMessage = 'The data is not aggregated';
     if (dataIsAggregated) {
-
       let aggregationMethod;
       if (aggOpts.func === 'mean') {
         aggregationMethod = 'average';

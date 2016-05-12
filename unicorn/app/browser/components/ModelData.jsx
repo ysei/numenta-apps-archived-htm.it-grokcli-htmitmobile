@@ -86,7 +86,6 @@ function sortedMerge(a, b, compareFunction) {
  * @returns {Number} - gap threshold.
  */
 function computeGapThreshold(data) {
-
   let deltas = [];
   for (let i = 1; i < data.length; i++) {
     let delta = (data[i][DATA_INDEX_TIME].getTime() -
@@ -117,7 +116,6 @@ function computeGapThreshold(data) {
  * @returns {Array} - data with gap values inserted
  */
 function insertIntoGaps(data, vals, gapThreshold) {
-
   let newData = [];
   data.forEach((item, rowid) => {
     newData.push(item);
@@ -164,7 +162,9 @@ function prepareData(
   let minVal = Number.POSITIVE_INFINITY;
   let maxVal = Number.NEGATIVE_INFINITY;
 
-  let gapThreshold = computeGapThreshold(metricRecords);
+  let gapThreshold = computeGapThreshold(modelRecords.length > 0
+                                         ? modelRecords
+                                         : metricRecords);
 
   let aggregatedChartData = null;
   if (modelRecords.length && aggregated) {
