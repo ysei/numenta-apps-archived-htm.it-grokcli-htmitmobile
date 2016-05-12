@@ -31,7 +31,7 @@ from sqlalchemy.exc import OperationalError
 
 from nta.utils import error_reporting
 from nta.utils.config import Config
-from taurus.engine import logging_support
+from taurus_engine import logging_support
 
 from taurus_monitoring import taurus_monitor_utils as monitorUtils
 from taurus_monitoring.monitorsdb import schema
