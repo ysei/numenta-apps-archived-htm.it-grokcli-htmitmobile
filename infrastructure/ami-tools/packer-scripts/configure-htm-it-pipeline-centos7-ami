@@ -113,7 +113,7 @@ install-htm-it() {
 
   # Install HTM-IT pre-requisites
   pip install paver==1.2.4 agamotto==0.5.1 --target "${NUMENTA}/lib/python2.7/site-packages"
-  pip install uwsgi==2.0.4 --install-option="--prefix=${NUMENTA}"
+  pip install uwsgi==2.0.12 --install-option="--prefix=${NUMENTA}"
 
   # Clone Numenta Apps Repo
   cd "${NUMENTA}"
