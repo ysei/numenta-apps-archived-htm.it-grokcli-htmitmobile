@@ -34,4 +34,4 @@ pushd /opt/numenta/taurus_engine
 ./docker/configure.sh
 
 # Pass-through Docker CMD
-$@
+source $@
