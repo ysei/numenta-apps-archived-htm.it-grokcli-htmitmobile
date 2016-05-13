@@ -28,7 +28,7 @@ set -o verbose
 set -o xtrace
 set -o nounset
 
-pushd /opt/numenta/taurus
+pushd /opt/numenta/taurus_engine
 
 # Configure instance
 ./docker/configure.sh
