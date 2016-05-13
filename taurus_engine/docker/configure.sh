@@ -106,6 +106,6 @@ taurus-set-dynamodb \
 taurus-set-api-key --apikey=${TAURUS_API_KEY}
 
 # Run database migrations
-pushd taurus/engine/repository
+pushd taurus_engine/repository
 python migrate.py
 popd
