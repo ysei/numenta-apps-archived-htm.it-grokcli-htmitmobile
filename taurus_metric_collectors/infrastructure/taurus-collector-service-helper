@@ -35,8 +35,8 @@ set -o pipefail
 set -o errexit
 
 prog="taurus.metric.collector"
-PRODUCTS_D=/opt/numenta/products
-TAURUS_COLLECTOR_D="${PRODUCTS_D}/taurus.metric.collector"
+PRODUCTS_D=/opt/numenta/numenta-apps
+TAURUS_COLLECTOR_D="${PRODUCTS_D}/taurus_metric_collectors"
 SUPERVISORCTL_URL="http://127.0.0.1:8001"
 
 if [ ! -z "${DEBUG}" ]; then
@@ -50,7 +50,7 @@ fi
 if [ -r "${TAURUS_COLLECTOR_D}/env.sh" ]; then
   source "${TAURUS_COLLECTOR_D}/env.sh"
 else
-  failmsg="ERROR: ${TAURUS_COLLECTOR_D}/taurus/env.sh is missing, exiting helper"
+  failmsg="ERROR: ${TAURUS_COLLECTOR_D}/taurus_engine/env.sh is missing, exiting helper"
   echo "${failmsg}"
   logger -t taurus-collector "${failmsg}"
   exit 1

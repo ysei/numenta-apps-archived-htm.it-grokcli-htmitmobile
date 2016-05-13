@@ -37,7 +37,7 @@ set -o errexit
 
 prog=supervisord
 NUMENTA=/opt/numenta
-TAURUS_D="${NUMENTA}/products/taurus"
+TAURUS_D="${NUMENTA}/numenta-apps/taurus_engine"
 SUPERVISORCTL_URL="http://127.0.0.1:9001"
 
 if [ ! -z "${DEBUG}" ]; then
@@ -48,10 +48,10 @@ if [ ! -z "${DEBUG}" ]; then
 fi
 
 # Load taurus environment
-if [ -r "${TAURUS_D}/taurus/env.sh" ]; then
-  source "${TAURUS_D}/taurus/env.sh"
+if [ -r "${TAURUS_D}/taurus_engine/env.sh" ]; then
+  source "${TAURUS_D}/taurus_engine/env.sh"
 else
-  logger -t supervisor "${TAURUS_D}/taurus/env.sh is missing"
+  logger -t supervisor "${TAURUS_D}/taurus_engine/env.sh is missing"
   exit 1
 fi
 

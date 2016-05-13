@@ -212,10 +212,10 @@ Taurus and Docker
 A [Dockerfile](https://docs.docker.com/engine/reference/builder/) is included
 to support a docker-based workflow.  To build a docker image, run the following
 command from the root of the `numenta-apps` repository (the parent directory
-of `taurus/`):
+of `taurus_engine/`):
 
 ```
-docker build -t taurus:latest -f taurus/Dockerfile .
+docker build -t taurus:latest -f taurus_engine/Dockerfile .
 ```
 
 See `Dockerfile` for specific environment variable configuration directives.

@@ -18,8 +18,8 @@ def loadSchema(schemaFile):
   Will throw IOError if given an invalid path
 
   :param schemaFile: "examplefilename.json", function will look in
-      TAURUS_HOME/taurus/webservices/schemas/ for the file.
-  :returns: Loaded json schema object from taurus/webservices/schemas
+      TAURUS_HOME/taurus_engine/webservices/schemas/ for the file.
+  :returns: Loaded json schema object from taurus_engine/webservices/schemas
   """
 
 

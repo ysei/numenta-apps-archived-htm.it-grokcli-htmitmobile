@@ -472,7 +472,7 @@ class DynamoDBService(object):
 
     :param str body: Incoming message payload as a JSON-encoded list of objects,
       with each object per
-      ``taurus/metric_collectors/twitterdirect/tweet_export_schema.json``
+      ``taurus_engine/metric_collectors/twitterdirect/tweet_export_schema.json``
     """
     payload = json.loads(body)
     g_log.info("Handling %d non-metric tweet item(s)", len(payload))
@@ -548,7 +548,7 @@ class DynamoDBService(object):
 
         Non-metric tweets: Incoming message payload as a JSON-encoded list of
           objects, with each object formatted per
-          ``taurus/metric_collectors/twitterdirect/tweet_export_schema.json``
+          ``taurus_engine/metric_collectors/twitterdirect/tweet_export_schema.json``
     """
     if message.methodInfo.routingKey == "taurus.data.non-metric.twitter":
       self._handleNonMetricTweetData(message.body)

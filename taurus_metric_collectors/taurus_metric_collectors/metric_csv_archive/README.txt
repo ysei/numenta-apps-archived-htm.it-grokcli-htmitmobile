@@ -6,6 +6,6 @@ Windows Comma Separated CSV format.
 Example commands after updating metrics.csv:
 
     cd $PRODUCTS/taurus_metric_collectors
-    python taurus/metric_collectors/gen_metrics_config.py \
-        taurus/metric_collectors/metric_csv_archive/metrics.csv > \
+    python taurus_engine/metric_collectors/gen_metrics_config.py \
+        taurus_engine/metric_collectors/metric_csv_archive/metrics.csv > \
         conf/metrics.json

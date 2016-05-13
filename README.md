@@ -18,7 +18,7 @@ Or, if you prefer pip:
 
 You can see coverage across multiple projects as follows:
 
-    py.test --cov nta.utils --cov htmengine --cov taurus taurus/tests/unit htmengine/tests/unit nta.utils/tests/unit
+    py.test --cov nta.utils --cov htmengine --cov taurus taurus_engine/tests/unit htmengine/tests/unit nta.utils/tests/unit
 
 
 ## Licenses
