@@ -116,6 +116,15 @@ export default class CreateModelDialog extends React.Component {
     setTimeout(() => this.setState({progress: false}), 4000);
   }
 
+  componentWillReceiveProps(nextProps) {
+    let currentlyOpen = this.props.open;
+    if (!currentlyOpen && nextProps.open) {
+      this.setState({showAdvanced: false});
+      this.setState({progress: true});
+      setTimeout(() => this.setState({progress: false}), 4000);
+    }
+  }
+
   render() {
     let {fileName, inputOpts, metricId, metricName, modelRunnerParams,
           recommendAgg, aggregateData, open} = this.props;
