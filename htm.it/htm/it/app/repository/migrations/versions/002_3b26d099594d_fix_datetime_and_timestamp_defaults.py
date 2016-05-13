@@ -19,11 +19,11 @@
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
 
-"""timestatmp to datetime
+"""fix DATETIME and TIMESTAMP defaults
 
-Revision ID: 1d2eddc43366
-Revises: 57ab75d58038
-Create Date: 2014-12-30 15:58:52.062058
+Revision ID: 3b26d099594d
+Revises: 2f1ee984f978
+Create Date: 2016-05-11 17:04:36.725605
 """
 
 from alembic import op
@@ -31,30 +31,27 @@ import sqlalchemy as sa
 
 
 # Revision identifiers, used by Alembic. Do not change.
-revision = '1d2eddc43366'
-down_revision = '57ab75d58038'
+revision = '3b26d099594d'
+down_revision = '2f1ee984f978'
 
 
 
 def upgrade():
-  """ Change tables to use DATETIME column types instead of TIMESTAMP """
-  # Change tables to use DATETIME column types instead of TIMESTAMP
-  op.alter_column("instance_status_history", "timestamp",
-                  type_=sa.DATETIME,
-                  server_default=None,
-                  existing_nullable=False)
+    """Fix server defaults for DATETIME columns, because
+    0 ("0000-00-00 00:00:00") is deprecated as default for those colum types
+    as of mysql 5.7.8, and will fail with mysql installed with default config.
+    """
+    op.alter_column("annotation", "created",
+                    server_default=None,
+                    existing_type=sa.DATETIME,
+                    existing_nullable=False)
 
-  op.alter_column("metric", "last_timestamp",
-                  type_=sa.DATETIME,
-                  existing_nullable=True,
-                  existing_server_default=sa.text("NULL"))
-
-  op.alter_column("metric_data", "timestamp",
-                  type_=sa.DATETIME,
-                  existing_nullable=False)
-  ### end Alembic commands ###
+    op.alter_column("instance_status_history", "timestamp",
+                    server_default=None,
+                    existing_type=sa.DATETIME,
+                    existing_nullable=False)
 
 
 
 def downgrade():
-  raise NotImplementedError("Rollback is not supported.")
+    raise NotImplementedError("Rollback is not supported.")

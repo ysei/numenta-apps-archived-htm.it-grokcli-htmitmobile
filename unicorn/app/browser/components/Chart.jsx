@@ -21,7 +21,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import ChartUpdateViewpoint from '../actions/ChartUpdateViewpoint';
-import Dygraph from '../lib/Dygraphs/DygraphsExtended';
+import Dygraph from 'dygraphs';
+import '../lib/Dygraphs/Plugins';
+import CustomDygraph from '../lib/Dygraphs/CustomDygraph';
 import {DATA_FIELD_INDEX} from '../lib/Constants';
 
 const {DATA_INDEX_TIME} = DATA_FIELD_INDEX;
@@ -63,6 +65,7 @@ export default class Chart extends React.Component {
 
   constructor(props, context) {
     super(props, context);
+    this._scrollLock = true;
     this._config = this.context.getConfigClient();
 
     // DyGraphs chart container
@@ -83,12 +86,28 @@ export default class Chart extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.data.length) {
-      this._chartInitalize();
-    }
+    this._chartInitalize();
   }
 
   componentWillUnmount() {
+    this._removeDygraph();
+  }
+
+  componentDidUpdate() {
+    if (!this._dygraph) {
+      this._chartInitalize();
+    } else {
+      this._chartUpdate(true);
+    }
+  }
+
+  componentWillUpdate() {
+    if (this.props.data.length < this._previousDataSize) {
+      this._removeDygraph();
+    }
+  }
+
+  _removeDygraph() {
     let {model} = this.props.metaData;
     let element = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
     let range = element.getElementsByClassName(RANGE_SELECTOR_CLASS)[0];
@@ -101,25 +120,14 @@ export default class Chart extends React.Component {
     }
   }
 
-  componentDidUpdate() {
-    if (this._dygraph && this.props.data.length > 1) {
-      this._chartUpdate(true);
-    } else if (this.props.data.length) {
-      this._chartInitalize();
-    }
-  }
-
-  componentWillUpdate() {
-    if (this.props.data.length < this._previousDataSize) {
-      this.componentWillUnmount();
-    }
-  }
-
   /**
    * DyGrpahs Chart Initalize and Render
    */
   _chartInitalize() {
     let {data, metaData, options} = this.props;
+
+    if (data.length < 2) return;
+
     let {metric, model, displayPointCount} = metaData;
     let element = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
     let first = data[0][DATA_INDEX_TIME].getTime();
@@ -147,9 +155,9 @@ export default class Chart extends React.Component {
     // init, render, and draw chart!
     options.labelsUTC = true;
     options.dateWindow = this._chartRange;  // update viewport of range selector
-    options.axes.y.valueRange = [metaData.min, metaData.max];
     this._previousDataSize = data.length;
-    this._dygraph = new Dygraph(element, data, options);
+    this._dygraph = new CustomDygraph(element, data, options,
+      this.props.yScaleCalculate);
 
     // after: track chart viewport position changes
     rangeEl = element.getElementsByClassName(RANGE_SELECTOR_CLASS)[0];
@@ -163,17 +171,24 @@ export default class Chart extends React.Component {
    */
   _chartUpdate(resetZoom) {
     let {data, metaData, options} = this.props;
-    let {model, metric, displayPointCount} = metaData;
+
+    if (data.length < 1) return;
+
+    let {model,  metric, displayPointCount} = metaData;
     let modelIndex = Math.abs(model.dataSize - 1);
     let first = data[0][DATA_INDEX_TIME].getTime();
     let last = data[data.length - 1][DATA_INDEX_TIME].getTime();
+
+
     let [rangeMin, rangeMax] = this._chartRange;
+
     let unit;
     if (model.ran) {
       unit = (last - first) / model.dataSize;
     } else {
       unit = (last - first) / metric.dataSize;
     }
+
     let rangeWidth = unit * displayPointCount;
     if (resetZoom) {
       rangeMax = rangeMin + rangeWidth;
@@ -182,30 +197,19 @@ export default class Chart extends React.Component {
         rangeMin = last - rangeWidth;
       }
     }
-    this._chartRange = [rangeMin, rangeMax];
-    let scrollLock = false;
 
-    // should we scroll along with incoming model data?
-    if (model.active && (modelIndex < data.length) && (
-      (model.aggregated && (data.length !== this._previousDataSize)) ||
-      (!model.aggregated)
-    )) {
-      scrollLock = true;
-    }
-
-    // scroll along with fresh anomaly model data input.
-    if (scrollLock) {
+    if (model.active && this._scrollLock) {
       rangeMax = data[modelIndex][DATA_INDEX_TIME].getTime();
       rangeMin = rangeMax - rangeWidth;
       if (rangeMin < first) {
         rangeMin = first;
         rangeMax = rangeMin + rangeWidth;
       }
-      this._chartRange = [rangeMin, rangeMax];
     }
 
+    this._chartRange = [rangeMin, rangeMax];
+
     // update chart
-    options.axes.y.valueRange = [metaData.min, metaData.max];
     options.dateWindow = this._chartRange;
     options.file = data;  // new data
     this._previousDataSize = data.length;
@@ -218,7 +222,8 @@ export default class Chart extends React.Component {
    * @param {Object} event - DOM `mousedown` event object
    */
   _handleMouseDown(event) {
-    if (! this._dygraph) return;
+    if (!this._dygraph) return;
+    this._scrollLock = false;
 
     let eventX = this._dygraph.eventToDomCoords(event)[0];
     let {w: canvasWidth} = this._dygraph.getArea();
@@ -257,7 +262,8 @@ export default class Chart extends React.Component {
    * @param {Object} event - DOM `mouseup` event object
    */
   _handleMouseUp(event) {
-    if (! this._dygraph) return;
+    if (!this._dygraph) return;
+    this._scrollLock = false;
     let range = this._dygraph.xAxisRange();
     this._chartRange = range;
 
@@ -276,7 +282,7 @@ export default class Chart extends React.Component {
     let {model} = this.props.metaData;
 
     if (model.aggregated) {
-      this._styles.root.marginTop = '1rem';  // make room for: ☑ ShowNonAgg?
+      this._styles.root.marginTop = '1rem';  // make room for: ☑ ShowNonAgg
     }
 
     let classSuffix = this.props.canZoom ? 'zoom' : 'nozoom';
@@ -286,11 +292,10 @@ export default class Chart extends React.Component {
         ref={`chart-${model.modelId}`}
         style={this._styles.root}
         zDepth={this.props.zDepth}
-        >
-          <CircularProgress className="loading" size={0.5} />
-          {this._config.get('chart:loading')}
+      >
+        <CircularProgress className="loading" size={0.5}/>
+        {this._config.get('chart:loading')}
       </Paper>
     );
   }
-
 }

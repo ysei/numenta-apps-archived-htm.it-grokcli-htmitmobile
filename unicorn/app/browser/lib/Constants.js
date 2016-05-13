@@ -78,6 +78,10 @@ Object.assign(module.exports, CommonConstants);
  * - Param Finder Data
  *   - RECEIVE_PARAM_FINDER_DATA: {@link ReceiveParamFinderData}
  *
+ * - UI Advanced Settings
+ *  - TOGGLE_AGGREGATE_DATA: {@link ToggleAggregateData}
+ *  - OVERRIDE_PARAM_FINDER_RESULTS: {@link OverrideParamFinderResults}
+ *
  * - UI File Detail Menu
  *  - SHOW_FILE_DETAILS: {@link ShowFileDetails}
  *  - HIDE_FILE_DETAILS: {@link HideFileDetails}
@@ -145,6 +149,10 @@ export const ACTIONS = Object.freeze({
 
   // Param Finder Data
   RECEIVE_PARAM_FINDER_DATA: 'RECEIVE_PARAM_FINDER_DATA',
+
+  // UI Advanced Settings
+  TOGGLE_AGGREGATE_DATA: 'TOGGLE_AGGREGATE_DATA',
+  OVERRIDE_PARAM_FINDER_RESULTS: 'OVERRIDE_PARAM_FINDER_RESULTS',
 
   // UI File Detail Menu
   SHOW_FILE_DETAILS: 'SHOW_FILE_DETAILS',

@@ -21,7 +21,8 @@ import RGBColor from 'rgbcolor';
 import {
   DATA_FIELD_INDEX, ANOMALY_YELLOW_VALUE, PROBATION_LENGTH
 } from '../Constants';
-import Dygraph from './DygraphsExtended';
+
+import Dygraph from 'dygraphs';
 import {mapAnomalyColor} from '../browser-utils';
 
 const {DATA_INDEX_ANOMALY} = DATA_FIELD_INDEX;

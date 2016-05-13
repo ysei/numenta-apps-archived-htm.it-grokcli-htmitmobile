@@ -41,8 +41,8 @@ def upgrade():
   # Change tables to use DATETIME column types instead of TIMESTAMP
   op.alter_column("instance_status_history", "timestamp",
                   type_=sa.DATETIME,
-                  existing_nullable=False,
-                  existing_server_default=sa.text("'0000-00-00 00:00:00'"))
+                  server_default=None,
+                  existing_nullable=False)
 
   op.alter_column("metric", "last_timestamp",
                   type_=sa.DATETIME,
