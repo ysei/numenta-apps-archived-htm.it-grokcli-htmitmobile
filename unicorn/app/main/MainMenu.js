@@ -16,13 +16,43 @@
 // http://numenta.org/licenses/
 
 import defaultMenu from 'electron-default-menu';
-
+let electron = require('electron');
 
 /**
  * Main top system menu (File/Open.., etc) for application
  */
 
 let menu = defaultMenu();
+
+let aboutMenuItem = menu[0].submenu[0];
+if (aboutMenuItem.label === 'About HTM Studio') {
+  // Don't show the default Electron dialog.
+  delete aboutMenuItem.role;
+
+  // Do this instead.
+  aboutMenuItem.click = () => {
+    const BrowserWindow = electron.BrowserWindow;
+    let win = new BrowserWindow({width: 283, height: 234, title: ''});
+    win.loadURL(`file://${__dirname}/../browser/about.html`);
+  };
+} else {
+  throw new Error(
+    `Unexpected menu item in first position: ${aboutMenuItem.label}`
+  );
+}
+
+let helpMenu = menu.find((item) => item.label === 'Help');
+if (helpMenu) {
+  helpMenu.submenu.push({
+    label: 'Provide Feedback',
+    click() {
+      let url = 'http://numenta.com/?HTM_STUDIO_FEEDBACK_PLACEHOLDER';
+      electron.shell.openExternal(url);
+    }
+  });
+} else {
+  throw new Error('Could not find Help menu.');
+}
 
 menu.splice(1, 0, {
   label: 'File',
