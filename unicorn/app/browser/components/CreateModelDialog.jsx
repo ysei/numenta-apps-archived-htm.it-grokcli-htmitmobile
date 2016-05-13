@@ -102,9 +102,9 @@ export default class CreateModelDialog extends React.Component {
       viewpoint: null
     });
 
-    this.props.dismiss();
-
     this.context.executeAction(StartModelAction, payload);
+
+    this.props.dismiss();
   }
 
   _handleAdvancedOptions() {
@@ -114,6 +114,15 @@ export default class CreateModelDialog extends React.Component {
   componentDidMount() {
     // Show progress for at least 4 secs
     setTimeout(() => this.setState({progress: false}), 4000);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    let currentlyOpen = this.props.open;
+    if (!currentlyOpen && nextProps.open) {
+      this.setState({showAdvanced: false});
+      this.setState({progress: true});
+      setTimeout(() => this.setState({progress: false}), 4000);
+    }
   }
 
   render() {

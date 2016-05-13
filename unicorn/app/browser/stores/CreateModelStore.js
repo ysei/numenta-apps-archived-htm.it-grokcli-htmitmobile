@@ -94,6 +94,7 @@ export default class CreateModelStore extends BaseStore {
 
   _handleReceiveParamFinderData(payload) {
     this.paramFinderResults = JSON.parse(payload.paramFinderResults);
+    this.aggregateData = this.recommendAggregation();
     this.metricId = payload.metricId;
     this.emitChange();
   }
