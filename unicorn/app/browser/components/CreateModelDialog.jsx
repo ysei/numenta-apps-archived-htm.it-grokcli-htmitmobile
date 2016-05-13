@@ -102,9 +102,9 @@ export default class CreateModelDialog extends React.Component {
       viewpoint: null
     });
 
-    this.props.dismiss();
-
     this.context.executeAction(StartModelAction, payload);
+
+    this.props.dismiss();
   }
 
   _handleAdvancedOptions() {
