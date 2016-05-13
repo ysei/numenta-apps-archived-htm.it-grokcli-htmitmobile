@@ -49,6 +49,7 @@ export default class Chart extends React.Component {
       data: React.PropTypes.array.isRequired,
       metaData: React.PropTypes.object,
       options: React.PropTypes.object,
+      canZoom: React.PropTypes.boolean,
       zDepth: React.PropTypes.number
     };
   }
@@ -70,7 +71,6 @@ export default class Chart extends React.Component {
     // DyGraphs chart container
     this._dygraph = null;
     this._chartRange = [null, null];
-    this._displayPointCount = this._config.get('chart:points');
     this._previousDataSize = 0;
 
     // dynamic styles
@@ -97,7 +97,7 @@ export default class Chart extends React.Component {
     if (!this._dygraph) {
       this._chartInitalize();
     } else {
-      this._chartUpdate();
+      this._chartUpdate(true);
     }
   }
 
@@ -128,27 +128,36 @@ export default class Chart extends React.Component {
 
     if (data.length < 2) return;
 
-    let {metric, model} = metaData;
+    let {metric, model, displayPointCount} = metaData;
     let element = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
     let first = data[0][DATA_INDEX_TIME].getTime();
-    let second = data[1][DATA_INDEX_TIME].getTime();
-    let unit = second - first; // each datapoint
-    let rangeWidth = unit * this._displayPointCount;
-    let rangeEl;
-
-    this._chartRange = [first, first + rangeWidth]; // float left
-
-    // move chart back to last valid display position from previous viewing?
-    if ('viewpoint' in metric && metric.viewpoint) {
-      this._chartRange = [metric.viewpoint, metric.viewpoint + rangeWidth];
+    let last = data[data.length - 1][DATA_INDEX_TIME].getTime();
+    let rangeEl, unit;
+    if (model.ran) {
+      unit = (last - first) / model.dataSize;
+    } else {
+      unit = (last - first) / metric.dataSize;
     }
+    let rangeWidth = unit * displayPointCount;
+
+    let rangeMin = first;
+    // move chart back to last valid display position from previous viewing
+    if ('viewpoint' in metric && metric.viewpoint) {
+      rangeMin = metric.viewpoint;
+    }
+    let rangeMax = rangeMin + rangeWidth;
+    if (rangeMax > last) {
+      rangeMax = last;
+      rangeMin = last - rangeWidth;
+    }
+    this._chartRange = [rangeMin, rangeMax];
 
     // init, render, and draw chart!
     options.labelsUTC = true;
     options.dateWindow = this._chartRange;  // update viewport of range selector
     this._previousDataSize = data.length;
     this._dygraph = new CustomDygraph(element, data, options,
-                                      this.props.yScaleCalculate);
+      this.props.yScaleCalculate);
 
     // after: track chart viewport position changes
     rangeEl = element.getElementsByClassName(RANGE_SELECTOR_CLASS)[0];
@@ -158,24 +167,46 @@ export default class Chart extends React.Component {
 
   /**
    * DyGraphs Chart Update Logic and Re-Render
+   * @param {boolean} resetZoom Whether or not to reset the zoom level
    */
-  _chartUpdate() {
+  _chartUpdate(resetZoom) {
     let {data, metaData, options} = this.props;
 
     if (data.length < 1) return;
 
-    let {model} = metaData;
+    let {model,  metric, displayPointCount} = metaData;
+    let modelIndex = Math.abs(model.dataSize - 1);
+    let first = data[0][DATA_INDEX_TIME].getTime();
+    let last = data[data.length - 1][DATA_INDEX_TIME].getTime();
+
+
     let [rangeMin, rangeMax] = this._chartRange;
 
-    if (model.active && this._scrollLock) {
-      let rangeWidth = rangeMax - rangeMin;
-      if (model.aggregated) {
-        rangeMax = data[data.length - 1][DATA_INDEX_TIME].getTime();
-      } else if (model.dataSize > 0) {
-        rangeMax = data[model.dataSize - 1][DATA_INDEX_TIME].getTime();
-      }
-      rangeMin = rangeMax - rangeWidth;
+    let unit;
+    if (model.ran) {
+      unit = (last - first) / model.dataSize;
+    } else {
+      unit = (last - first) / metric.dataSize;
     }
+
+    let rangeWidth = unit * displayPointCount;
+    if (resetZoom) {
+      rangeMax = rangeMin + rangeWidth;
+      if (rangeMax > last) {
+        rangeMax = last;
+        rangeMin = last - rangeWidth;
+      }
+    }
+
+    if (model.active && this._scrollLock) {
+      rangeMax = data[modelIndex][DATA_INDEX_TIME].getTime();
+      rangeMin = rangeMax - rangeWidth;
+      if (rangeMin < first) {
+        rangeMin = first;
+        rangeMax = rangeMin + rangeWidth;
+      }
+    }
+
     this._chartRange = [rangeMin, rangeMax];
 
     // update chart
@@ -221,7 +252,7 @@ export default class Chart extends React.Component {
 
     // update chart
     this._chartRange = [newMin, newMax];
-    this._chartUpdate();
+    this._chartUpdate(false);
   }
 
   /**
@@ -254,11 +285,16 @@ export default class Chart extends React.Component {
       this._styles.root.marginTop = '1rem';  // make room for: ☑ ShowNonAgg
     }
 
+    let classSuffix = this.props.canZoom ? 'zoom' : 'nozoom';
     return (
-      <Paper className="dygraph-chart" ref={`chart-${model.modelId}`}
-        style={this._styles.root} zDepth={this.props.zDepth}>
-          <CircularProgress className="loading" size={0.5} />
-          {this._config.get('chart:loading')}
+      <Paper
+        className={`dygraph-chart-${classSuffix}`}
+        ref={`chart-${model.modelId}`}
+        style={this._styles.root}
+        zDepth={this.props.zDepth}
+      >
+        <CircularProgress className="loading" size={0.5}/>
+        {this._config.get('chart:loading')}
       </Paper>
     );
   }

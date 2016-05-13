@@ -18,11 +18,15 @@
 import connectToStores from 'fluxible-addons-react/connectToStores';
 import moment from 'moment';
 import React from 'react';
+import ReactDOM from 'react-dom';
+
 import anomalyBarChartUnderlay from '../lib/Dygraphs/AnomalyBarChartUnderlay';
 import axesCustomLabelsUnderlay from '../lib/Dygraphs/AxesCustomLabelsUnderlay';
 import chartInteraction from '../lib/Dygraphs/ChartInteraction.js';
 import Chart from './Chart';
-import {DATA_FIELD_INDEX, PROBATION_LENGTH} from '../lib/Constants';
+import {
+  DATA_FIELD_INDEX, PROBATION_LENGTH, ANOMALY_BAR_WIDTH
+} from '../lib/Constants';
 import {
   formatDisplayValue, mapAnomalyColor
 } from '../lib/browser-utils';
@@ -35,7 +39,7 @@ import RangeSelectorBarChart from '../lib/Dygraphs/RangeSelectorBarChartPlugin';
 
 const {
   DATA_INDEX_TIME, DATA_INDEX_VALUE, DATA_INDEX_ANOMALY
-} = DATA_FIELD_INDEX;
+  } = DATA_FIELD_INDEX;
 
 /**
  * Merge two sorted arrays to create a new sorted array.
@@ -88,7 +92,7 @@ function computeGapThreshold(data) {
   let deltas = [];
   for (let i = 1; i < data.length; i++) {
     let delta = (data[i][DATA_INDEX_TIME].getTime() -
-                 data[i-1][DATA_INDEX_TIME].getTime());
+    data[i - 1][DATA_INDEX_TIME].getTime());
     if (delta > 0) {
       deltas.push(delta);
     }
@@ -96,7 +100,7 @@ function computeGapThreshold(data) {
   deltas.sort();
 
   let percentile = 0.1;
-  let smallTimestampGap =  deltas[Math.floor(deltas.length*percentile)];
+  let smallTimestampGap = deltas[Math.floor(deltas.length * percentile)];
   let maxMissingBars = 2;
   return (1 + maxMissingBars) * smallTimestampGap;
 }
@@ -121,10 +125,10 @@ function insertIntoGaps(data, vals, gapThreshold) {
 
     if (rowid + 1 < data.length) {
       let curr = item[DATA_INDEX_TIME].getTime();
-      let next = data[rowid+1][DATA_INDEX_TIME].getTime();
+      let next = data[rowid + 1][DATA_INDEX_TIME].getTime();
       let delta = next - curr;
       if (delta > gapThreshold) {
-        let gapItem = [new Date(curr + delta/2)].concat(vals);
+        let gapItem = [new Date(curr + delta / 2)].concat(vals);
         newData.push(gapItem);
       }
     }
@@ -162,8 +166,8 @@ function prepareData(
   let yValues = [];
 
   let gapThreshold = computeGapThreshold(modelRecords.length > 0
-                                         ? modelRecords
-                                         : metricRecords);
+    ? modelRecords
+    : metricRecords);
 
   let aggregatedChartData = null;
   if (modelRecords.length && aggregated) {
@@ -175,18 +179,18 @@ function prepareData(
     if (rawDataInBackground) {
       aggregatedChartData = modelRecords.map(
         (item) => [item[DATA_INDEX_TIME],
-                   item[DATA_INDEX_VALUE],
-                   null]);
+          item[DATA_INDEX_VALUE],
+          null]);
 
       aggregatedChartData = insertIntoGaps(aggregatedChartData,
-                                           [NaN, null], gapThreshold);
+        [NaN, null], gapThreshold);
     } else {
       aggregatedChartData = modelRecords.map(
         (item) => [item[DATA_INDEX_TIME],
-                   item[DATA_INDEX_VALUE]]);
+          item[DATA_INDEX_VALUE]]);
 
       aggregatedChartData = insertIntoGaps(aggregatedChartData,
-                                           [NaN], gapThreshold);
+        [NaN], gapThreshold);
     }
   }
 
@@ -200,18 +204,18 @@ function prepareData(
     if (rawDataInBackground) {
       rawChartData = metricRecords.map(
         (item) => [item[DATA_INDEX_TIME],
-                   null,
-                   item[DATA_INDEX_VALUE]]);
+          null,
+          item[DATA_INDEX_VALUE]]);
 
       rawChartData = insertIntoGaps(rawChartData,
-                                    [null, NaN], gapThreshold);
+        [null, NaN], gapThreshold);
     } else {
       rawChartData = metricRecords.map(
         (item) => [item[DATA_INDEX_TIME],
-                   item[DATA_INDEX_VALUE]]);
+          item[DATA_INDEX_VALUE]]);
 
       rawChartData = insertIntoGaps(rawChartData,
-                                    [NaN], gapThreshold);
+        [NaN], gapThreshold);
     }
   }
 
@@ -237,7 +241,7 @@ function yScaleCalculate(context, g) {
 
   // Add space for green anomaly bars.
   yExtentAdjusted[0] -= anomalyScale(0) * (yExtentAdjusted[1] -
-                                           yExtentAdjusted[0]);
+    yExtentAdjusted[0]);
 
   return yExtentAdjusted;
 }
@@ -278,21 +282,44 @@ export default class ModelData extends React.Component {
     this._config = this.context.getConfigClient();
 
     let muiTheme = this.context.muiTheme;
-    let displayPointCount = this._config.get('chart:points');
-
     this._styles = {
       container: {
         position: 'relative'
       },
-      legendSection: {
-        height: '1rem',
-        fontSize: 12
-      },
       legend: {
-        float: 'left'
+        section: {
+          height: '1rem',
+          fontSize: 12
+        },
+        label: {
+          float: 'left'
+        }
+      },
+      zoom: {
+        section: {
+          height: '1rem',
+          fontSize: 12,
+          float: 'right'
+        },
+        label: {
+          color: muiTheme.rawTheme.palette.accent3Color,
+          paddingRight: '1rem',
+          fontWeight: 'bold'
+        },
+        link: {
+          color: muiTheme.rawTheme.palette.primary1Color,
+          paddingRight: '0.5rem',
+          textDecoration: 'underline',
+          cursor: 'pointer'
+        },
+        linkActive: {
+          color: muiTheme.rawTheme.palette.textColor,
+          paddingRight: '0.5rem',
+          textDecoration: 'none',
+          cursor: 'default'
+        }
       }
     }
-    this._anomalyBarWidth = Math.round(displayPointCount / 16, 10);
 
     this._yScaleCalculate = function (context, dygraph) {
       return yScaleCalculate(context, dygraph);
@@ -363,6 +390,11 @@ export default class ModelData extends React.Component {
         }
       }
     }; // chartOptions
+
+    this.state = {
+      zoomLevel: 0,
+      points: 0
+    }
   } // constructor
 
   /**
@@ -400,23 +432,84 @@ export default class ModelData extends React.Component {
         anomalyValue = modelData[anomalyIdx][DATA_INDEX_ANOMALY];
       } else {
         // Get max value from neighboring points
-        let first = -anomalyIdx;
+        let first = ~anomalyIdx;
         let second = first + 1;
         if (second >= modelData.length - 1) {
           second = modelData.length - 1;
         }
         anomalyValue = Math.max(modelData[first][DATA_INDEX_ANOMALY],
-                                modelData[second][DATA_INDEX_ANOMALY]);
+          modelData[second][DATA_INDEX_ANOMALY]);
       }
       // Format anomaly value
       if (anomalyValue || anomalyValue === null) {
         let color = mapAnomalyColor(anomalyValue);
         let anomalyText = mapAnomalyText(anomalyValue);
         displayValue += ` <font color="${color}"><b>Anomaly: ${anomalyText}` +
-                        `</b></font>`;
+          `</b></font>`;
       }
     }
     return displayValue;
+  }
+
+  _handleZoom(zoomLevel) {
+    this.setState({zoomLevel});
+  }
+
+  /**
+   * Get the total of points to display based on either metricData or modelData
+   * and the zoom level
+   * @param  {number} zoomLevel Percentage of data to display. [0..1]
+   * @return {number}      Total points to dispay
+   */
+  _getDisplayPoints(zoomLevel) {
+    // Max zoom level
+    let points = this.state.points;
+    if (zoomLevel > 0) {
+      let {model, metricData, modelData} = this.props;
+      let data;
+      if (model.ran) {
+        data = modelData.data;
+      } else {
+        data = metricData;
+      }
+      if (data && data.length > 0) {
+        points = Math.floor(data.length * zoomLevel) - 1;
+      }
+    }
+    return points;
+  }
+
+  /**
+   * Describe time zoom level rounding time rounded to the closest time
+   * description (minute,  hour, day, week, month, ...) based .
+   * @param  {number} zoomLevel Percentage of data to display. [0..1]
+   * @return {string}           Human readable time period description.
+   *                            For example:
+   *                              All
+   *                              15 minutes
+   *                              8 hours
+   *                              1 day
+   *                              2 weeks
+   *                              6 months
+   */
+  _describeZoomLevel(zoomLevel) {
+    if (zoomLevel === 1) {
+      // No zoom
+      return this._config.get('chart:zoom:all');
+    }
+    let {model, metricData, modelData} = this.props;
+    let data;
+    if (model.ran) {
+      data = modelData.data;
+    } else {
+      data = metricData;
+    }
+    if (data && data.length > 0) {
+      let first = data[0][DATA_INDEX_TIME];
+      let zoomIndex = this._getDisplayPoints(zoomLevel);
+      let last = data[zoomIndex][DATA_INDEX_TIME];
+      return moment(first).to(last, true);
+    }
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -426,13 +519,34 @@ export default class ModelData extends React.Component {
     if (showNonAgg !== nextProps.showNonAgg) {
       return true;
     }
+    if (nextState.zoomLevel !== this.state.zoomLevel) {
+      return true;
+    }
+    if (nextState.points !== this.state.points) {
+      return true;
+    }
 
     // Only update if the model is visible and model data has changed
     if (model.visible && modelData.data.length) {
-      return modelData.modified !== nextProps.modelData.modified;
+      return modelData.modified !== nextProps.modelData.modified ||
+        this.props.model.active !== nextProps.model.active;
     }
 
     return true;
+  }
+
+  componentDidMount() {
+    // Get chart actual width used to calculate the initial number of bars
+    let modelId = this.props.modelId;
+    let chart = ReactDOM.findDOMNode(this.refs[`chart-${modelId}`]);
+    this.setState({points: Math.ceil(chart.offsetWidth / ANOMALY_BAR_WIDTH)});
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.model.active) {
+      // Reset zoom level
+      this.setState({zoomLevel: 0});
+    }
   }
 
   _calculateState(props) {
@@ -447,8 +561,8 @@ export default class ModelData extends React.Component {
     }
 
     const rawDataInBackground = (modelData.data.length &&
-                                 model.aggregated &&
-                                 showNonAgg);
+    model.aggregated &&
+    showNonAgg);
 
     // Calculate axes, labels, and series. Grab them from the "value" options,
     // maybe insert the "raw" options, then overwrite the actual "options" that
@@ -462,14 +576,14 @@ export default class ModelData extends React.Component {
     Object.assign(options, {axes, labels, series});
 
     let [data, xValues, yValues] = prepareData(metricData, modelData.data,
-                                               model.aggregated,
-                                               rawDataInBackground);
+      model.aggregated,
+      rawDataInBackground);
 
     this._data = data;
     this._xValues = xValues;
     this._yValues = yValues;
     this._yExtent = [Math.min(...yValues),
-                     Math.max(...yValues)];
+      Math.max(...yValues)];
   }
 
   componentWillUpdate(nextProps, nextState) {
@@ -483,14 +597,42 @@ export default class ModelData extends React.Component {
   render() {
     let {metric, model, modelData, modelId} = this.props;
     let metaData = {metric, model, modelData};
+    let zoomLevel = this.state.zoomLevel;
+
+    metaData.displayPointCount = this._getDisplayPoints(zoomLevel);
+
+    let zoomSection;
+    if (!model.active) {
+      // Render Zoom buttons
+      let zoomButtons = [0, 0.25, 1].map((level) => {
+        let style;
+        if (level === zoomLevel) {
+          style = this._styles.zoom.linkActive;
+        } else {
+          style = this._styles.zoom.link;
+        }
+        // Generate friendly zoom level description
+        let label = this._describeZoomLevel(level);
+        return (<a style={style} onClick={this._handleZoom.bind(this, level)}>
+          {label}</a>);
+      });
+      zoomSection = (<section style={this._styles.zoom.section}>
+        <span style={this._styles.zoom.label}>Zoom:</span>
+        {zoomButtons}
+      </section>);
+    }
 
     return (
       <div style={this._styles.container}>
-        <section style={this._styles.legendSection}>
-          <span id={`legend-${modelId}`} style={this._styles.legend}></span>
+        {zoomSection}
+        <section style={this._styles.legend.section}>
+          <span id={`legend-${modelId}`} style={this._styles.legend.label}/>
         </section>
         <section>
-          <Chart data={this._data} metaData={metaData}
+          <Chart ref={`chart-${modelId}`}
+                 data={this._data}
+                 metaData={metaData}
+                 canZoom={!model.active}
                  options={this._chartOptions.options}
                  yScaleCalculate={this._yScaleCalculate}/>
         </section>

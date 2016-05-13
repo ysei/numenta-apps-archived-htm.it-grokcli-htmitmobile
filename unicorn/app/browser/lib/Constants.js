@@ -176,3 +176,10 @@ export const DATA_FIELD_INDEX = Object.freeze({
   DATA_INDEX_VALUE: 1,
   DATA_INDEX_ANOMALY: 2
 });
+
+
+/**
+ * Anomaly bar width in pixels
+ * @type {Number}
+ */
+export const ANOMALY_BAR_WIDTH = 10;

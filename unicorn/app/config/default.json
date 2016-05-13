@@ -21,7 +21,9 @@
   "chart": {
     "showNonAgg": "Show non-aggregated data",
     "loading": "Loading chart...",
-    "points": 100
+    "zoom": {
+      "all": "All"
+    }
   },
   "dialog": {
     "file": {

@@ -17,12 +17,18 @@
 
 import RGBColor from 'rgbcolor';
 
-import {anomalyScale} from '../../../common/common-utils';
-import {DATA_FIELD_INDEX, PROBATION_LENGTH} from '../Constants';
+import {anomalyScale, binarySearch} from '../../../common/common-utils';
+import {
+  ANOMALY_BAR_WIDTH , DATA_FIELD_INDEX, PROBATION_LENGTH
+} from '../Constants';
 import {mapAnomalyColor} from '../../lib/browser-utils';
 
-const {DATA_INDEX_TIME, DATA_INDEX_ANOMALY} = DATA_FIELD_INDEX;
+const {
+  DATA_INDEX_TIME, DATA_INDEX_ANOMALY
+} = DATA_FIELD_INDEX;
 
+// Anomaly bar padding in pixels
+const PADDING = 3;
 
 /**
  * Helper function to Draw a rectangle on a DyGraphs canvas.
@@ -38,6 +44,31 @@ function _drawRectangle(canvas, xStart, yStart, width, height, color) {
   canvas.fillRect(xStart, yStart, width, height);
 }
 
+/**
+ * Update graph date windown
+ * @param  {Object} dygraph    Dygraph instance
+ * @param  {Array} dateWindow  [earliest, latest], where earliest/latest are
+ *                             milliseconds since epoch.
+ *                             see http://dygraphs.com/options.html#dateWindow
+ */
+function _updateDateWindow(dygraph, dateWindow) {
+  setTimeout(() => {
+    dygraph.updateOptions({dateWindow});
+  });
+}
+
+/**
+ * Compare function used to search row by time
+ * @param  {Object}  current Current data recored
+ * @param  {integer} key     Timestamp key (UTC miliseconds)
+ * @return {integer}         0 for match,
+ *                           negative value if current < key,
+ *                           positive value if current > key
+ * @see  {@link binarySearch}
+ */
+function _compare(current, key) {
+  return current[DATA_INDEX_TIME].getTime() - key;
+}
 
 /**
  * DyGraph Custom Chart Underlay: AnomalyBarChart Plotter-like callback, for
@@ -55,45 +86,95 @@ function _drawRectangle(canvas, xStart, yStart, width, height, color) {
  */
 export default function (context, canvas, area, dygraph) {
   let modelData = dygraph.getOption('modelData') || [];
-  let xAxisRange = dygraph.xAxisRange();
-  let barWidth = context._anomalyBarWidth;
-  let safeColor = context.context.muiTheme.rawTheme.palette.safeColor;
-  let height = area.h;
-  let halfBarWidth = Math.ceil(barWidth / 2);
-  let barHeight, probationIndex;
-
-  if (!(modelData.length)) {
-    return;  // no anomaly data, no draw bars.
+  if (modelData.length < 2) {
+    // Not enough data
+    return;
   }
 
-  probationIndex = Math.min(PROBATION_LENGTH, modelData.length);
+  // Calculate number of bars based on the chart area
+  let totalBars = Math.ceil(area.w / ANOMALY_BAR_WIDTH);
 
-  for (let index=0; index<modelData.length; index++) {
-    (function (i) {  // help data survive loop closure
-      let time = modelData[i][DATA_INDEX_TIME].getTime();
-      let color, value, x, y;
+  // Update bar width based on actual bars to be displayed
+  let barWidth = area.w / totalBars;
 
-      if (time < xAxisRange[0] || time > xAxisRange[1]) {
-        return;  // filter out if not inside the current date range
-      }
+  // Get total points matching date window range
+  let range = dygraph.xAxisRange();
+  let firstPoint = binarySearch(modelData, range[0], _compare);
+  if (firstPoint < 0) {
+    firstPoint = ~firstPoint;
+  }
 
-      value = modelData[i][DATA_INDEX_ANOMALY];
-      x = Math.round(dygraph.toDomXCoord(time) - halfBarWidth);
+  let lastPoint =  binarySearch(modelData, range[1], _compare);
+  if (lastPoint < 0) {
+    lastPoint = ~lastPoint;
+  }
+  let totalPoints = lastPoint - firstPoint;
+  let pointsPerBar = totalPoints / totalBars;
 
-      if (isFinite(x) && (value >= 0)) {
-        // draw: real anomaly bar
-        if (index < probationIndex) {
-          barHeight = Math.round(anomalyScale(0) * height);
-          value = null;
-        } else {
-          barHeight = Math.round(anomalyScale(value) * height);
-        }
-        y = 0 - barHeight;
-        color = mapAnomalyColor(value);
-        _drawRectangle(canvas, x, height - 1, barWidth, y, color);
-      } else {
-        _drawRectangle(canvas, x, height - 1, barWidth, -2, safeColor);
-      }
-    }(index));  // help data survive loop closure
-  }  // for loop modelData
+  // Validate date window range with visible bars
+  let startTime = modelData[firstPoint][DATA_INDEX_TIME].getTime();
+  let endTime = modelData[lastPoint][DATA_INDEX_TIME].getTime();
+
+  // Not enough points, expand window
+  if (totalPoints < totalBars) {
+    let lastData = modelData.length - 1;
+    // Try to expand to the right first
+    if (firstPoint + totalBars < lastData) {
+      endTime = modelData[firstPoint + totalBars][DATA_INDEX_TIME].getTime();
+    } else {
+      // Expand to the left
+      startTime = modelData[lastData - totalBars][DATA_INDEX_TIME].getTime();
+      endTime = modelData[lastData][DATA_INDEX_TIME].getTime();
+    }
+    _updateDateWindow(dygraph, [startTime, endTime]);
+    return;
+  }
+
+
+  // Find X position for first visible bar by calculating the X position of
+  // the initial data point translated by the number of bars up to the bar
+  // containing the first visible point
+  let firstBar = Math.floor(firstPoint / pointsPerBar);
+  let initialX = dygraph.toDomXCoord(modelData[0][DATA_INDEX_TIME].getTime());
+  let x = initialX + firstBar * barWidth;
+
+  // Find first record after probation period
+  let probationIndex = Math.min(PROBATION_LENGTH, modelData.length);
+
+  // Render bars
+  let anomaly, bar, color, height;
+  for (bar=0; bar <= totalBars; bar++) {
+    startTime = dygraph.toDataXCoord(x);
+    firstPoint = binarySearch(modelData, startTime, _compare);
+    if (firstPoint < 0) {
+      firstPoint = ~firstPoint;
+    }
+    endTime = dygraph.toDataXCoord(x + barWidth);
+    lastPoint = binarySearch(modelData, endTime, _compare);
+    if (lastPoint < 0) {
+      lastPoint = ~lastPoint;
+    }
+
+    // Check probation period
+    if (firstPoint >= probationIndex) {
+      // Find max anomaly
+      anomaly = modelData
+                  .slice(firstPoint, lastPoint)
+                  .reduce((prev, current) => {
+                    return Math.max(prev, current[DATA_INDEX_ANOMALY]);
+                  }, 0);
+      // Format anomaly bar
+      height = anomalyScale(anomaly) * area.h;
+      color = mapAnomalyColor(anomaly);
+    } else {
+      // Format probation period bar
+      height = anomalyScale(0) * area.h;
+      color = mapAnomalyColor(null);
+    }
+
+    _drawRectangle(canvas, x - (barWidth - PADDING) / 2, area.h-1,
+                   barWidth - PADDING, -height, color);
+    // Next bar
+    x += barWidth;
+  }
 }
