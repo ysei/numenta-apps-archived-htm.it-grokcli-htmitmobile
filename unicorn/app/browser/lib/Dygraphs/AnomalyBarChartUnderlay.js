@@ -45,19 +45,6 @@ function _drawRectangle(canvas, xStart, yStart, width, height, color) {
 }
 
 /**
- * Update graph date windown
- * @param  {Object} dygraph    Dygraph instance
- * @param  {Array} dateWindow  [earliest, latest], where earliest/latest are
- *                             milliseconds since epoch.
- *                             see http://dygraphs.com/options.html#dateWindow
- */
-function _updateDateWindow(dygraph, dateWindow) {
-  setTimeout(() => {
-    dygraph.updateOptions({dateWindow});
-  });
-}
-
-/**
  * Compare function used to search row by time
  * @param  {Object}  current Current data recored
  * @param  {integer} key     Timestamp key (UTC miliseconds)
@@ -91,90 +78,62 @@ export default function (context, canvas, area, dygraph) {
     return;
   }
 
-  // Calculate number of bars based on the chart area
-  let totalBars = Math.ceil(area.w / ANOMALY_BAR_WIDTH);
+  // Divide the x extent into buckets.
+  // Each bucket contains zero or more points.
+  let timespan = dygraph.xAxisRange();
+  let visibleBucketCount = area.w / ANOMALY_BAR_WIDTH;
+  let timestampBucketWidth =
+        (timespan[1] - timespan[0]) / visibleBucketCount;
+  let bucketStart0 =
+        modelData[0][DATA_INDEX_TIME].getTime() - timestampBucketWidth/2;
+  let firstVisibleBucket =
+        Math.floor((timespan[0] - bucketStart0) / timestampBucketWidth);
 
-  // Update bar width based on actual bars to be displayed
-  let barWidth = area.w / totalBars;
-
-  // Get total points matching date window range
-  let range = dygraph.xAxisRange();
-  let firstPoint = binarySearch(modelData, range[0], _compare);
-  if (firstPoint < 0) {
-    firstPoint = ~firstPoint;
+  // Walk all of the visible buckets, using a single `iData` index.
+  let bucketIndex = firstVisibleBucket;
+  let bucketStart = bucketStart0 + (bucketIndex * timestampBucketWidth);
+  let iData = binarySearch(modelData, timespan[0], _compare);
+  if (iData < 0) {
+    iData = ~iData;
   }
 
-  let lastPoint =  binarySearch(modelData, range[1], _compare);
-  if (lastPoint < 0) {
-    lastPoint = ~lastPoint;
-  }
-  let totalPoints = lastPoint - firstPoint;
-  let pointsPerBar = totalPoints / totalBars;
-
-  // Validate date window range with visible bars
-  let startTime = modelData[firstPoint][DATA_INDEX_TIME].getTime();
-  let endTime = modelData[lastPoint][DATA_INDEX_TIME].getTime();
-
-  // Not enough points, expand window
-  if (totalPoints < totalBars) {
-    let lastData = modelData.length - 1;
-    // Try to expand to the right first
-    if (firstPoint + totalBars < lastData) {
-      endTime = modelData[firstPoint + totalBars][DATA_INDEX_TIME].getTime();
-    } else {
-      // Expand to the left
-      startTime = modelData[lastData - totalBars][DATA_INDEX_TIME].getTime();
-      endTime = modelData[lastData][DATA_INDEX_TIME].getTime();
-    }
-    _updateDateWindow(dygraph, [startTime, endTime]);
-    return;
-  }
-
-
-  // Find X position for first visible bar by calculating the X position of
-  // the initial data point translated by the number of bars up to the bar
-  // containing the first visible point
-  let firstBar = Math.floor(firstPoint / pointsPerBar);
-  let initialX = dygraph.toDomXCoord(modelData[0][DATA_INDEX_TIME].getTime());
-  let x = initialX + firstBar * barWidth;
-
-  // Find first record after probation period
-  let probationIndex = Math.min(PROBATION_LENGTH, modelData.length);
-
-  // Render bars
-  let anomaly, bar, color, height;
-  for (bar=0; bar <= totalBars; bar++) {
-    startTime = dygraph.toDataXCoord(x);
-    firstPoint = binarySearch(modelData, startTime, _compare);
-    if (firstPoint < 0) {
-      firstPoint = ~firstPoint;
-    }
-    endTime = dygraph.toDataXCoord(x + barWidth);
-    lastPoint = binarySearch(modelData, endTime, _compare);
-    if (lastPoint < 0) {
-      lastPoint = ~lastPoint;
+  while (bucketStart <= timespan[1]) {
+    // Find all results within this bucket.
+    let bucketEnd = bucketStart + timestampBucketWidth;
+    let matchStart = iData;
+    let matchEnd = matchStart;
+    while (matchEnd < modelData.length &&
+           modelData[matchEnd][DATA_INDEX_TIME].getTime() < bucketEnd) {
+      matchEnd++;
     }
 
-    // Check probation period
-    if (firstPoint >= probationIndex) {
-      // Find max anomaly
-      anomaly = modelData
-                  .slice(firstPoint, lastPoint)
-                  .reduce((prev, current) => {
-                    return Math.max(prev, current[DATA_INDEX_ANOMALY]);
-                  }, 0);
-      // Format anomaly bar
-      height = anomalyScale(anomaly) * area.h;
-      color = mapAnomalyColor(anomaly);
-    } else {
-      // Format probation period bar
-      height = anomalyScale(0) * area.h;
-      color = mapAnomalyColor(null);
+    if (matchStart !== matchEnd) {
+      let color, heightPercent;
+      if (matchEnd - 1 < PROBATION_LENGTH) {
+        // All results in this bucket are in the probationary period.
+        color = mapAnomalyColor(null);
+        heightPercent = anomalyScale(0);
+      } else {
+        // Use the highest anomaly score in this bucket.
+        let maxAnomaly = 0;
+        for (let i = Math.max(matchStart, PROBATION_LENGTH); i < matchEnd;
+             i++) {
+          maxAnomaly = Math.max(maxAnomaly, modelData[i][DATA_INDEX_ANOMALY]);
+        }
+
+        color = mapAnomalyColor(maxAnomaly);
+        heightPercent = anomalyScale(maxAnomaly);
+      }
+
+      let x = dygraph.toDomXCoord(bucketStart);
+      let y = area.h - 1;
+      let height = heightPercent * area.h;
+      _drawRectangle(canvas, x + PADDING/2, y, ANOMALY_BAR_WIDTH - PADDING,
+                     -height, color);
     }
 
-    _drawRectangle(canvas, x - (barWidth - PADDING) / 2, area.h-1,
-                   barWidth - PADDING, -height, color);
-    // Next bar
-    x += barWidth;
+    bucketIndex++;
+    bucketStart = bucketStart0 + (bucketIndex * timestampBucketWidth);
+    iData = matchEnd;
   }
 }
