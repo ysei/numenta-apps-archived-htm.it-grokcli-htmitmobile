@@ -400,8 +400,10 @@ class CustomDatasourceAdapterTest(TestCaseBase):
     self.checkEncoderResolution(metricId, 0, 100)
 
 
-  def _getPathToData(self, filename):
-    """ Returns the absolute path to a file that lives in the relative data/directory """
+  @staticmethod
+  def _getPathToData(filename):
+    """ Returns the absolute path to a file that lives in the relative
+    data/directory """
     basePath = os.path.split(os.path.abspath(__file__))[0]
     dataDirPath = os.path.join(basePath, "../../../data")
     knownDataFilePath = os.path.join(dataDirPath, filename)
@@ -409,7 +411,8 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
 
   def testMonitorMetricWithCompleteModelParams(self):
-    """ Test monitorMetric with complete set of user-provided model parameters that activates a model """
+    """ Test monitorMetric with complete set of user-provided model parameters
+    that activates a model """
     metricName = "test-" + uuid.uuid1().hex
 
     adapter = datasource_adapter_factory.createCustomDatasourceAdapter()
@@ -420,7 +423,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     modelParamsPath = self._getPathToData("example_model_params.json")
     with open(modelParamsPath, "rb") as f:
-        completeModelParams = json.load(f)
+      completeModelParams = json.load(f)
 
     # Turn on monitoring
     modelSpec = {
@@ -602,8 +605,8 @@ class CustomDatasourceAdapterTest(TestCaseBase):
     with self.engine.connect() as conn:
       metricObj = repository.getMetric(conn,
                                        metricId,
-                                      fields=[schema.metric.c.parameters,
-                                              schema.metric.c.status])
+                                       fields=[schema.metric.c.parameters,
+                                               schema.metric.c.status])
     self.assertEqual(metricObj.status, MetricStatus.PENDING_DATA)
     self.assertEqual(json.loads(metricObj.parameters), modelSpec)
 

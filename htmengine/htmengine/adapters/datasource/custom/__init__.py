@@ -190,8 +190,8 @@ class _CustomDatasourceAdapter(DatasourceAdapterIface):
     custom metrics.
 
     Start the model if possible: this will happen if modelParams includes both
-    "min" and "max" or there is enough data to estimate them. Alternatively, users
-    may pass in a full set of model parameters.
+    "min" and "max" or there is enough data to estimate them. Alternatively,
+    users may pass in a full set of model parameters.
 
     :param modelSpec: model specification for HTM model; per
         ``model_spec_schema.json`` with the ``metricSpec`` property per
@@ -286,15 +286,19 @@ class _CustomDatasourceAdapter(DatasourceAdapterIface):
     if "completeModelParams" in modelSpec:
       # Full model params have been provided by the user
       swarmParams = dict()
-      swarmParams["modelConfig"] = copy.deepcopy(modelSpec["completeModelParams"])
-      swarmParams["inferenceArgs"] = {"predictionSteps": [1], "predictedField": "c1", "inputPredictedField": "auto"}
-      swarmParams["inputRecordSchema"] = (fieldmeta.FieldMetaInfo(name="c0",
-                                                                  type=fieldmeta.FieldMetaType.datetime,
-                                                                  special=fieldmeta.FieldMetaSpecial.timestamp),
-                                          fieldmeta.FieldMetaInfo(name="c1",
-                                                                  type=fieldmeta.FieldMetaType.float,
-                                                                  special=fieldmeta.FieldMetaSpecial.none),
-      )
+      swarmParams["modelConfig"] = copy.deepcopy(
+        modelSpec["completeModelParams"])
+      swarmParams["inferenceArgs"] = {"predictionSteps": [1],
+                                      "predictedField": "c1",
+                                      "inputPredictedField": "auto"}
+      c0Info = fieldmeta.FieldMetaInfo("c0",
+                                       fieldmeta.FieldMetaType.datetime,
+                                       fieldmeta.FieldMetaSpecial.timestamp)
+
+      c1Info = fieldmeta.FieldMetaInfo("c1",
+                                       fieldmeta.FieldMetaType.float,
+                                       fieldmeta.FieldMetaSpecial.none)
+      swarmParams["inputRecordSchema"] = (c0Info, c1Info,)
     else:
       modelParams = modelSpec.get("modelParams", dict())
       minVal = modelParams.get("min")
