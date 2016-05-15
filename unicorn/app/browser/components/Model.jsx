@@ -289,8 +289,11 @@ export default class Model extends React.Component {
     let aggOpts = valueField.aggregation_options;
 
     // More info section
-    let recognizeWeeklyPatterns = Boolean(encoders.c0_dayOfWeek);
-    let recognizeDailyPatterns = Boolean(encoders.c0_timeOfDay);
+    let timeOfDay = _.get(encoders, 'c0_timeOfDay');
+    let dayOfWeek = _.get(encoders, 'c0_dayOfWeek');
+
+    let recognizeWeeklyPatterns = Boolean(dayOfWeek);
+    let recognizeDailyPatterns = Boolean(timeOfDay);
     let dataIsAggregated = Boolean(aggOpts);
 
     let aggregationMessage = 'The data is not aggregated';
