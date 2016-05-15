@@ -301,6 +301,13 @@ function yScaleCalculate(context, g) {
   return yExtentAdjusted;
 }
 
+function onChartResize(context) {
+  // Get chart actual width used to calculate the initial number of bars
+  let modelId = context.props.modelId;
+  let chart = ReactDOM.findDOMNode(context.refs[`chart-${modelId}`]);
+  context.setState({chartWidth: chart.offsetWidth});
+}
+
 /**
  * React Component for sending Model Data from Model component to
  *  Chart component.
@@ -383,6 +390,8 @@ export default class ModelData extends React.Component {
     this._yScaleCalculate = function (context, dygraph) {
       return yScaleCalculate(context, dygraph);
     }.bind(null, this);
+
+    this._onChartResize = onChartResize.bind(null, this);
 
     // Dygraphs Chart Options: Global and per-Series/Axis settings.
     this._chartOptions = {
@@ -608,11 +617,12 @@ export default class ModelData extends React.Component {
   }
 
   componentDidMount() {
-    // Get chart actual width used to calculate the initial number of bars
-    let modelId = this.props.modelId;
-    let chart = ReactDOM.findDOMNode(this.refs[`chart-${modelId}`]);
-    // TODO we also need this on chart resize
-    this.setState({chartWidth: chart.offsetWidth});
+    this._onChartResize();
+    window.addEventListener('resize', this._onChartResize);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._onChartResize);
   }
 
   componentWillReceiveProps(nextProps) {
