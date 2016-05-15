@@ -2,6 +2,7 @@
   "description" : "Model specification shared by all datasource adapters for `monitorMetric` input; also what is stored in a metric row's properties field",
   "type": "object",
   "additionalProperties":false,
+
   "properties": {
     "datasource": {
       "description" : "datasource adapter identifier; e.g., custom, cloudwatch",
@@ -34,9 +35,24 @@
       }
     },
     "completeModelParams": {
-      "description": "Model creation parameter overrides for entire model.",
+      "description": "Complete model params obtained from calling nupic.swarming.permutations_runner.runWithConfig() passing swarm config specifying timestamp and single scalar volume metric fields as well as 'TemporalAnomaly' inference type'",
       "required": false,
       "type": "object"
+    },
+    "inferenceArgs": {
+      "description": "OPF Model Inference parameters (JSON object) for passing to the resulting model's `enableInference()` method as the `inferenceArgs` parameter.",
+      "type": "object",
+      "required": false
+    },
+    "timestampFieldName": {
+      "description": "The name of the field in modelParams corresponding to the metric timestamp; for example, this is c0 in the model params returned by nupic.frameworks.opf.common_models.cluster_params.getScalarMetricWithTimeOfDayAnomalyParams().",
+      "type": "string",
+      "required": false
+    },
+    "valueFieldName": {
+      "description": "The name of the field in modelParams corresponding to the metric value; for example, this is c1 in the model params returned by nupic.frameworks.opf.common_models.cluster_params.getScalarMetricWithTimeOfDayAnomalyParams().",
+      "type": "string",
+      "required": false
     }
   }
 }

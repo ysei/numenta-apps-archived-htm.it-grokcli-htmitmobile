@@ -257,6 +257,33 @@ class _CustomDatasourceAdapter(DatasourceAdapterIface):
     :raises htmengine.exceptions.MetricAlreadyMonitored: if the metric is
       already being monitored
     """
+    if "completeModelParams" in modelSpec:
+      # User has provided full model params
+
+      # 'completeModelParams' and 'modelParams' are mutex
+      if "modelParams" in modelSpec:
+        raise ValueError("Specify either \"modelParams\" or "
+                         "\"completeModelParams\" but not both; modelSpec=%r"
+                         % (modelSpec,))
+
+      # 'completeModelParams', 'inferenceArgs', 'timestampFieldName', and
+      # 'valueFieldName' must all be present together
+      if "inferenceArgs" not in modelSpec:
+        raise ValueError("inferenceArgs must be specified with "
+                         "completeModelParams; modelSpec=%r" % (modelSpec,))
+      if "timestampFieldName" not in modelSpec:
+        raise ValueError("timestampFieldName must be specified with "
+                         "completeModelParams; modelSpec=%r" % (modelSpec,))
+      if "valueFieldName" not in modelSpec:
+        raise ValueError("valueFieldName must be specified with "
+                         "completeModelParams; modelSpec=%r" % (modelSpec,))
+
+      # check for consistency in predicted field naming
+      if modelSpec["inferenceArgs"]["predictedField"] != modelSpec[
+        "valueFieldName"]:
+        raise ValueError("Inference args' predictedField must match "
+                         "valueFieldName")
+
     metricSpec = modelSpec["metricSpec"]
 
     with self.connectionFactory() as conn:
@@ -283,22 +310,21 @@ class _CustomDatasourceAdapter(DatasourceAdapterIface):
           "Neither uid nor metric name present in metricSpec; modelSpec=%r"
           % (modelSpec,))
 
+    # Construct singular swarm params structure
     if "completeModelParams" in modelSpec:
-      # Full model params have been provided by the user
       swarmParams = dict()
       swarmParams["modelConfig"] = copy.deepcopy(
         modelSpec["completeModelParams"])
-      swarmParams["inferenceArgs"] = {"predictionSteps": [1],
-                                      "predictedField": "c1",
-                                      "inputPredictedField": "auto"}
-      c0Info = fieldmeta.FieldMetaInfo("c0",
-                                       fieldmeta.FieldMetaType.datetime,
-                                       fieldmeta.FieldMetaSpecial.timestamp)
-
-      c1Info = fieldmeta.FieldMetaInfo("c1",
-                                       fieldmeta.FieldMetaType.float,
-                                       fieldmeta.FieldMetaSpecial.none)
-      swarmParams["inputRecordSchema"] = (c0Info, c1Info,)
+      swarmParams["inferenceArgs"] = modelSpec["inferenceArgs"]
+      inputRecordSchema = (
+        fieldmeta.FieldMetaInfo(modelSpec["timestampFieldName"],
+                                fieldmeta.FieldMetaType.datetime,
+                                fieldmeta.FieldMetaSpecial.timestamp),
+        fieldmeta.FieldMetaInfo(modelSpec["valueFieldName"],
+                                fieldmeta.FieldMetaType.float,
+                                fieldmeta.FieldMetaSpecial.none),
+      )
+      swarmParams["inputRecordSchema"] = inputRecordSchema
     else:
       modelParams = modelSpec.get("modelParams", dict())
       minVal = modelParams.get("min")
