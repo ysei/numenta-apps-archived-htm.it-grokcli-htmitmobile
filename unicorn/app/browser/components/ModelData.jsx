@@ -99,7 +99,7 @@ function computeGapThreshold(data) {
       deltas.push(delta);
     }
   }
-  deltas.sort();
+  deltas.sort((a, b) => a - b);
 
   let percentile = 0.1;
   let smallTimestampGap = deltas[Math.floor(deltas.length * percentile)];
@@ -296,7 +296,7 @@ function yScaleCalculate(context, g) {
 
   // Add space for green anomaly bars.
   yExtentAdjusted[0] -= anomalyScale(0) * (yExtentAdjusted[1] -
-    yExtentAdjusted[0]);
+                                           yExtentAdjusted[0]);
 
   return yExtentAdjusted;
 }
@@ -452,8 +452,8 @@ export default class ModelData extends React.Component {
 
     this.state = {
       zoomLevel: 0,
-      points: 0
-    }
+      chartWidth: 400 // Replace with actual width when we know it.
+    };
   } // constructor
 
   /**
@@ -515,27 +515,42 @@ export default class ModelData extends React.Component {
   }
 
   /**
-   * Get the total of points to display based on either metricData or modelData
-   * and the zoom level
+   * Translate the zoom level into a resolution.
+   *
+   * A resolution has a timespan and a 'per' field.
+   *
    * @param  {number} zoomLevel Percentage of data to display. [0..1]
-   * @return {number}      Total points to dispay
+   * @return {Object} a 'timespan' + 'per' pair
    */
-  _getDisplayPoints(zoomLevel) {
-    // Max zoom level
-    let points = this.state.points;
-    if (zoomLevel > 0) {
-      let {model, metricData, modelData} = this.props;
-      let data;
-      if (model.ran) {
-        data = modelData.data;
+  _getResolution(zoomLevel) {
+    let {metricData, modelData} = this.props;
+
+    let resolution;
+    if (zoomLevel === 0) {
+      let timespan;
+      if (modelData.data.length) {
+        timespan = this._minTimeDelta;
       } else {
-        data = metricData;
+        // Assume evenly distributed points. It might not be evenly distributed,
+        // but it won't cause problems. If we used the min delta, it would cause
+        // the chart to zoom too far if the data contains a single small delta.
+        timespan = (this._xValues[this._xValues.length - 1] -
+                    this._xValues[0]) / metricData.length;
       }
-      if (data && data.length > 0) {
-        points = Math.floor(data.length * zoomLevel) - 1;
-      }
+
+      resolution = {
+        timespan,
+        per: 'anomaly bar'
+      };
+    } else {
+      resolution = {
+        timespan: zoomLevel * (this._xValues[this._xValues.length - 1] -
+                               this._xValues[0]),
+        per: 'chart width'
+      };
     }
-    return points;
+
+    return resolution;
   }
 
   /**
@@ -556,19 +571,17 @@ export default class ModelData extends React.Component {
       // No zoom
       return this._config.get('chart:zoom:all');
     }
-    let {model, metricData, modelData} = this.props;
-    let data;
-    if (model.ran) {
-      data = modelData.data;
-    } else {
-      data = metricData;
+
+    let resolution = this._getResolution(zoomLevel);
+    let chartWidthTimespan;
+    if (resolution.per === 'anomaly bar') {
+      chartWidthTimespan = resolution.timespan * (this.state.chartWidth /
+                                                  ANOMALY_BAR_WIDTH);
+    } else if (resolution.per === 'chart width') {
+      chartWidthTimespan = resolution.timespan;
     }
-    if (data && data.length > 0) {
-      let first = data[0][DATA_INDEX_TIME];
-      let zoomIndex = this._getDisplayPoints(zoomLevel);
-      let last = data[zoomIndex][DATA_INDEX_TIME];
-      return moment(first).to(last, true);
-    }
+
+    return moment.duration(chartWidthTimespan).humanize();
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -581,7 +594,7 @@ export default class ModelData extends React.Component {
     if (nextState.zoomLevel !== this.state.zoomLevel) {
       return true;
     }
-    if (nextState.points !== this.state.points) {
+    if (nextState.chartWidth !== this.state.chartWidth) {
       return true;
     }
 
@@ -598,7 +611,8 @@ export default class ModelData extends React.Component {
     // Get chart actual width used to calculate the initial number of bars
     let modelId = this.props.modelId;
     let chart = ReactDOM.findDOMNode(this.refs[`chart-${modelId}`]);
-    this.setState({points: Math.ceil(chart.offsetWidth / ANOMALY_BAR_WIDTH)});
+    // TODO we also need this on chart resize
+    this.setState({chartWidth: chart.offsetWidth});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -645,7 +659,7 @@ export default class ModelData extends React.Component {
     this._yValues = yValues;
     this._minTimeDelta = minDelta;
     this._yExtent = [Math.min(...yValues),
-      Math.max(...yValues)];
+                     Math.max(...yValues)];
   }
 
   componentWillUpdate(nextProps, nextState) {
@@ -660,8 +674,6 @@ export default class ModelData extends React.Component {
     let {metric, model, modelData, modelId} = this.props;
     let metaData = {metric, model, modelData};
     let zoomLevel = this.state.zoomLevel;
-
-    metaData.displayPointCount = this._getDisplayPoints(zoomLevel);
 
     let zoomSection;
     if (!model.active) {
@@ -696,6 +708,7 @@ export default class ModelData extends React.Component {
                  metaData={metaData}
                  canZoom={!model.active}
                  options={this._chartOptions.options}
+                 resolution={this._getResolution(zoomLevel)}
                  xScaleCalculate={this._xScaleCalculate}
                  yScaleCalculate={this._yScaleCalculate}/>
         </section>
