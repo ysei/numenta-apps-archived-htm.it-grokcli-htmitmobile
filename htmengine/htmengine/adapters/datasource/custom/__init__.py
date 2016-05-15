@@ -279,8 +279,8 @@ class _CustomDatasourceAdapter(DatasourceAdapterIface):
                          "completeModelParams; modelSpec=%r" % (modelSpec,))
 
       # check for consistency in predicted field naming
-      if modelSpec["inferenceArgs"]["predictedField"] != modelSpec[
-        "valueFieldName"]:
+      if (modelSpec["inferenceArgs"]["predictedField"] !=
+          modelSpec["valueFieldName"]):
         raise ValueError("Inference args' predictedField must match "
                          "valueFieldName")
 
