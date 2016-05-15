@@ -246,10 +246,14 @@ function xScaleCalculate(context, g) {
   let {modelData} = context.props;
 
   if (modelData.data.length) {
+    let data = modelData.data;
+
+    // When there are only a few results, Dygraphs adds some padding.
+    adjusted[0] = Math.max(adjusted[0], data[0][DATA_INDEX_TIME]);
+
     // Must be zoomed out enough that the space is filled with anomaly bars.
     let anomalyBarCount = g.getArea().w / ANOMALY_BAR_WIDTH;
     let minSpread = context._minTimeDelta * anomalyBarCount;
-    let data = modelData.data;
     let discrepancy = minSpread - (adjusted[1] - adjusted[0]);
     if (discrepancy > 0) {
       adjusted[1] = Math.min(data[data.length-1][DATA_INDEX_TIME],
@@ -258,6 +262,11 @@ function xScaleCalculate(context, g) {
       if (discrepancy > 0) {
         adjusted[0] = Math.max(data[0][DATA_INDEX_TIME],
                                adjusted[0] - discrepancy);
+        discrepancy = minSpread - (adjusted[1] - adjusted[0]);
+        if (discrepancy > 0) {
+          // Now force extra space to the right.
+          adjusted[1] += discrepancy;
+        }
       }
     }
   }
@@ -604,8 +613,8 @@ export default class ModelData extends React.Component {
     }
 
     const rawDataInBackground = (modelData.data.length &&
-    model.aggregated &&
-    showNonAgg);
+                                 model.aggregated &&
+                                 showNonAgg);
 
     // Calculate axes, labels, and series. Grab them from the "value" options,
     // maybe insert the "raw" options, then overwrite the actual "options" that
