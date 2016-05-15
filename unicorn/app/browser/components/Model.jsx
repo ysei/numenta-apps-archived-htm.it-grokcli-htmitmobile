@@ -289,11 +289,14 @@ export default class Model extends React.Component {
     let aggOpts = valueField.aggregation_options;
 
     // More info section
-    let recognizeWeeklyPatterns = Boolean(encoders.c0_dayOfWeek);
-    let recognizeDailyPatterns = Boolean(encoders.c0_timeOfDay);
+    let timeOfDay = _.get(encoders, 'c0_timeOfDay');
+    let dayOfWeek = _.get(encoders, 'c0_dayOfWeek');
+
+    let recognizeWeeklyPatterns = Boolean(dayOfWeek);
+    let recognizeDailyPatterns = Boolean(timeOfDay);
     let dataIsAggregated = Boolean(aggOpts);
 
-    let aggregationMessage = 'The data is not aggregated';
+    let aggregationMessage = 'The data is not aggregated.';
     if (dataIsAggregated) {
       let aggregationMethod;
       if (aggOpts.func === 'mean') {
@@ -315,7 +318,7 @@ export default class Model extends React.Component {
     if (recognizeDailyPatterns && !recognizeWeeklyPatterns) {
       patternMessage = 'Daily patterns are recognized but not weekly patterns.'
     } else if (!recognizeDailyPatterns && recognizeWeeklyPatterns) {
-      patternMessage = 'Weekly patterns are recognized but not daily patterns'
+      patternMessage = 'Weekly patterns are recognized but not daily patterns.'
     } else if (recognizeDailyPatterns && recognizeWeeklyPatterns) {
       patternMessage = 'Daily and weekly patterns are recognized.'
     }
