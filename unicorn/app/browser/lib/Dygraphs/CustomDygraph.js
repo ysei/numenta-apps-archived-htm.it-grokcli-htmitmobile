@@ -44,14 +44,14 @@ function CustomDygraph(element, data, options, xAxisRangeCalculate,
 
 CustomDygraph.prototype = Object.create(Dygraph.prototype);
 CustomDygraph.prototype.drawGraph_ = function () {
-  let dateWindow = this.xAxisRangeCalculate_(this);
-  if (this.dateWindow_[0] !== dateWindow[0] ||
-      this.dateWindow_[1] !== dateWindow[1]) {
+  let original = this.xAxisRange();
+  let adjusted = this.xAxisRangeCalculate_(this);
+  if (original[0] !== adjusted[0] || original[1] !== adjusted[1]) {
     // Cancel this draw. Schedule another with an allowed date window. This
     // approach causes flickering in the range finder, but it avoids flickering
     // in the chart.
     setTimeout(() => {
-      this.updateOptions({dateWindow});
+      this.updateOptions({dateWindow: adjusted});
     });
   } else {
     let yExtentAdjusted = this.yAxisRangeCalculate_(this);
