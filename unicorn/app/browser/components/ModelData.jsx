@@ -245,6 +245,7 @@ function xScaleCalculate(context, g) {
   let adjusted = [dateWindow[0], dateWindow[1]];
   let {modelData} = context.props;
 
+  /* eslint-disable max-depth */
   if (modelData.data.length) {
     let data = modelData.data;
 
@@ -256,28 +257,40 @@ function xScaleCalculate(context, g) {
     let minSpread = context._minTimeDelta * anomalyBarCount;
     let discrepancy = minSpread - (adjusted[1] - adjusted[0]);
     if (discrepancy > 0) {
-      // Grow both sides, trying to hold the midpoint constant.
-      adjusted[0] = Math.max(data[0][DATA_INDEX_TIME],
-                             adjusted[0] - discrepancy/2);
-      adjusted[1] = Math.min(data[data.length-1][DATA_INDEX_TIME],
-                             adjusted[1] + discrepancy/2);
-      discrepancy = minSpread - (adjusted[1] - adjusted[0]);
-      if (discrepancy > 0) {
-        // One of the sides hit the end. Put the remainder on the other side.
+      if (context._previousDateWindow &&
+          (context._previousDateWindow[0] === adjusted[0] ||
+           context._previousDateWindow[1] === adjusted[1]) &&
+          minSpread <= (context._previousDateWindow[1] -
+                        context._previousDateWindow[0])) {
+        // If the old window was good and it partly matches the current window,
+        // just use it.
+        adjusted[0] = context._previousDateWindow[0];
+        adjusted[1] = context._previousDateWindow[1];
+      } else {
+        // Grow both sides, trying to hold the midpoint constant.
         adjusted[0] = Math.max(data[0][DATA_INDEX_TIME],
-                               adjusted[0] - discrepancy);
+                               adjusted[0] - discrepancy/2);
         adjusted[1] = Math.min(data[data.length-1][DATA_INDEX_TIME],
-                               adjusted[1] + discrepancy);
+                               adjusted[1] + discrepancy/2);
         discrepancy = minSpread - (adjusted[1] - adjusted[0]);
         if (discrepancy > 0) {
-          // Both sides hit the end.
-          // Force extra space to the right.
-          adjusted[1] += discrepancy;
+          // One of the sides hit the end. Put the remainder on the other side.
+          adjusted[0] = Math.max(data[0][DATA_INDEX_TIME],
+                                 adjusted[0] - discrepancy);
+          adjusted[1] = Math.min(data[data.length-1][DATA_INDEX_TIME],
+                                 adjusted[1] + discrepancy);
+          discrepancy = minSpread - (adjusted[1] - adjusted[0]);
+          if (discrepancy > 0) {
+            // Both sides hit the end.
+            // Force extra space to the right.
+            adjusted[1] += discrepancy;
+          }
         }
       }
     }
   }
 
+  context._previousDateWindow = adjusted;
   return adjusted;
 }
 

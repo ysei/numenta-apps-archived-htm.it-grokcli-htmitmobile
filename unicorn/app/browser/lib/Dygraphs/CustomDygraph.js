@@ -51,7 +51,7 @@ CustomDygraph.prototype.drawGraph_ = function () {
     // approach causes flickering in the range finder, but it avoids flickering
     // in the chart.
     setTimeout(() => {
-      this.updateOptions({dateWindow: adjusted});
+      this.updateOptions({dateWindow: [adjusted[0], adjusted[1]]});
     });
   } else {
     let yExtentAdjusted = this.yAxisRangeCalculate_(this);
