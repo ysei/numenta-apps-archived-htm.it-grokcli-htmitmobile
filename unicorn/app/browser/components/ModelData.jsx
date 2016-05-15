@@ -86,7 +86,9 @@ function sortedMerge(a, b, compareFunction) {
  * The result is the gap threshold.
  *
  * @param {Array} data - Array of arrays: [[Date, ...], [Date, ...], ...]
- * @returns {Number} - gap threshold.
+ * @returns {Array} - Tuple:
+ *                    number: gap threshold
+ *                    number: minimum time delta
  */
 function computeGapThreshold(data) {
   let deltas = [];
@@ -102,7 +104,9 @@ function computeGapThreshold(data) {
   let percentile = 0.1;
   let smallTimestampGap = deltas[Math.floor(deltas.length * percentile)];
   let maxMissingBars = 2;
-  return (1 + maxMissingBars) * smallTimestampGap;
+  let minDelta = deltas.length ? deltas[0] : null;
+  let gapThreshold = (1 + maxMissingBars) * smallTimestampGap;
+  return [gapThreshold, minDelta];
 }
 
 
@@ -158,6 +162,8 @@ function insertIntoGaps(data, vals, gapThreshold) {
  *                    Array: Dygraphs multi-dimensional array
  *                    Array: The x values in the prepared data
  *                    Array: The y values in the prepared data
+ *                    number: The minimum timestep delta in the model records,
+ *                            or in the metric records as a fallback
  * @see http://dygraphs.com/tests/independent-series.html
  */
 function prepareData(
@@ -165,9 +171,9 @@ function prepareData(
   let xValues = [];
   let yValues = [];
 
-  let gapThreshold = computeGapThreshold(modelRecords.length > 0
-    ? modelRecords
-    : metricRecords);
+  let [gapThreshold, minDelta] = computeGapThreshold(modelRecords.length > 0
+                                                     ? modelRecords
+                                                     : metricRecords);
 
   let aggregatedChartData = null;
   if (modelRecords.length && aggregated) {
@@ -223,7 +229,40 @@ function prepareData(
     aggregatedChartData, rawChartData,
     (a, b) => a[DATA_INDEX_TIME].getTime() - b[DATA_INDEX_TIME].getTime());
 
-  return [data, xValues, yValues];
+  return [data, xValues, yValues, minDelta];
+}
+
+/**
+ * Determine an x scale using the current x scale and the model data.
+ *
+ * @param {Object} context - a ModelData instance
+ * @param {Dygraph} g - a Dygraph instance
+ * @returns {Array} the new x extent [min, max]
+ */
+function xScaleCalculate(context, g) {
+  // Set a zoom limit.
+  let dateWindow = g.xAxisRange();
+  let adjusted = [dateWindow[0], dateWindow[1]];
+  let {modelData} = context.props;
+
+  if (modelData.data.length) {
+    // Must be zoomed out enough that the space is filled with anomaly bars.
+    let anomalyBarCount = g.getArea().w / ANOMALY_BAR_WIDTH;
+    let minSpread = context._minTimeDelta * anomalyBarCount;
+    let data = modelData.data;
+    let discrepancy = minSpread - (adjusted[1] - adjusted[0]);
+    if (discrepancy > 0) {
+      adjusted[1] = Math.min(data[data.length-1][DATA_INDEX_TIME],
+                             adjusted[1] + discrepancy);
+      discrepancy = minSpread - (adjusted[1] - adjusted[0]);
+      if (discrepancy > 0) {
+        adjusted[0] = Math.max(data[0][DATA_INDEX_TIME],
+                               adjusted[0] - discrepancy);
+      }
+    }
+  }
+
+  return adjusted;
 }
 
 /**
@@ -320,6 +359,10 @@ export default class ModelData extends React.Component {
         }
       }
     }
+
+    this._xScaleCalculate = function (context, dygraph) {
+      return xScaleCalculate(context, dygraph);
+    }.bind(null, this);
 
     this._yScaleCalculate = function (context, dygraph) {
       return yScaleCalculate(context, dygraph);
@@ -575,13 +618,16 @@ export default class ModelData extends React.Component {
     }
     Object.assign(options, {axes, labels, series});
 
-    let [data, xValues, yValues] = prepareData(metricData, modelData.data,
-      model.aggregated,
-      rawDataInBackground);
+    let [data,
+         xValues,
+         yValues,
+         minDelta] = prepareData(metricData, modelData.data, model.aggregated,
+                                 rawDataInBackground);
 
     this._data = data;
     this._xValues = xValues;
     this._yValues = yValues;
+    this._minTimeDelta = minDelta;
     this._yExtent = [Math.min(...yValues),
       Math.max(...yValues)];
   }
@@ -634,6 +680,7 @@ export default class ModelData extends React.Component {
                  metaData={metaData}
                  canZoom={!model.active}
                  options={this._chartOptions.options}
+                 xScaleCalculate={this._xScaleCalculate}
                  yScaleCalculate={this._yScaleCalculate}/>
         </section>
       </div>

@@ -157,7 +157,8 @@ export default class Chart extends React.Component {
     options.dateWindow = this._chartRange;  // update viewport of range selector
     this._previousDataSize = data.length;
     this._dygraph = new CustomDygraph(element, data, options,
-      this.props.yScaleCalculate);
+                                      this.props.xScaleCalculate,
+                                      this.props.yScaleCalculate);
 
     // after: track chart viewport position changes
     rangeEl = element.getElementsByClassName(RANGE_SELECTOR_CLASS)[0];
