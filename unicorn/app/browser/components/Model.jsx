@@ -296,7 +296,7 @@ export default class Model extends React.Component {
     let recognizeDailyPatterns = Boolean(timeOfDay);
     let dataIsAggregated = Boolean(aggOpts);
 
-    let aggregationMessage = 'The data is not aggregated';
+    let aggregationMessage = 'The data is not aggregated.';
     if (dataIsAggregated) {
       let aggregationMethod;
       if (aggOpts.func === 'mean') {
@@ -318,7 +318,7 @@ export default class Model extends React.Component {
     if (recognizeDailyPatterns && !recognizeWeeklyPatterns) {
       patternMessage = 'Daily patterns are recognized but not weekly patterns.'
     } else if (!recognizeDailyPatterns && recognizeWeeklyPatterns) {
-      patternMessage = 'Weekly patterns are recognized but not daily patterns'
+      patternMessage = 'Weekly patterns are recognized but not daily patterns.'
     } else if (recognizeDailyPatterns && recognizeWeeklyPatterns) {
       patternMessage = 'Daily and weekly patterns are recognized.'
     }
