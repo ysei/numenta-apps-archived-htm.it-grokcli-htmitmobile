@@ -59,6 +59,7 @@ export default class MetricStore extends BaseStore {
     return {
       DELETE_FILE: '_handleDeleteFile',
       LIST_METRICS: '_handleListMetrics',
+      UPDATE_METRIC: '_handleUpdateMetric',
       CHART_UPDATE_VIEWPOINT: '_handleUpdateViewpoint'
     }
   }
@@ -142,6 +143,23 @@ export default class MetricStore extends BaseStore {
         }
         this._metrics.set(metric.uid, record);
       });
+      this.emitChange();
+    }
+  }
+
+  /**
+   * Update store metric
+   * @param  {Object} payload - metric info to update in the store
+   */
+  _handleUpdateMetric(payload) {
+    let {aggOpts, inputOpts, metricId, modelOpts} = payload;
+
+    let metric = this._metrics.get(metricId);
+    if (metric) {
+      metric.aggregation_options = aggOpts;
+      metric.input_options = inputOpts;
+      metric.model_options = modelOpts;
+
       this.emitChange();
     }
   }
