@@ -141,11 +141,11 @@ function insertIntoGaps(data, vals, gapThreshold) {
 /**
  * Compute Dygraphs input from the metric and model data.
  *
- * If aggregated, the return value will contain properly formatted model
- * records, possibly with nonaggregated raw metric records inserted.
+ * If there are modelRecords, the return value will contain properly formatted
+ * model records, possibly with nonaggregated raw metric records inserted.
  *
- * If not aggregated, or if there are no modelRecords, the return value will
- * contain properly formatted raw metric records.
+ * If there are no modelRecords, the return value will contain properly
+ * formatted raw metric records.
  *
  * In all cases, gaps are detected. NaN values are inserted to designate gaps.
  *
@@ -169,33 +169,33 @@ function prepareData(
     ? modelRecords
     : metricRecords);
 
-  let aggregatedChartData = null;
-  if (modelRecords.length && aggregated) {
+  let modelChartData = null;
+  if (modelRecords.length) {
     modelRecords.forEach((item) => {
       xValues.push(item[DATA_INDEX_TIME]);
       yValues.push(item[DATA_INDEX_VALUE]);
     });
 
     if (rawDataInBackground) {
-      aggregatedChartData = modelRecords.map(
+      modelChartData = modelRecords.map(
         (item) => [item[DATA_INDEX_TIME],
           item[DATA_INDEX_VALUE],
           null]);
 
-      aggregatedChartData = insertIntoGaps(aggregatedChartData,
+      modelChartData = insertIntoGaps(modelChartData,
         [NaN, null], gapThreshold);
     } else {
-      aggregatedChartData = modelRecords.map(
+      modelChartData = modelRecords.map(
         (item) => [item[DATA_INDEX_TIME],
           item[DATA_INDEX_VALUE]]);
 
-      aggregatedChartData = insertIntoGaps(aggregatedChartData,
+      modelChartData = insertIntoGaps(modelChartData,
         [NaN], gapThreshold);
     }
   }
 
   let rawChartData = null;
-  if (metricRecords.length && (!aggregated || rawDataInBackground)) {
+  if (metricRecords.length && (!modelRecords.length || rawDataInBackground)) {
     metricRecords.forEach((item) => {
       xValues.push(item[DATA_INDEX_TIME]);
       yValues.push(item[DATA_INDEX_VALUE]);
@@ -220,7 +220,7 @@ function prepareData(
   }
 
   let data = sortedMerge(
-    aggregatedChartData, rawChartData,
+    modelChartData, rawChartData,
     (a, b) => a[DATA_INDEX_TIME].getTime() - b[DATA_INDEX_TIME].getTime());
 
   return [data, xValues, yValues];
