@@ -256,15 +256,22 @@ function xScaleCalculate(context, g) {
     let minSpread = context._minTimeDelta * anomalyBarCount;
     let discrepancy = minSpread - (adjusted[1] - adjusted[0]);
     if (discrepancy > 0) {
+      // Grow both sides, trying to hold the midpoint constant.
+      adjusted[0] = Math.max(data[0][DATA_INDEX_TIME],
+                             adjusted[0] - discrepancy/2);
       adjusted[1] = Math.min(data[data.length-1][DATA_INDEX_TIME],
-                             adjusted[1] + discrepancy);
+                             adjusted[1] + discrepancy/2);
       discrepancy = minSpread - (adjusted[1] - adjusted[0]);
       if (discrepancy > 0) {
+        // One of the sides hit the end. Put the remainder on the other side.
         adjusted[0] = Math.max(data[0][DATA_INDEX_TIME],
                                adjusted[0] - discrepancy);
+        adjusted[1] = Math.min(data[data.length-1][DATA_INDEX_TIME],
+                               adjusted[1] + discrepancy);
         discrepancy = minSpread - (adjusted[1] - adjusted[0]);
         if (discrepancy > 0) {
-          // Now force extra space to the right.
+          // Both sides hit the end.
+          // Force extra space to the right.
           adjusted[1] += discrepancy;
         }
       }
