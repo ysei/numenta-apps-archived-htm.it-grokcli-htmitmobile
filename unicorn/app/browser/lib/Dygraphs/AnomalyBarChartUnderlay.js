@@ -92,6 +92,7 @@ export default function (context, canvas, area, dygraph) {
   // Walk all of the visible buckets, using a single `iData` index.
   let bucketIndex = firstVisibleBucket;
   let bucketStart = bucketStart0 + (bucketIndex * timestampBucketWidth);
+
   let iData = binarySearch(modelData, timespan[0], _compare);
   if (iData < 0) {
     iData = ~iData;
@@ -100,7 +101,13 @@ export default function (context, canvas, area, dygraph) {
   while (bucketStart <= timespan[1]) {
     // Find all results within this bucket.
     let bucketEnd = bucketStart + timestampBucketWidth;
+
     let matchStart = iData;
+    while (matchStart < modelData.length &&
+           modelData[matchStart][DATA_INDEX_TIME].getTime() < bucketStart) {
+      matchStart++;
+    }
+
     let matchEnd = matchStart;
     while (matchEnd < modelData.length &&
            modelData[matchEnd][DATA_INDEX_TIME].getTime() < bucketEnd) {
