@@ -186,7 +186,7 @@ export default class Chart extends React.Component {
     let rangeWidth = rangeWidthOverride ||
           getDateWindowWidth(resolution, element);
 
-    if (model.active && this._jumpToNewResults && model.dataSize > 0) {
+    if (model.active && model.dataSize > 0) {
       // Move to rightmost model result.
       let first = data[0][DATA_INDEX_TIME].getTime();
       let lastResult = modelData.data[model.dataSize - 1];
