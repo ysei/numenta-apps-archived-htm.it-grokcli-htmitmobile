@@ -25,7 +25,7 @@ import {
 import Dygraph from 'dygraphs';
 import {mapAnomalyColor} from '../browser-utils';
 
-const {DATA_INDEX_ANOMALY} = DATA_FIELD_INDEX;
+const {DATA_INDEX_TIME, DATA_INDEX_ANOMALY} = DATA_FIELD_INDEX;
 
 
 /**
@@ -173,9 +173,18 @@ export default class {
     }
 
     // Calculate dimensions for, and highlight probation period
-    probationWidth = (
-      canvasWidth * (Math.min(PROBATION_LENGTH, data.length) / data.length)
-    );
+    if (data.length < PROBATION_LENGTH) {
+      probationWidth = canvasWidth;
+    } else {
+      let probationTimeWidth = (
+        data[PROBATION_LENGTH][DATA_INDEX_TIME] - data[0][DATA_INDEX_TIME]
+      );
+      let totalTimeWidth = (
+        data[data.length-1][DATA_INDEX_TIME] - data[0][DATA_INDEX_TIME]
+      );
+      probationWidth = canvasWidth * (probationTimeWidth / totalTimeWidth);
+    }
+
     this._drawProbationPeriod(
       context, probationWidth, canvasHeight, probationColor
     );
