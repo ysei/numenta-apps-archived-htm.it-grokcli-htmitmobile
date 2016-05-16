@@ -42,6 +42,7 @@ Object.assign(module.exports, CommonConstants);
  * - Metric
  *  - LIST_METRICS: {@link ListMetrics}
  *  - LIST_METRICS_FAILURE
+ *  - UPDATE_METRIC: {@link UpdateMetric}
  *
  * - Metric Data
  *  - LOAD_METRIC_DATA: {@link LoadMetricData}
@@ -112,6 +113,7 @@ export const ACTIONS = Object.freeze({
   // Metric
   LIST_METRICS: 'LIST_METRICS',
   LIST_METRICS_FAILURE: 'LIST_METRICS_FAILURE',
+  UPDATE_METRIC: 'UPDATE_METRIC',
 
   // Metric Data
   LOAD_METRIC_DATA: 'LOAD_METRIC_DATA',
