@@ -36,6 +36,7 @@ import MetricDataStore from '../stores/MetricDataStore';
 import ModelStore from '../stores/ModelStore';
 import ModelDataStore from '../stores/ModelDataStore';
 import RangeSelectorBarChart from '../lib/Dygraphs/RangeSelectorBarChartPlugin';
+import d3 from 'd3-scale';
 
 const {
   DATA_INDEX_TIME, DATA_INDEX_VALUE, DATA_INDEX_ANOMALY
@@ -318,13 +319,24 @@ function xScaleCalculate(context, g) {
  * @returns {Array} the new y extent [min, max]
  */
 function yScaleCalculate(context, g) {
-  let yExtentAdjusted = [context._yExtent[0], context._yExtent[1]];
+  let {modelData} = context.props;
 
-  // Add space for green anomaly bars.
-  yExtentAdjusted[0] -= anomalyScale(0) * (yExtentAdjusted[1] -
-                                           yExtentAdjusted[0]);
+  let paddingPx = 2;
+  let height = g.canvas_.offsetHeight;
+  let range = [height - paddingPx, paddingPx];
+  if (modelData.data && modelData.data.length) {
+    range[0] -= anomalyScale(0) * height;
+  }
 
-  return yExtentAdjusted;
+  // Use d3's 'nice' so that small changes in the domain don't cause the scale
+  // to change.
+  let y = d3.scaleLinear()
+        .domain(context._yExtent)
+        .range(range)
+        .nice();
+
+  // Compute updated domain.
+  return [y.invert(height), y.invert(0)];
 }
 
 function onChartResize(context) {
@@ -437,7 +449,7 @@ export default class ModelData extends React.Component {
           anomalyBarChartUnderlay(context, ...args);
         }.bind(null, this),
         xRangePad: 0,
-        yRangePad: 4
+        yRangePad: 0
       },
 
       // main value data chart line (could be either Raw OR Aggregated data)

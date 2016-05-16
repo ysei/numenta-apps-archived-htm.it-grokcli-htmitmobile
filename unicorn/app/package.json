@@ -60,6 +60,7 @@
     "bunyan": "1.6.0",
     "convert-newline": "0.0.5",
     "csv-streamify": "3.0.3",
+    "d3-scale": "0.7.0",
     "dygraphs": "1.1.1",
     "electron-default-menu": "0.1.1",
     "file-api": "0.10.4",

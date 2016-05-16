@@ -19,8 +19,10 @@
 
 import moment from 'moment';
 import RGBColor from 'rgbcolor';
+import d3 from 'd3-scale';
 
 import {formatDisplayValue} from '../browser-utils';
+import {anomalyScale} from '../../../common/common-utils';
 
 
 /**
@@ -37,26 +39,13 @@ import {formatDisplayValue} from '../browser-utils';
 export default function (context, canvas, area, dygraph) {
   const muiTheme = context.context.muiTheme.rawTheme;
   const xLabels = 5;
-  const yLabels = 4;
   const pad = 10;
   const xFactor = area.w / (xLabels - 1);
   const xAxisRange = dygraph.xAxisRange();
   const xRangeWidth = xAxisRange[1] - xAxisRange[0];
-  const yFactor = area.h / (yLabels - 1);
-  const yAxisRange = dygraph.yAxisRange();
-  const yRangeWidth = yAxisRange[1] - yAxisRange[0];
   let xValues = Array.from(xAxisRange);
-  let yValues = Array.from(yAxisRange);
-
 
   // --- Custom Y axis and labels (on left) ---
-
-  // prep Y value labels
-  for (let y=1; y<(yLabels - 1); y++) {
-    let multiplier = y / (yLabels - 1);
-    let value = yAxisRange[0] + (yRangeWidth * multiplier);
-    yValues.splice(y, 0, value);
-  }
 
   // draw Y axis line
   canvas.beginPath();
@@ -67,23 +56,29 @@ export default function (context, canvas, area, dygraph) {
   canvas.stroke();
 
   // draw left-side Y axis labels
-  canvas.font = '12px Roboto';
-  canvas.fillStyle = new RGBColor(muiTheme.palette.accent3Color).toRGB();
-  for (let y=0; y<yValues.length; y++) {
-    let yHeight = area.h - (y * yFactor);
-    let value = formatDisplayValue(yValues[y]);
 
-    if (y === yValues.length - 1) {
-      yHeight += pad;  // bring down top label to make visible
-    } else if (y === 0) {
-      yHeight--;  // visual: push bottom label pixel spacing a bit
-    } else {
-      yHeight += (pad/2);  // visual: slight vertical padding
-    }
+  // Padding to avoid labels going above/below the canvas.
+  let paddingPx = 8;
+  let top = area.y + paddingPx;
+  let bottom = area.y + area.h;
 
-    canvas.fillText(value, area.x + (pad/2), area.y + yHeight);
+  let modelData = dygraph.getOption('modelData') || [];
+  if (modelData.length) {
+    bottom -= anomalyScale(0) * area.h;
+  } else {
+    bottom -= paddingPx;
   }
 
+  let y = d3.scaleLinear()
+        .domain([dygraph.toDataYCoord(bottom), dygraph.toDataYCoord(top)])
+        .range([bottom, top]);
+
+  canvas.font = '12px Roboto';
+  canvas.fillStyle = new RGBColor(muiTheme.palette.accent3Color).toRGB();
+  y.ticks(4).forEach((tickValue) => {
+    let value = formatDisplayValue(tickValue);
+    canvas.fillText(value, area.x + (pad/2), y(tickValue));
+  });
 
   // --- Custom X axis and labels and markers (along top) ---
 
