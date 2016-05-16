@@ -173,8 +173,9 @@ export default class Chart extends React.Component {
 
   /**
    * Dygraphs Chart Update Logic and Re-Render
+   * @param {number} rangeWidthOverride - if set, overrides rangeWidth
    */
-  _chartUpdate() {
+  _chartUpdate(rangeWidthOverride) {
     let {data, metaData, options, resolution} = this.props;
 
     if (data.length < 1) return;
@@ -182,7 +183,8 @@ export default class Chart extends React.Component {
     let {model, modelData} = metaData;
 
     let element = ReactDOM.findDOMNode(this.refs[`chart-${model.modelId}`]);
-    let rangeWidth = getDateWindowWidth(resolution, element);
+    let rangeWidth = rangeWidthOverride ||
+          getDateWindowWidth(resolution, element);
 
     if (model.active && this._jumpToNewResults && model.dataSize > 0) {
       // Move to rightmost model result.
@@ -264,7 +266,7 @@ export default class Chart extends React.Component {
 
     // update chart
     this._chartRange = [newMin, newMax];
-    this._chartUpdate();
+    this._chartUpdate(rangeWidth);
   }
 
   /**

@@ -288,6 +288,19 @@ function xScaleCalculate(context, g) {
         }
       }
     }
+
+    let spread = adjusted[1] - adjusted[0];
+    if (spread !== minSpread) {
+      // It's not at the max zoom. This might have come from a user interaction
+      // on the chart, encapsulated by Dygraphs. Record the zoom level.
+      let zoomLevel =
+            spread / (data[data.length - 1][DATA_INDEX_TIME].getTime() -
+                      data[0][DATA_INDEX_TIME].getTime());
+
+      // Don't cause a render. It would be nice to update the zoom text, but
+      // it's very broken if a chart render causes a chart render.
+      context._zoomOverride = zoomLevel;
+    }
   }
 
   context._previousDateWindow = adjusted;
@@ -476,6 +489,9 @@ export default class ModelData extends React.Component {
       zoomLevel: 0,
       chartWidth: 400 // Replace with actual width when we know it.
     };
+
+    // When the zoom is updated from Dygraphs, save the value here.
+    this._zoomOverride = null;
   } // constructor
 
   /**
@@ -533,6 +549,7 @@ export default class ModelData extends React.Component {
   }
 
   _handleZoom(zoomLevel) {
+    this._zoomOverride = null;
     this.setState({zoomLevel});
   }
 
@@ -641,6 +658,7 @@ export default class ModelData extends React.Component {
   componentWillReceiveProps(nextProps) {
     if (nextProps.model.active) {
       // Reset zoom level
+      this._zoomOverride = null;
       this.setState({zoomLevel: 0});
     }
   }
@@ -696,7 +714,7 @@ export default class ModelData extends React.Component {
   render() {
     let {metric, model, modelData, modelId} = this.props;
     let metaData = {metric, model, modelData};
-    let zoomLevel = this.state.zoomLevel;
+    let zoomLevel = this._zoomOverride || this.state.zoomLevel;
 
     let zoomSection;
     if (!model.active) {
