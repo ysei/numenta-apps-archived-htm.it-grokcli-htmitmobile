@@ -253,7 +253,7 @@ function xScaleCalculate(context, g) {
     adjusted[0] = Math.max(adjusted[0], data[0][DATA_INDEX_TIME]);
 
     // Must be zoomed out enough that the space is filled with anomaly bars.
-    let anomalyBarCount = g.getArea().w / ANOMALY_BAR_WIDTH;
+    let anomalyBarCount = g.canvas_.offsetWidth / ANOMALY_BAR_WIDTH;
     let minSpread = context._minTimeDelta * anomalyBarCount;
     let discrepancy = minSpread - (adjusted[1] - adjusted[0]);
     if (discrepancy > 0) {

@@ -32,16 +32,16 @@ const PADDING = 3;
 
 /**
  * Helper function to Draw a rectangle on a DyGraphs canvas.
- * @param {Object} canvas - Dygraphs Canvas DOM reference.
+ * @param {CanvasRenderingContext2D} ctx - Dygraphs Canvas context.
  * @param {Number} xStart - Starting X coordinate of rectangle.
  * @param {Number} yStart - Starting Y coordinate for rectangle.
  * @param {Number} width - Width of rectangle.
  * @param {Number} height - Height of rectangle.
  * @param {String} color - Color to fill in rectangle.
  */
-function _drawRectangle(canvas, xStart, yStart, width, height, color) {
-  canvas.fillStyle = new RGBColor(color).toRGB();
-  canvas.fillRect(xStart, yStart, width, height);
+function _drawRectangle(ctx, xStart, yStart, width, height, color) {
+  ctx.fillStyle = new RGBColor(color).toRGB();
+  ctx.fillRect(xStart, yStart, width, height);
 }
 
 /**
@@ -65,13 +65,13 @@ function _compare(current, key) {
  *  of a y3 axes, instead of a full custom plugin. Model Result data is forced
  *  in via the Dygraph.option with the key "modelData".
  * @param {Object} context - ModelData.jsx component context w/settings.
- * @param {Object} canvas - DOM Canvas object to draw with, from Dygraphs.
+ * @param {CanvasRenderingContext2D} canvasCtx - Dygraphs Canvas context.
  * @param {Object} area - Canvas drawing area metadata, Width x Height info etc.
  * @param {Object} dygraph - Instantiated Dygraph library object itself.
  * @requries Dygraphs
  * @see view-source:http://dygraphs.com/tests/underlay-callback.html
  */
-export default function (context, canvas, area, dygraph) {
+export default function (context, canvasCtx, area, dygraph) {
   let modelData = dygraph.getOption('modelData') || [];
   if (modelData.length < 2) {
     // Not enough data
@@ -81,7 +81,7 @@ export default function (context, canvas, area, dygraph) {
   // Divide the x extent into buckets.
   // Each bucket contains zero or more points.
   let timespan = dygraph.xAxisRange();
-  let visibleBucketCount = area.w / ANOMALY_BAR_WIDTH;
+  let visibleBucketCount = canvasCtx.canvas.offsetWidth / ANOMALY_BAR_WIDTH;
   let timestampBucketWidth =
         (timespan[1] - timespan[0]) / visibleBucketCount;
   let bucketStart0 =
@@ -135,7 +135,7 @@ export default function (context, canvas, area, dygraph) {
       let x = dygraph.toDomXCoord(bucketStart);
       let y = area.h - 1;
       let height = heightPercent * area.h;
-      _drawRectangle(canvas, x + PADDING/2, y, ANOMALY_BAR_WIDTH - PADDING,
+      _drawRectangle(canvasCtx, x + PADDING/2, y, ANOMALY_BAR_WIDTH - PADDING,
                      -height, color);
     }
 
