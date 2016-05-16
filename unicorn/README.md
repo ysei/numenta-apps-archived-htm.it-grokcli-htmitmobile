@@ -472,3 +472,11 @@ does [not yet work with Electron](https://github.com/atom/electron/issues/915).
 ### Other
 
 * [Electron and Windows Debug Symbol Server](http://electron.atom.io/docs/v0.31.0/development/setting-up-symbol-server/)
+
+# Release management
+
+## How to create a release?
+
+* Create a branch called "htm-studio-vX" where X is the version number
+* The convention for version numbers is [semantic versioning](http://semver.org/)
+* For example, we have a branch called [`htm-studio-v0.0.1`](https://github.com/numenta/numenta-apps/tree/htm-studio-v0.0.1)
