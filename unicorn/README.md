@@ -478,5 +478,6 @@ does [not yet work with Electron](https://github.com/atom/electron/issues/915).
 ## How to create a release?
 
 * Create a branch called "htm-studio-vX" where X is the version number
+* Update `app/package.json` with new version number
 * The convention for version numbers is [semantic versioning](http://semver.org/)
 * For example, we have a branch called [`htm-studio-v0.0.1`](https://github.com/numenta/numenta-apps/tree/htm-studio-v0.0.1)
