@@ -918,7 +918,8 @@ class CustomDatasourceAdapterTest(TestCaseBase):
                                        metricId,
                                        fields=[schema.metric.c.parameters,
                                                schema.metric.c.status])
-    self.assertEqual(metricObj.status, MetricStatus.CREATE_PENDING)
+    self.assertIn(metricObj.status, (MetricStatus.CREATE_PENDING,
+                                     MetricStatus.ACTIVE))
     self.assertEqual(json.loads(metricObj.parameters), modelSpec)
 
     self._validateModelSpec(json.loads(metricObj.parameters))
