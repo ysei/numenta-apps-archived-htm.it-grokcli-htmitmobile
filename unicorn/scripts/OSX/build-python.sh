@@ -116,7 +116,7 @@ git clone https://github.com/numenta/nupic.git
 echo "==> Installing nupic ..."
 pushd $NUPIC
 # Clean up nupic  datafiles
-rm -rf datafiles
+rm -rf src/nupic/datafiles
 $PREFIX/bin/pip install -r external/common/requirements.txt --no-cache-dir
 $PREFIX/bin/python setup.py install
 popd
@@ -130,24 +130,6 @@ rm -rf $NUPIC_CORE
 echo "--> Removed: $NUPIC_CORE"
 rm -rf $NUPIC
 echo "--> Removed: $NUPIC"
-
-# Clean up miniconda
-$PREFIX/bin/python $PREFIX/bin/conda clean --packages --source-cache --index-cache --tarballs --lock -y
-
-# Remove development headers
-rm -fr $PREFIX/include
-
-# Remove python sources
-find $PREFIX -name "*.py" -delete
-
-# Remove test binaries
-rm $PREFIX/bin/*test
-rm $PREFIX/bin/*tests
-rm $PREFIX/bin/hello*
-
-# Remove development binaries
-rm $PREFIX/bin/capnp*
-rm $PREFIX/lib/libnupic_core.a
 
 # Check that it worked
 $PREFIX/bin/python -c "import nupic.algorithms.anomaly_likelihood"
@@ -163,6 +145,25 @@ cp -RL $PREFIX $PREFIX.npm
 rm -rf $PREFIX
 
 pushd $PREFIX.npm
+
+# Clean up miniconda
+./bin/python ./bin/conda clean --packages --source-cache --index-cache --tarballs --lock -y
+
+# Remove development headers
+rm -fr ./include
+
+# Remove python sources
+find . -name "*.py" -delete
+
+# Remove test binaries
+rm ./bin/*test
+rm ./bin/*tests
+rm ./bin/hello*
+
+# Remove development binaries
+rm ./bin/capnp*
+rm ./lib/libnupic_core.a
+
 # Copy NPM package information
 cp ${SCRIPT_PATH}/index.js .
 cp ${SCRIPT_PATH}/package.json .

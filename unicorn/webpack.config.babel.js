@@ -20,7 +20,6 @@
  */
 export default {
   bail: true,
-  devtool: 'source-map',
   entry: ['babel-polyfill', './app/browser/entry'],
   module: {
     loaders: [
