@@ -32,7 +32,7 @@ if (aboutMenuItem.label === 'About HTM Studio') {
   // Do this instead.
   aboutMenuItem.click = () => {
     const BrowserWindow = electron.BrowserWindow;
-    let win = new BrowserWindow({width: 283, height: 250, title: ''});
+    let win = new BrowserWindow({width: 283, height: 230, title: ''});
     win.loadURL(`file://${__dirname}/../browser/about.html`);
   };
 } else {
