@@ -18,7 +18,6 @@
 
 import {app, BrowserWindow, crashReporter, dialog, Menu} from 'electron';
 import bunyan from 'bunyan';
-import moment from 'moment';
 import path from 'path';
 
 import config from './ConfigService';
@@ -70,21 +69,13 @@ function initializeApplicationData() {
 
 /**
  * Handles model data event saving the results to the database
- * @param  {string} modelId Model receiving data
- * @param  {Array} data    model data in the following format:
- *                         [timestamp, metric_value, anomaly_score]
+ * @param  {string} modelId - Model receiving data
+ * @param  {Object} modelData - Parsed model data
  */
-function receiveModelData(modelId, data) {
-  let [timestamp, value, score] = data; // eslint-disable-line
-  let metricData = {
-    metric_uid: modelId,
-    timestamp: moment.utc(timestamp).valueOf(),
-    metric_value: value,
-    anomaly_score: score
-  };
-  database.putModelData(metricData, (error) => {
+function receiveModelData(modelId, modelData) {
+  database.putModelData(modelData, (error) => {
     if (error) {
-      log.error('Error saving model data', error, metricData);
+      log.error('Error saving model data', error, modelData);
     }
   });
 }
@@ -100,7 +91,7 @@ function handleModelEvents() {
         try {
           if (command === 'data') {
             // Handle model data
-            receiveModelData(modelId, JSON.parse(data));
+            receiveModelData(modelId, data);
           }
         } catch (e) {
           log.error('Model Error', e, modelId, command, data);

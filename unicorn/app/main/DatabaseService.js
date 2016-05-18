@@ -23,12 +23,14 @@ import isElectronRenderer from 'is-electron-renderer';
 import json2csv from 'json2csv-stream';
 import leveldown from 'leveldown';
 import levelup from 'levelup';
-import moment from 'moment';
 import os from 'os';
 import path from 'path';
 import sublevel from 'level-sublevel';
 import {Validator} from 'jsonschema';
 import {mapAnomalyText} from '../common/common-utils';
+import {
+  parseTimestampFallbackUtc, parseIsoTimestampFallbackUtc, getNaiveTime
+} from '../common/timestamp';
 
 import fileService from './FileService';
 import {
@@ -80,30 +82,6 @@ function _getDefaultDatabaseLocation() {
 function stringifyResultsCallback(callback) {
   return (error, data) => callback(error, JSON.stringify(data));
 }
-
-/**
- * Parse the timestamp as if it doesn't contain a time zone.
- *
- * This is a way of having "naive" datetimes, as in Python. JavaScript condenses
- * the day/hour with the timezone by simply storing the UTC timestamp. We want
- * to preserve the parsed day/hour -- it's what we render -- so we preserve it
- * by throwing out time zone info.
- *
- * @param {string} timestamp a timestamp string intended for moment.js
- * @param {string} format a format intended for moment.js
- * @return {Date} a JavaScript date corresponding to the timestamp's time in
- *                UTC, ignoring the timestamp's specified time zone.
- */
-function parseTimestampIgnoreZone(timestamp, format) {
-  if (format.indexOf('Z') === -1) {
-    return moment.utc(timestamp, format).valueOf();
-  }
-
-  let noZoneFormat = 'YYYY-MM-DDTHH:mm:ss.ssss';
-  let strippedZone = moment.parseZone(timestamp, format).format(noZoneFormat);
-  return moment.utc(strippedZone, noZoneFormat).valueOf();
-}
-
 
 /**
  * HTM Studio: DatabaseService - Respond to a DatabaseClient over IPC.
@@ -257,7 +235,7 @@ export class DatabaseService {
     })
     .on('data', (metric) => {
       results.push([
-        metric.timestamp, metric.metric_value, metric.anomaly_score
+        metric.naive_time, metric.metric_value, metric.anomaly_score
       ]);
     })
     .on('error', callback)
@@ -282,7 +260,7 @@ export class DatabaseService {
       lt: `${metricId}\xff`
     })
     .on('data', (metric) => {
-      results.push([metric.timestamp, metric.metric_value]);
+      results.push([metric.naive_time, metric.metric_value]);
     })
     .on('error', callback)
     .on('end', () => {
@@ -454,8 +432,8 @@ export class DatabaseService {
       callback(validation.errors, null);
       return;
     }
-    let {metric_uid, timestamp} = data;
-    let key = generateMetricDataId(metric_uid, timestamp);
+    let {metric_uid, naive_time} = data;
+    let key = generateMetricDataId(metric_uid, naive_time);
     this._modelData.put(key, data, callback);
   }
 
@@ -478,8 +456,8 @@ export class DatabaseService {
     }
 
     let ops = data.map((value) => {
-      let {metric_uid, timestamp} = value;
-      let key = generateMetricDataId(metric_uid, timestamp);
+      let {metric_uid, naive_time} = value;
+      let key = generateMetricDataId(metric_uid, naive_time);
       return {
         type: 'put', key, value
       };
@@ -503,8 +481,8 @@ export class DatabaseService {
       callback(validation.errors, null);
       return;
     }
-    let {metric_uid, timestamp} = metricData;
-    let key = generateMetricDataId(metric_uid, timestamp);
+    let {metric_uid, naive_time} = metricData;
+    let key = generateMetricDataId(metric_uid, naive_time);
     this._metricData.put(key, metricData, callback);
   }
 
@@ -527,8 +505,8 @@ export class DatabaseService {
     }
 
     let ops = data.map((value) => {
-      let {metric_uid, timestamp} = value;
-      let key = generateMetricDataId(metric_uid, timestamp);
+      let {metric_uid, naive_time} = value;
+      let key = generateMetricDataId(metric_uid, naive_time);
       return {
         type: 'put', key, value
       };
@@ -570,7 +548,6 @@ export class DatabaseService {
     const parser = json2csv();
     parser.pipe(output);
     let idx = 0;
-    let score;
 
     // Metric Data id is based on metric Id. See Util.generateMetricDataId
     this._modelData.createValueStream({
@@ -582,16 +559,22 @@ export class DatabaseService {
       callback(error);
     })
     .on('data', (result) => {
+      let score, timestamp;
       if (++idx <= probationLength) {
         score = null;
       } else {
         score = result.anomaly_score;
       }
+
+      if (timestampFormat) {
+        let [m] = parseIsoTimestampFallbackUtc(result.iso_timestamp);
+        timestamp = m.format(timestampFormat);
+      } else {
+        timestamp = result.iso_timestamp;
+      }
+
       let data = {
-        // Don't include time zone. The model runner doesn't send time zone
-        // info, and the time zone may not be UTC.
-        timestamp: moment.utc(result.timestamp)
-              .format(timestampFormat),
+        timestamp,
         metric_value: result.metric_value,
         anomaly_level: mapAnomalyText(score),
         raw_anomaly_score: result.anomaly_score
@@ -927,7 +910,7 @@ export class DatabaseService {
           columns: false,
           offset : file.rowOffset
         };
-        fileService.getData(file.filename, options, ((error, data) => { // eslint-disable-line
+        fileService.getData(file.filename, options, ((error, data) => {
           if (error) {
             throw error;
           }
@@ -936,14 +919,18 @@ export class DatabaseService {
             metrics.forEach((field) => {
               // Collect data for each numeric field
               if (field.type === 'number') {
+                let [m, hasTimeZone] = parseTimestampFallbackUtc(
+                  data[timestampField.index], timestampField.format);
                 let metricData = {
                   metric_uid: field.uid,
-                  timestamp: parseTimestampIgnoreZone(
-                    data[timestampField.index], timestampField.format),
+                  iso_timestamp: m.format(hasTimeZone
+                                          ? 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ'
+                                          : 'YYYY-MM-DDTHH:mm:ss.SSSSSS'),
+                  naive_time: getNaiveTime(m),
                   metric_value: parseFloat(data[field.index])
                 };
                 // Save data
-                this.putMetricData(metricData, (error) => { // eslint-disable-line
+                this.putMetricData(metricData, (error) => { // eslint-disable-line max-nested-callbacks
                   if (error) {
                     throw error;
                   }
@@ -955,10 +942,10 @@ export class DatabaseService {
             file.records = records;
             this.putFile(file, (error) => {
               callback(error, file);
-            })
+            });
             return;
           }
-        }))
+        }));
       })
       .catch(callback);
   }
