@@ -21,6 +21,7 @@ import bunyan from 'bunyan';
 import moment from 'moment';
 import path from 'path';
 
+import AutoUpdate from './AutoUpdate';
 import config from './ConfigService';
 import database from './DatabaseService';
 import fileService from './FileService';
@@ -172,6 +173,20 @@ app.on('ready', () => {
   mainWindow.webContents.on('dom-ready', () => {
     log.info('Electron Main: Renderer DOM is now ready!');
   });
+
+  // Handle Auto Update events
+  // Updater is only avaialbe is release mode, when the app is properly signed
+  let updater = null;
+  let environment = config.get('env');
+  if (environment === 'prod') {
+    updater = new AutoUpdate(mainWindow);
+    // Check for updates
+    mainWindow.webContents.once('did-frame-finish-load', (event) => {
+      if (updater) {
+        updater.checkForUpdates();
+      }
+    });
+  }
 
   // Handle model service events
   handleModelEvents();

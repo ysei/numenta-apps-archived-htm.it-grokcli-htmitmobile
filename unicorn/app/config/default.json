@@ -2,6 +2,13 @@
   "title": "HTM Studio",
   "desc": "HTM Studio Desktop Application",
   "company": "Numenta",
+  "update": {
+    "readyTitle": "Software Updated ready",
+    "errorTitle": "Update Error",
+    "message": "A new update is ready to install.\nWould you like to install it now?",
+    "detail": "What's new in %releaseName:\n%releaseNotes",
+    "url": "http://public.numenta.com/updates/htmstudio"
+  },
   "browser": {
     "entry": "../browser/index.html"
   },
@@ -16,7 +23,9 @@
       "summary": "Results"
     },
     "okay": "OK",
-    "analyze": "Analyze"
+    "analyze": "Analyze",
+    "yes": "Yes",
+    "no": "No"
   },
   "chart": {
     "showNonAgg": "Show non-aggregated data",
