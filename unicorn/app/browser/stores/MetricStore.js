@@ -165,26 +165,30 @@ export default class MetricStore extends BaseStore {
   }
 
   /**
-   * Update store with new Metric+Chart starting viewpoint. The starting
-   *  viewpoint is stored as a JS Date stamp, miliseconds since epoch
-   *  (1 January 1970 00:00:00 UTC), example = 1458342717816. JS Null if unused.
-   *  This value ends up in Dygraphs as the start value of the range viewfinder
-   *  coordinate [begin, end] pair, which leads to the visible Chart section.
-   *  This store updater does not emit changes, as we want to keep this value
-   *  for the future, but not trigger a UI re-render (already did).
+   * Update store with new chart viewpoint.
+   *
+   * The dateWindow endpoints are stored as a JS time, milliseconds since epoch
+   * (1 January 1970 00:00:00 UTC), example = 1458342717816. null if unused.
+   * This value corresponds directly to the Dygraphs dateWindow, which specifies
+   * the visible Chart time interval.
+   *
+   * This store updater does not emit changes, as we want to keep this value for
+   * the future, but not trigger a UI re-render (already did).
+   *
    * @param {Object} payload - Data payload to use
    * @param {String} payload.metricId - ID of Metric to operate on
-   * @param {Number} payload.viewpoint - Number timestamp, Miliseconds since
-   *  epoch UTC. Where to start zooming in on chart.
+   * @param {Array} payload.dateWindow - [start, end] number pair
+   *                                     Each in milliseconds since epoch UTC.
+   *                                     Where to start zooming in on chart.
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
    * @see http://dygraphs.com/options.html#dateWindow
    * @see view-source://dygraphs.com/tests/range-selector.html
    */
   _handleUpdateViewpoint(payload) {
-    let {metricId, viewpoint} = payload;
+    let {metricId, dateWindow} = payload;
     let metric = this._metrics.get(metricId);
     if (metric) {
-      metric.viewpoint = viewpoint;
+      metric.dateWindow = dateWindow;
       // No change emit - only store value, do not cause UI to re-render.
       //  The UI just gave us this value, UI does not need any updating now.
     }
