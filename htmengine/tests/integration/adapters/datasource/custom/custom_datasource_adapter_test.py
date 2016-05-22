@@ -489,9 +489,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     excArgZero = excCtx.exception.args[0]
     initialMsg = excArgZero[0: len(
-      scalar_metric_utils._MUTEX_MODEL_SPEC_ERROR_MESSAGE)]
+      scalar_metric_utils._MUTEX_MODEL_SPEC_MSG)]
     self.assertEqual(initialMsg,
-                     scalar_metric_utils._MUTEX_MODEL_SPEC_ERROR_MESSAGE)
+                     scalar_metric_utils._MUTEX_MODEL_SPEC_MSG)
 
 
   def testMonitorMetricCompleteModelParamsNoValueFieldName(self):
@@ -523,9 +523,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     excArgZero = excCtx.exception.args[0]
     initialMsg = excArgZero[0: len(
-      scalar_metric_utils._NO_VALUE_FIELD_NAME_ERROR_MESSAGE)]
+      scalar_metric_utils._NO_VALUE_FIELD_NAME_MSG)]
     self.assertEqual(initialMsg,
-                     scalar_metric_utils._NO_VALUE_FIELD_NAME_ERROR_MESSAGE)
+                     scalar_metric_utils._NO_VALUE_FIELD_NAME_MSG)
 
 
   def testMonitorMetricCompleteModelParamsNoTimestampFieldName(self):
@@ -557,9 +557,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     excArgZero = excCtx.exception.args[0]
     initialMsg = excArgZero[0: len(
-      scalar_metric_utils._NO_TIMESTAMP_FIELD_NAME_ERROR_MESSAGE)]
+      scalar_metric_utils._NO_TIMESTAMP_FIELD_NAME_MSG)]
     self.assertEqual(initialMsg,
-                     scalar_metric_utils._NO_TIMESTAMP_FIELD_NAME_ERROR_MESSAGE)
+                     scalar_metric_utils._NO_TIMESTAMP_FIELD_NAME_MSG)
 
 
   def testMonitorMetricCompleteModelParamsNoInferenceArgs(self):
@@ -590,9 +590,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     excArgZero = excCtx.exception.args[0]
     initialMsg = excArgZero[0: len(
-      scalar_metric_utils._NO_INFERENCE_ARGS_ERROR_MESSAGE)]
+      scalar_metric_utils._NO_INFERENCE_ARGS_MSG)]
     self.assertEqual(initialMsg,
-                     scalar_metric_utils._NO_INFERENCE_ARGS_ERROR_MESSAGE)
+                     scalar_metric_utils._NO_INFERENCE_ARGS_MSG)
 
 
   def testMonitorMetricNameMismatch(self):
@@ -625,9 +625,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     excArgZero = excCtx.exception.args[0]
     initialMsg = excArgZero[0: len(
-      scalar_metric_utils._INCONSISTENT_PREDICTED_FIELD_NAME_ERROR_MESSAGE)]
+      scalar_metric_utils._INCONSISTENT_PREDICTED_FIELD_NAME_MSG)]
     self.assertEqual(initialMsg,
-      scalar_metric_utils._INCONSISTENT_PREDICTED_FIELD_NAME_ERROR_MESSAGE)
+                     scalar_metric_utils._INCONSISTENT_PREDICTED_FIELD_NAME_MSG)
 
 
   def testMonitorMetricWithMinResolution(self):

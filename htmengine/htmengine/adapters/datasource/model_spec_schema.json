@@ -2,7 +2,6 @@
   "description" : "Model specification shared by all datasource adapters for `monitorMetric` input; also what is stored in a metric row's properties field",
   "type": "object",
   "additionalProperties":false,
-
   "properties": {
     "datasource": {
       "description" : "datasource adapter identifier; e.g., custom, cloudwatch",

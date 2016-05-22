@@ -59,20 +59,20 @@ config = Config("application.conf", os.environ.get("APPLICATION_CONFIG_PATH"))
 MODEL_CREATION_RECORD_THRESHOLD = (60 / 5) * 24
 
 # Error messages for the 'generateSwarmParamsFromCompleteModelParams' function
-_MUTEX_MODEL_SPEC_ERROR_MESSAGE = (
-    "Specify either modelParams or completeModelParams but not both.")
-_NO_INFERENCE_ARGS_ERROR_MESSAGE = (
-    "inferenceArgs must be specified in completeModelParams."
+_MUTEX_MODEL_SPEC_MSG = (
+  "Specify either modelParams or completeModelParams but not both.")
+_NO_INFERENCE_ARGS_MSG = (
+  "inferenceArgs must be specified in completeModelParams."
 )
-_NO_TIMESTAMP_FIELD_NAME_ERROR_MESSAGE = (
-    "timestampFieldName must be specified in completeModelParams."
+_NO_TIMESTAMP_FIELD_NAME_MSG = (
+  "timestampFieldName must be specified in completeModelParams."
 )
-_NO_VALUE_FIELD_NAME_ERROR_MESSAGE = (
-    "valueFieldName must be specified in completeModelParams."
+_NO_VALUE_FIELD_NAME_MSG = (
+  "valueFieldName must be specified in completeModelParams."
 )
-_INCONSISTENT_PREDICTED_FIELD_NAME_ERROR_MESSAGE = (
-    "Inference args' predictedField must match complete model params' "
-    "valueFieldName"
+_INCONSISTENT_PREDICTED_FIELD_NAME_MSG = (
+  "Inference args' predictedField must match complete model params' "
+  "valueFieldName"
 )
 
 
@@ -111,56 +111,55 @@ def generateSwarmParams(stats):
 
 
 def generateSwarmParamsFromCompleteModelParams(modelSpec):
-    """ Generates a "swarm" parameter structure for model creation based on a
-    complete set of user-specified model parameters.
+  """ Generates a "swarm" parameter structure for model creation based on a
+  complete set of user-specified model parameters.
 
-    :param modelSpec: Model specification structure as defined by
-    'htmengine/adapters/datasource/model_spec_schema.json'
-    :type modelSpec: dict
-    :returns: If a valid set of complete model params is present, returns a
-    swarmParams object suitable for passing to startMonitoring() and
-    startModel(); otherwise, an empty dict is returned
-    :rtype dict
-    """
-    swarmParams = dict()
+  :param modelSpec: Model specification structure as defined by
+  'htmengine/adapters/datasource/model_spec_schema.json'
+  :type modelSpec: dict
+  :returns: If a valid set of complete model params is present, returns a
+  swarmParams object suitable for passing to startMonitoring() and
+  startModel(); otherwise, an empty dict is returned
+  :rtype dict
+  """
+  swarmParams = dict()
+  if "completeModelParams" in modelSpec:
+    # 'completeModelParams' and 'modelParams' are mutex
+    if "modelParams" in modelSpec:
+      raise ValueError("{} modelSpec={}".format(_MUTEX_MODEL_SPEC_MSG,
+                                                modelSpec))
 
-    if "completeModelParams" in modelSpec:
-      # 'completeModelParams' and 'modelParams' are mutex
-      if "modelParams" in modelSpec:
-        raise ValueError("{} modelSpec={}".format(
-            _MUTEX_MODEL_SPEC_ERROR_MESSAGE, modelSpec))
+    # 'completeModelParams', 'inferenceArgs', 'timestampFieldName', and
+    # 'valueFieldName' must all be present together
+    completeModelParams = modelSpec["completeModelParams"]
+    if "inferenceArgs" not in completeModelParams:
+      raise ValueError("{} modelSpec={}".format(_NO_INFERENCE_ARGS_MSG,
+                                                modelSpec))
+    if "timestampFieldName" not in completeModelParams:
+      raise ValueError("{} modelSpec={}".format(_NO_TIMESTAMP_FIELD_NAME_MSG,
+                                                modelSpec))
+    if "valueFieldName" not in completeModelParams:
+      raise ValueError("{} modelSpec={}".format(_NO_VALUE_FIELD_NAME_MSG,
+                                                modelSpec))
 
-      # 'completeModelParams', 'inferenceArgs', 'timestampFieldName', and
-      # 'valueFieldName' must all be present together
-      completeModelParams = modelSpec["completeModelParams"]
-      if "inferenceArgs" not in completeModelParams:
-        raise ValueError("{} modelSpec={}".format(
-            _NO_INFERENCE_ARGS_ERROR_MESSAGE, modelSpec))
-      if "timestampFieldName" not in completeModelParams:
-        raise ValueError("{} modelSpec={}".format(
-            _NO_TIMESTAMP_FIELD_NAME_ERROR_MESSAGE, modelSpec))
-      if "valueFieldName" not in completeModelParams:
-          raise ValueError("{} modelSpec={}".format(
-              _NO_VALUE_FIELD_NAME_ERROR_MESSAGE, modelSpec))
+    # check consistency in predicted field naming
+    if (completeModelParams["inferenceArgs"]["predictedField"] !=
+        completeModelParams["valueFieldName"]):
+      raise ValueError(_INCONSISTENT_PREDICTED_FIELD_NAME_MSG)
 
-      # check consistency in predicted field naming
-      if (completeModelParams["inferenceArgs"]["predictedField"] !=
-            completeModelParams["valueFieldName"]):
-        raise ValueError(_INCONSISTENT_PREDICTED_FIELD_NAME_ERROR_MESSAGE)
+    swarmParams["modelConfig"] = completeModelParams["modelParams"]
+    swarmParams["inferenceArgs"] = completeModelParams["inferenceArgs"]
+    inputRecordSchema = (
+      fieldmeta.FieldMetaInfo(completeModelParams["timestampFieldName"],
+                              fieldmeta.FieldMetaType.datetime,
+                              fieldmeta.FieldMetaSpecial.timestamp),
+      fieldmeta.FieldMetaInfo(completeModelParams["valueFieldName"],
+                              fieldmeta.FieldMetaType.float,
+                              fieldmeta.FieldMetaSpecial.none),
+    )
+    swarmParams["inputRecordSchema"] = inputRecordSchema
 
-      swarmParams["modelConfig"] = completeModelParams["modelParams"]
-      swarmParams["inferenceArgs"] = completeModelParams["inferenceArgs"]
-      inputRecordSchema = (
-        fieldmeta.FieldMetaInfo(completeModelParams["timestampFieldName"],
-                                fieldmeta.FieldMetaType.datetime,
-                                fieldmeta.FieldMetaSpecial.timestamp),
-        fieldmeta.FieldMetaInfo(completeModelParams["valueFieldName"],
-                                fieldmeta.FieldMetaType.float,
-                                fieldmeta.FieldMetaSpecial.none),
-      )
-      swarmParams["inputRecordSchema"] = inputRecordSchema
-
-    return swarmParams
+  return swarmParams
 
 
 def startMonitoring(conn, metricId, swarmParams, logger):
