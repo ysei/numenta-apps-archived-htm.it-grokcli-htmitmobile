@@ -35,24 +35,32 @@
       }
     },
     "completeModelParams": {
-      "description": "Complete model params obtained from calling nupic.swarming.permutations_runner.runWithConfig() passing swarm config specifying timestamp and single scalar volume metric fields as well as 'TemporalAnomaly' inference type'",
+      "description": "Complete model params to be passed to nupic.frameworks.opf.modelfactory.ModelFactory.create().",
       "required": false,
-      "type": "object"
-    },
-    "inferenceArgs": {
-      "description": "OPF Model Inference parameters (JSON object) for passing to the resulting model's `enableInference()` method as the `inferenceArgs` parameter.",
       "type": "object",
-      "required": false
-    },
-    "timestampFieldName": {
-      "description": "The name of the field in modelParams corresponding to the metric timestamp; for example, this is c0 in the model params returned by nupic.frameworks.opf.common_models.cluster_params.getScalarMetricWithTimeOfDayAnomalyParams().",
-      "type": "string",
-      "required": false
-    },
-    "valueFieldName": {
-      "description": "The name of the field in modelParams corresponding to the metric value; for example, this is c1 in the model params returned by nupic.frameworks.opf.common_models.cluster_params.getScalarMetricWithTimeOfDayAnomalyParams().",
-      "type": "string",
-      "required": false
+      "additionalProperties":false,
+      "properties": {
+        "modelParams": {
+          "description": "Model params for a model having a single scalar volume metric and a 'TemporalAnomaly' inference type.",
+          "type": "object",
+          "required": false
+        },
+        "inferenceArgs": {
+          "description": "OPF Model Inference parameters (JSON object) for passing to the resulting model's `enableInference()` method as the `inferenceArgs` parameter.",
+          "type": "object",
+          "required": false
+        },
+        "timestampFieldName": {
+          "description": "The name of the field in modelParams corresponding to the metric timestamp; for example, this is c0 in the model params returned by nupic.frameworks.opf.common_models.cluster_params.getScalarMetricWithTimeOfDayAnomalyParams().",
+          "type": "string",
+          "required": false
+        },
+        "valueFieldName": {
+          "description": "The name of the field in modelParams corresponding to the metric value; for example, this is c1 in the model params returned by nupic.frameworks.opf.common_models.cluster_params.getScalarMetricWithTimeOfDayAnomalyParams().",
+          "type": "string",
+          "required": false
+        }
+      }
     }
   }
 }

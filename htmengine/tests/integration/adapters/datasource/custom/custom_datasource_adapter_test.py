@@ -420,7 +420,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     fileName = "custom_datasource_adapter_test_model_params.json"
     with self._openTestDataFile(fileName) as modelParamsFile:
-      completeModelParams = json.load(modelParamsFile)
+      modelParams = json.load(modelParamsFile)
 
     # Turn on monitoring
     modelSpec = {
@@ -428,11 +428,13 @@ class CustomDatasourceAdapterTest(TestCaseBase):
       "metricSpec": {
         "metric": metricName
       },
-      "completeModelParams": completeModelParams,
-      "inferenceArgs": {"predictionSteps": [1], "predictedField": "bar",
-                        "inputPredictedField": "auto"},
-      "timestampFieldName": "foo",
-      "valueFieldName": "bar"
+      "completeModelParams": {
+        "modelParams": modelParams,
+        "inferenceArgs": {"predictionSteps": [1], "predictedField": "bar",
+                          "inputPredictedField": "auto"},
+        "timestampFieldName": "foo",
+        "valueFieldName": "bar"
+      }
     }
 
     adapter.monitorMetric(modelSpec)
@@ -462,26 +464,34 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     fileName = "custom_datasource_adapter_test_model_params.json"
     with self._openTestDataFile(fileName) as modelParamsFile:
-      completeModelParams = json.load(modelParamsFile)
+      modelParams = json.load(modelParamsFile)
 
     modelSpec = {
       "datasource": "custom",
       "metricSpec": {
         "metric": metricName
       },
-      "completeModelParams": completeModelParams,
-      "inferenceArgs": {"predictionSteps": [1], "predictedField": "snow",
-                        "inputPredictedField": "auto"},
-      "timestampFieldName": "jon",
-      "valueFieldName": "snow",
+      "completeModelParams": {
+        "modelParams": modelParams,
+        "inferenceArgs": {"predictionSteps": [1], "predictedField": "bar",
+                          "inputPredictedField": "auto"},
+        "timestampFieldName": "foo",
+        "valueFieldName": "bar"
+      },
       "modelParams": {
         "min": 0,
         "max": 100
       }
     }
 
-    with self.assertRaises(ValueError):
+    with self.assertRaises(ValueError) as excCtx:
       adapter.monitorMetric(modelSpec)
+
+    excArgZero = excCtx.exception.args[0]
+    initialMsg = excArgZero[0: len(
+      scalar_metric_utils._MUTEX_MODEL_SPEC_ERROR_MESSAGE)]
+    self.assertEqual(initialMsg,
+                     scalar_metric_utils._MUTEX_MODEL_SPEC_ERROR_MESSAGE)
 
 
   def testMonitorMetricCompleteModelParamsNoValueFieldName(self):
@@ -493,21 +503,29 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     fileName = "custom_datasource_adapter_test_model_params.json"
     with self._openTestDataFile(fileName) as modelParamsFile:
-      completeModelParams = json.load(modelParamsFile)
+      modelParams = json.load(modelParamsFile)
 
     modelSpec = {
       "datasource": "custom",
       "metricSpec": {
         "metric": metricName
       },
-      "completeModelParams": completeModelParams,
-      "inferenceArgs": {"predictionSteps": [1], "predictedField": "snow",
-                        "inputPredictedField": "auto"},
-      "timestampFieldName": "jon"
+      "completeModelParams": {
+        "modelParams": modelParams,
+        "inferenceArgs": {"predictionSteps": [1], "predictedField": "bachman",
+                          "inputPredictedField": "auto"},
+        "timestampFieldName": "erlich"
+      }
     }
 
-    with self.assertRaises(ValueError):
+    with self.assertRaises(ValueError) as excCtx:
       adapter.monitorMetric(modelSpec)
+
+    excArgZero = excCtx.exception.args[0]
+    initialMsg = excArgZero[0: len(
+      scalar_metric_utils._NO_VALUE_FIELD_NAME_ERROR_MESSAGE)]
+    self.assertEqual(initialMsg,
+                     scalar_metric_utils._NO_VALUE_FIELD_NAME_ERROR_MESSAGE)
 
 
   def testMonitorMetricCompleteModelParamsNoTimestampFieldName(self):
@@ -519,21 +537,29 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     fileName = "custom_datasource_adapter_test_model_params.json"
     with self._openTestDataFile(fileName) as modelParamsFile:
-      completeModelParams = json.load(modelParamsFile)
+      modelParams = json.load(modelParamsFile)
 
     modelSpec = {
       "datasource": "custom",
       "metricSpec": {
         "metric": metricName
       },
-      "completeModelParams": completeModelParams,
-      "inferenceArgs": {"predictionSteps": [1], "predictedField": "snow",
-                        "inputPredictedField": "auto"},
-      "valueFieldName": "snow"
+      "completeModelParams": {
+        "modelParams": modelParams,
+        "inferenceArgs": {"predictionSteps": [1], "predictedField": "snow",
+                          "inputPredictedField": "auto"},
+        "valueFieldName": "snow"
+      }
     }
 
-    with self.assertRaises(ValueError):
+    with self.assertRaises(ValueError) as excCtx:
       adapter.monitorMetric(modelSpec)
+
+    excArgZero = excCtx.exception.args[0]
+    initialMsg = excArgZero[0: len(
+      scalar_metric_utils._NO_TIMESTAMP_FIELD_NAME_ERROR_MESSAGE)]
+    self.assertEqual(initialMsg,
+                     scalar_metric_utils._NO_TIMESTAMP_FIELD_NAME_ERROR_MESSAGE)
 
 
   def testMonitorMetricCompleteModelParamsNoInferenceArgs(self):
@@ -545,20 +571,28 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     fileName = "custom_datasource_adapter_test_model_params.json"
     with self._openTestDataFile(fileName) as modelParamsFile:
-      completeModelParams = json.load(modelParamsFile)
+      modelParams = json.load(modelParamsFile)
 
     modelSpec = {
       "datasource": "custom",
       "metricSpec": {
         "metric": metricName
       },
-      "completeModelParams": completeModelParams,
-      "timestampFieldName": "jon",
-      "valueFieldName": "snow"
+      "completeModelParams": {
+        "modelParams": modelParams,
+        "timestampFieldName": "jon",
+        "valueFieldName": "snow"
+      }
     }
 
-    with self.assertRaises(ValueError):
+    with self.assertRaises(ValueError) as excCtx:
       adapter.monitorMetric(modelSpec)
+
+    excArgZero = excCtx.exception.args[0]
+    initialMsg = excArgZero[0: len(
+      scalar_metric_utils._NO_INFERENCE_ARGS_ERROR_MESSAGE)]
+    self.assertEqual(initialMsg,
+                     scalar_metric_utils._NO_INFERENCE_ARGS_ERROR_MESSAGE)
 
 
   def testMonitorMetricNameMismatch(self):
@@ -570,22 +604,30 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     fileName = "custom_datasource_adapter_test_model_params.json"
     with self._openTestDataFile(fileName) as modelParamsFile:
-      completeModelParams = json.load(modelParamsFile)
+      modelParams = json.load(modelParamsFile)
 
     modelSpec = {
       "datasource": "custom",
       "metricSpec": {
         "metric": metricName
       },
-      "completeModelParams": completeModelParams,
-      "inferenceArgs": {"predictionSteps": [1], "predictedField": "baz",
-                        "inputPredictedField": "auto"},
-      "timestampFieldName": "snorf",
-      "valueFieldName": "bar"
+      "completeModelParams": {
+        "modelParams": modelParams,
+        "inferenceArgs": {"predictionSteps": [1], "predictedField": "baz",
+                          "inputPredictedField": "auto"},
+        "timestampFieldName": "snorf",
+        "valueFieldName": "bar"
+      }
     }
 
-    with self.assertRaises(ValueError):
+    with self.assertRaises(ValueError) as excCtx:
       adapter.monitorMetric(modelSpec)
+
+    excArgZero = excCtx.exception.args[0]
+    initialMsg = excArgZero[0: len(
+      scalar_metric_utils._INCONSISTENT_PREDICTED_FIELD_NAME_ERROR_MESSAGE)]
+    self.assertEqual(initialMsg,
+      scalar_metric_utils._INCONSISTENT_PREDICTED_FIELD_NAME_ERROR_MESSAGE)
 
 
   def testMonitorMetricWithMinResolution(self):
@@ -854,7 +896,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
     checkExportSpec(exportSpec)
 
 
-  def testExportImport_completeModelParams(self):
+  def testExportImportCompleteModelParams(self):
     metricName = "test-" + uuid.uuid1().hex
 
     adapter = datasource_adapter_factory.createCustomDatasourceAdapter()
@@ -878,7 +920,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     fileName = "custom_datasource_adapter_test_model_params.json"
     with self._openTestDataFile(fileName) as modelParamsFile:
-      completeModelParams = json.load(modelParamsFile)
+      modelParams = json.load(modelParamsFile)
 
     # Turn on monitoring
     modelSpec = {
@@ -886,12 +928,13 @@ class CustomDatasourceAdapterTest(TestCaseBase):
       "metricSpec": {
         "metric": metricName
       },
-
-      "completeModelParams": completeModelParams,
-      "inferenceArgs": {"predictionSteps": [1], "predictedField": "bar",
-                        "inputPredictedField": "auto"},
-      "timestampFieldName": "foo",
-      "valueFieldName": "bar"
+      "completeModelParams": {
+        "modelParams": modelParams,
+        "inferenceArgs": {"predictionSteps": [1], "predictedField": "bar",
+                          "inputPredictedField": "auto"},
+        "timestampFieldName": "foo",
+        "valueFieldName": "bar"
+      }
     }
 
     adapter.monitorMetric(modelSpec)
