@@ -72,7 +72,7 @@ const STYLES = {
     flexGrow: 0,
     flexShrink: 0,
     overflow: 'hidden',
-    width: '200px',
+    width: '250px',
     height: '2rem',
     textOverflow: 'ellipsis'
   },

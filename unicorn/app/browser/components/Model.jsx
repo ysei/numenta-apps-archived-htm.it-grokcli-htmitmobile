@@ -43,11 +43,14 @@ import ModelProgress from './ModelProgress';
 import ModelStore from '../stores/ModelStore';
 import ModelDataStore from '../stores/ModelDataStore';
 import ShowCreateModelDialogAction from '../actions/ShowCreateModelDialog';
+import HideCreateModelDialogAction from '../actions/HideCreateModelDialog';
 import StartParamFinderAction from '../actions/StartParamFinder';
 import {TIMESTAMP_FORMAT_PY_MAPPING} from '../../common/timestamp';
 import {
   DATA_FIELD_INDEX, ANOMALY_YELLOW_VALUE, ANOMALY_RED_VALUE
 } from '../lib/Constants';
+import moment from 'moment';
+import _ from 'lodash';
 
 const dialog = remote.require('dialog');
 
@@ -90,6 +93,7 @@ export default class Model extends React.Component {
     // init state
     this.state = {
       modalDialog: null,
+      showCreateModelDialog: false,
       showSnackbar: false,
       snackbarMessage: '',
       showNonAgg: false  // show raw data overlay on top of aggregate chart?
@@ -149,6 +153,15 @@ export default class Model extends React.Component {
         },
         anomaly: {
           verticalAlign: 'top'
+        },
+        htmSettings: {
+          color: muiTheme.rawTheme.palette.accent3Color,
+          fontStyle: 'italic',
+          fontSize: 14,
+          marginTop: '30px',
+          title: {
+            marginBottom: '10px'
+          }
         }
       },
       progress: {
@@ -197,6 +210,19 @@ export default class Model extends React.Component {
     });
   }
 
+  _openCreateModelDialog(file, valueField) {
+    this.context.executeAction(ShowCreateModelDialogAction, {
+      fileName: file.name,
+      metricName: valueField.name
+    });
+    this.setState({showCreateModelDialog: true});
+  }
+
+  _dismissCreateModelDialog() {
+    this.setState({showCreateModelDialog: false});
+    this.context.executeAction(HideCreateModelDialogAction);
+  }
+
   _createModel(model, file, valueField, timestampField) {
     let inputOpts = {
       csv: file.filename,
@@ -205,10 +231,8 @@ export default class Model extends React.Component {
       valueIndex: valueField.index,
       datetimeFormat: TIMESTAMP_FORMAT_PY_MAPPING[timestampField.format]
     };
-    this.context.executeAction(ShowCreateModelDialogAction, {
-      fileName: file.name,
-      metricName: valueField.name
-    });
+
+    this._openCreateModelDialog(file, valueField);
 
     this.context.executeAction(StartParamFinderAction, {
       metricId: model.modelId,
@@ -221,7 +245,7 @@ export default class Model extends React.Component {
       <FlatButton
         label={this._config.get('button:cancel')}
         onTouchTap={this._dismissModalDialog.bind(this)}
-        />,
+      />,
       <RaisedButton
         label={this._config.get('button:delete')}
         onTouchTap={() => {
@@ -235,7 +259,7 @@ export default class Model extends React.Component {
           this._dismissModalDialog();
         }}
         primary={true}
-        />
+      />
     ];
     this._showModalDialog(
       this._config.get('dialog:model:delete:title'),
@@ -243,14 +267,14 @@ export default class Model extends React.Component {
       dialogActions);
   }
 
-  _exportModelResults(modelId) {
+  _exportModelResults(modelId, timestampFormat) {
     dialog.showSaveDialog({
       title: this._config.get('dialog:model:export:title'),
       defaultPath: this._config.get('dialog:model:export:path')
     }, (filename) => {
       if (filename) {
         this.context.executeAction(ExportModelResultsAction, {
-          modelId, filename
+          modelId, filename, timestampFormat
         });
       } else {
         // @TODO trigger error about "bad file"
@@ -259,7 +283,52 @@ export default class Model extends React.Component {
   }
 
   _renderModelSummaryDialog() {
-    let {model, file, modelData} = this.props;
+    let {model, file, valueField, modelData} = this.props;
+    let encoders = _.get(valueField,
+      'model_options.modelConfig.modelParams.sensorParams.encoders');
+    let aggOpts = valueField.aggregation_options;
+
+    // More info section
+    let timeOfDay = _.get(encoders, 'c0_timeOfDay');
+    let dayOfWeek = _.get(encoders, 'c0_dayOfWeek');
+
+    let recognizeWeeklyPatterns = Boolean(dayOfWeek);
+    let recognizeDailyPatterns = Boolean(timeOfDay);
+    let dataIsAggregated = Boolean(aggOpts);
+
+    let aggregationMessage = 'The data is not aggregated.';
+    if (dataIsAggregated) {
+      let aggregationMethod;
+      if (aggOpts.func === 'mean') {
+        aggregationMethod = 'average';
+      } else if (aggOpts.func === 'sum') {
+        aggregationMethod = 'sum'
+      }
+
+      if (aggregationMethod) {
+        let window = moment.duration(aggOpts.windowSize, 'seconds');
+        aggregationMessage = `The data is aggregated with an aggregation window
+        of ${window.hours()} hours ${window.minutes()} minutes
+        ${window.seconds()} seconds and the aggregation method
+        "${aggregationMethod}" is used to combine the points in each window.`
+      }
+    }
+
+    let patternMessage = 'Daily and weekly pattern recognition is disabled.';
+    if (recognizeDailyPatterns && !recognizeWeeklyPatterns) {
+      patternMessage = 'Daily patterns are recognized but not weekly patterns.'
+    } else if (!recognizeDailyPatterns && recognizeWeeklyPatterns) {
+      patternMessage = 'Weekly patterns are recognized but not daily patterns.'
+    } else if (recognizeDailyPatterns && recognizeWeeklyPatterns) {
+      patternMessage = 'Daily and weekly patterns are recognized.'
+    }
+
+    let MoreSection = (
+      <div style={this._styles.summary.htmSettings}>
+        <p style={this._styles.summary.htmSettings.title}>
+          <b>HTM settings: </b>{aggregationMessage} {patternMessage}
+        </p>
+      </div>);
 
     let total = modelData.data.reduce((previous, data) => {
       let {red, yellow} = previous;
@@ -270,7 +339,7 @@ export default class Model extends React.Component {
         yellow++;
       }
       return {red, yellow};
-    }, {red:0, yellow: 0});
+    }, {red: 0, yellow: 0});
 
     let summary = [];
     if (total.red === 0 && total.yellow === 0) {
@@ -308,22 +377,25 @@ export default class Model extends React.Component {
           <li>Explore the chart to understand your results in context</li>
           <li>Export the results to preserve and present your findings</li>
           <li>Engage with a more scalable HTM project in the NuPIC community or
-              contact us for a license</li>
+            contact us for a license
+          </li>
         </ol>
+        {MoreSection}
       </div>
     );
   }
 
   _showModelSummaryDialog() {
     let actions = [<RaisedButton
-                      label={this._config.get('button:okay')}
-                      onTouchTap={this._dismissModalDialog.bind(this)}
-                      primary={true}/>
-                  ];
+      label={this._config.get('button:okay')}
+      onTouchTap={this._dismissModalDialog.bind(this)}
+      primary={true}/>
+    ];
     let body = this._renderModelSummaryDialog();
     let title = this._config.get('dialog:model:summary:title');
     this._showModalDialog(title, body, actions);
   }
+
   /**
    * Toggle showing a 3rd series of Raw Metric Data over top of the
    *  already-charted 2-Series Model results (Aggregated Metric and Anomaly).
@@ -340,6 +412,7 @@ export default class Model extends React.Component {
       snackbarMessage: message
     });
   }
+
   _dismissSnackbar() {
     this.setState({showSnackbar: false});
   }
@@ -347,7 +420,7 @@ export default class Model extends React.Component {
   componentWillReceiveProps(nextProps) {
     let newModel = nextProps.model;
     let oldModel = this.props.model;
-    if (oldModel.active  && !newModel.active) {
+    if (oldModel.active && !newModel.active) {
       let message = this._config.get('snackbar:completed:message');
       let title = this.props.model.metric;
       let fileName = this.props.file.name;
@@ -359,11 +432,19 @@ export default class Model extends React.Component {
     let {model, file, valueField, timestampField} = this.props;
     let title = model.metric;
 
+    // Fixme: UNI-440
+    // The convention is to ignore timezones when rendering or exporting time
+    // in the app until UNI-440 is fixed.
+    let exportedTimestampFormat = timestampField.format;
+    if (exportedTimestampFormat.slice(-1) === 'Z') {
+      exportedTimestampFormat = timestampField.format.slice(0, -1);
+    }
+
     // prep UI
     let muiTheme = this.context.muiTheme;
     let checkboxColor = muiTheme.rawTheme.palette.primary1Color;
     let showNonAgg = this.props.model.aggregated === true &&
-                      this.state.showNonAgg === true;
+      this.state.showNonAgg === true;
     let openDialog = this.state.modalDialog !== null;
     let modalDialog = this.state.modalDialog || {};
     let actions, progress, titleColor;
@@ -391,7 +472,7 @@ export default class Model extends React.Component {
             unCheckedIcon={
               <CheckboxOutline color={checkboxColor} viewBox="0 0 40 40" />
             }
-            />
+          />
         );
       }
 
@@ -405,21 +486,22 @@ export default class Model extends React.Component {
             labelStyle={this._styles.actionButtonLabel}
             style={this._styles.actionButton}
             onTouchTap={this._showModelSummaryDialog.bind(this)}
-            />
+          />
           <RaisedButton
             label={this._config.get('button:model:export')}
             labelPosition="after"
             labelStyle={this._styles.actionButtonLabel}
             style={this._styles.actionButton}
-            onTouchTap={this._exportModelResults.bind(this, model.modelId)}
-            />
+            onTouchTap={this._exportModelResults.bind(this, model.modelId,
+             exportedTimestampFormat)}
+          />
           <RaisedButton
             label={this._config.get('button:model:delete')}
             labelPosition="after"
             labelStyle={this._styles.actionButtonLabel}
             style={this._styles.actionButton}
             onTouchTap={this._deleteModel.bind(this, model.modelId)}
-            />
+          />
         </CardActions>
       );
     } else {
@@ -436,7 +518,7 @@ export default class Model extends React.Component {
               this._createModel.bind(this, model, file, valueField,
                 timestampField)
             }
-            />
+          />
         </CardActions>
       );
     }
@@ -463,7 +545,7 @@ export default class Model extends React.Component {
           {actions}
         </CardHeader>
         <CardText expandable={false} style={this._styles.cardText}>
-          <ModelData modelId={model.modelId} showNonAgg={showNonAgg} />
+          <ModelData modelId={model.modelId} showNonAgg={showNonAgg}/>
         </CardText>
         <Dialog
           actions={modalDialog.actions}
@@ -471,9 +553,12 @@ export default class Model extends React.Component {
           open={openDialog}
           ref="modalDialog"
           title={modalDialog.title}>
-            {modalDialog.body}
+          {modalDialog.body}
         </Dialog>
-        <CreateModelDialog ref="createModelWindow"/>
+        <CreateModelDialog
+          open={this.state.showCreateModelDialog}
+          dismiss={::this._dismissCreateModelDialog.bind(this)}
+          ref="createModelWindow"/>
         <Snackbar
           open={this.state.showSnackbar}
           message={this.state.snackbarMessage}

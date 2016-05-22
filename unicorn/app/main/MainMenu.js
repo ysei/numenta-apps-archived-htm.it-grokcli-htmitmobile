@@ -16,7 +16,7 @@
 // http://numenta.org/licenses/
 
 import defaultMenu from 'electron-default-menu';
-
+let electron = require('electron');
 
 /**
  * Main top system menu (File/Open.., etc) for application
@@ -24,15 +24,55 @@ import defaultMenu from 'electron-default-menu';
 
 let menu = defaultMenu();
 
-menu.splice(1, 0, {
-  label: 'File',
-  submenu: [
-    {
-      label: 'Open File...',
-      accelerator: 'Command+O',
-      role: 'open'
+let aboutMenuItem = menu[0].submenu[0];
+if (aboutMenuItem.label === 'About HTM Studio') {
+  // Don't show the default Electron dialog.
+  delete aboutMenuItem.role;
+
+  // Do this instead.
+  aboutMenuItem.click = () => {
+    const BrowserWindow = electron.BrowserWindow;
+    let win = new BrowserWindow({width: 283, height: 230, title: ''});
+    win.loadURL(`file://${__dirname}/../browser/about.html`);
+  };
+} else {
+  throw new Error(
+    `Unexpected menu item in first position: ${aboutMenuItem.label}`
+  );
+}
+
+let helpMenu = menu.find((item) => item.label === 'Help');
+if (helpMenu) {
+  // Learn More
+  helpMenu.submenu.splice(0, 1); // Remove old behavior
+  helpMenu.submenu.push({
+    label: 'Lean More',
+    click() {
+      let url = 'http://numenta.com/htm-studio';
+      electron.shell.openExternal(url);
     }
-  ]
-});
+  });
+
+  // FAQ
+  helpMenu.submenu.push({
+    label: 'Frequently Asked Questions',
+    click() {
+      let url = 'http://numenta.com/htm-studio#faq';
+      electron.shell.openExternal(url);
+    }
+  });
+
+  // Provide Feedback
+  helpMenu.submenu.push({
+    label: 'Provide Feedback',
+    click() {
+      let url = 'http://numenta.com/htm-studio#feedback';
+      electron.shell.openExternal(url);
+    }
+  });
+
+} else {
+  throw new Error('Could not find Help menu.');
+}
 
 export default menu;

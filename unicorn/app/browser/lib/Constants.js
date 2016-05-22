@@ -42,6 +42,7 @@ Object.assign(module.exports, CommonConstants);
  * - Metric
  *  - LIST_METRICS: {@link ListMetrics}
  *  - LIST_METRICS_FAILURE
+ *  - UPDATE_METRIC: {@link UpdateMetric}
  *
  * - Metric Data
  *  - LOAD_METRIC_DATA: {@link LoadMetricData}
@@ -78,6 +79,10 @@ Object.assign(module.exports, CommonConstants);
  * - Param Finder Data
  *   - RECEIVE_PARAM_FINDER_DATA: {@link ReceiveParamFinderData}
  *
+ * - UI Advanced Settings
+ *  - TOGGLE_AGGREGATE_DATA: {@link ToggleAggregateData}
+ *  - OVERRIDE_PARAM_FINDER_RESULTS: {@link OverrideParamFinderResults}
+ *
  * - UI File Detail Menu
  *  - SHOW_FILE_DETAILS: {@link ShowFileDetails}
  *  - HIDE_FILE_DETAILS: {@link HideFileDetails}
@@ -108,6 +113,7 @@ export const ACTIONS = Object.freeze({
   // Metric
   LIST_METRICS: 'LIST_METRICS',
   LIST_METRICS_FAILURE: 'LIST_METRICS_FAILURE',
+  UPDATE_METRIC: 'UPDATE_METRIC',
 
   // Metric Data
   LOAD_METRIC_DATA: 'LOAD_METRIC_DATA',
@@ -146,6 +152,10 @@ export const ACTIONS = Object.freeze({
   // Param Finder Data
   RECEIVE_PARAM_FINDER_DATA: 'RECEIVE_PARAM_FINDER_DATA',
 
+  // UI Advanced Settings
+  TOGGLE_AGGREGATE_DATA: 'TOGGLE_AGGREGATE_DATA',
+  OVERRIDE_PARAM_FINDER_RESULTS: 'OVERRIDE_PARAM_FINDER_RESULTS',
+
   // UI File Detail Menu
   SHOW_FILE_DETAILS: 'SHOW_FILE_DETAILS',
   HIDE_FILE_DETAILS: 'HIDE_FILE_DETAILS',
@@ -168,3 +178,10 @@ export const DATA_FIELD_INDEX = Object.freeze({
   DATA_INDEX_VALUE: 1,
   DATA_INDEX_ANOMALY: 2
 });
+
+
+/**
+ * Anomaly bar width in pixels
+ * @type {Number}
+ */
+export const ANOMALY_BAR_WIDTH = 10;

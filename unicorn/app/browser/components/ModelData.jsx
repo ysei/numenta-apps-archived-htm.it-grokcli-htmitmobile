@@ -18,17 +18,19 @@
 import connectToStores from 'fluxible-addons-react/connectToStores';
 import moment from 'moment';
 import React from 'react';
+import ReactDOM from 'react-dom';
 
 import anomalyBarChartUnderlay from '../lib/Dygraphs/AnomalyBarChartUnderlay';
 import axesCustomLabelsUnderlay from '../lib/Dygraphs/AxesCustomLabelsUnderlay';
-import highlightedProbationUnderlay from '../lib/Dygraphs/HighlightedProbationUnderlay';
+import chartInteraction from '../lib/Dygraphs/ChartInteraction.js';
 import Chart from './Chart';
-import {DATA_FIELD_INDEX} from '../lib/Constants';
-import Dygraph from '../lib/Dygraphs/DygraphsExtended';
+import {
+  DATA_FIELD_INDEX, PROBATION_LENGTH, ANOMALY_BAR_WIDTH
+} from '../lib/Constants';
 import {
   formatDisplayValue, mapAnomalyColor
 } from '../lib/browser-utils';
-import {binarySearch, mapAnomalyText} from '../../common/common-utils';
+import {anomalyScale, binarySearch, mapAnomalyText} from '../../common/common-utils';
 import MetricStore from '../stores/MetricStore';
 import MetricDataStore from '../stores/MetricDataStore';
 import ModelStore from '../stores/ModelStore';
@@ -37,7 +39,7 @@ import RangeSelectorBarChart from '../lib/Dygraphs/RangeSelectorBarChartPlugin';
 
 const {
   DATA_INDEX_TIME, DATA_INDEX_VALUE, DATA_INDEX_ANOMALY
-} = DATA_FIELD_INDEX;
+  } = DATA_FIELD_INDEX;
 
 /**
  * Merge two sorted arrays to create a new sorted array.
@@ -68,28 +70,86 @@ function sortedMerge(a, b, compareFunction) {
   return ret;
 }
 
+
 /**
- * Use a heuristic to detect gaps in timestamps in the data.
+ * Use a heuristic to compute the gap threshold which will be used to represent
+ * timestamp gaps in the data.
+ *
+ * Heuristic for gap threshold:
+ *
+ * (1) Compute all the time-deltas between points.
+ * (2) Find the 10th percentile of non-zero time-deltas and multiply it by the
+ *     maximum number of missing anomaly bars (i.e. timestamp gaps in model
+ *     results). Using the 10th percentile instead of the min time-delta value
+ *     allows to be less sensitive to very small outliers.
+ *
+ * The result is the gap threshold.
+ *
+ * @param {Array} data - Array of arrays: [[Date, ...], [Date, ...], ...]
+ * @returns {Array} - Tuple:
+ *                    number: gap threshold
+ *                    number: minimum time delta
+ */
+function computeGapThreshold(data) {
+  let deltas = [];
+  for (let i = 1; i < data.length; i++) {
+    let delta = (data[i][DATA_INDEX_TIME].getTime() -
+    data[i - 1][DATA_INDEX_TIME].getTime());
+    if (delta > 0) {
+      deltas.push(delta);
+    }
+  }
+  deltas.sort((a, b) => a - b);
+
+  let percentile = 0.1;
+  let smallTimestampGap = deltas[Math.floor(deltas.length * percentile)];
+  let maxMissingBars = 2;
+  let minDelta = deltas.length ? deltas[0] : null;
+  let gapThreshold = (1 + maxMissingBars) * smallTimestampGap;
+  return [gapThreshold, minDelta];
+}
+
+
+/**
+ * Detect gaps in timestamps in the data. Lines will be drawn for every
+ * time-delta that is less than the gap threshold.
  *
  * At each gap, insert [midpointOfGap, vals[0], vals[1], ...] as a new datum.
  *
  * @param {Array} data - Array of arrays: [[Date, ...], [Date, ...], ...]
  * @param {Array} vals - Values concatenated to timestamp at every single gap
+ * @param {Number} gapThreshold - Lines will be drawn for every time-delta that
+ *                                is less than the gap threshold.
  * @returns {Array} - data with gap values inserted
  */
-function insertIntoGaps(data, vals) {
-  // Heuristic: do nothing.
-  return data;
+function insertIntoGaps(data, vals, gapThreshold) {
+  let newData = [];
+  data.forEach((item, rowid) => {
+    newData.push(item);
+
+    if (rowid + 1 < data.length) {
+      let curr = item[DATA_INDEX_TIME].getTime();
+      let next = data[rowid + 1][DATA_INDEX_TIME].getTime();
+      let delta = next - curr;
+      if (delta > gapThreshold) {
+        let gapItem = [new Date(curr + delta / 2)].concat(vals);
+        newData.push(gapItem);
+      }
+    }
+  });
+
+  return newData;
 }
+
 
 /**
  * Compute Dygraphs input from the metric and model data.
  *
- * If aggregated, the return value will contain properly formatted model
- * records, possibly with nonaggregated raw metric records inserted.
+ * If there are modelRecords, the return value will contain properly formatted
+ * model records, possibly with nonaggregated raw metric records inserted.
  *
- * If not aggregated, or if there are no modelRecords, the return value will
- * contain properly formatted raw metric records.
+ * If there are no modelRecords, the return value will contain properly
+ * formatted raw metric records.
  *
  * In all cases, gaps are detected. NaN values are inserted to designate gaps.
  *
@@ -100,70 +160,178 @@ function insertIntoGaps(data, vals) {
  *                                        (in addition to the aggregated data)
  * @returns {Array} - Tuple:
  *                    Array: Dygraphs multi-dimensional array
- *                    boolean: minVal
- *                    boolean: maxVal
+ *                    Array: The x values in the prepared data
+ *                    Array: The y values in the prepared data
+ *                    number: The minimum timestep delta in the model records,
+ *                            or in the metric records as a fallback
  * @see http://dygraphs.com/tests/independent-series.html
  */
 function prepareData(
   metricRecords, modelRecords, aggregated, rawDataInBackground) {
-  let minVal = Number.POSITIVE_INFINITY;
-  let maxVal = Number.NEGATIVE_INFINITY;
+  let xValues = [];
+  let yValues = [];
 
-  let aggregatedChartData = null;
-  if (modelRecords.length && aggregated) {
+  let [gapThreshold, minDelta] = computeGapThreshold(modelRecords.length > 0
+                                                     ? modelRecords
+                                                     : metricRecords);
+
+  let modelChartData = null;
+  if (modelRecords.length) {
     modelRecords.forEach((item) => {
-      minVal = Math.min(minVal, item[DATA_INDEX_VALUE]);
-      maxVal = Math.max(maxVal, item[DATA_INDEX_VALUE]);
+      xValues.push(item[DATA_INDEX_TIME]);
+      yValues.push(item[DATA_INDEX_VALUE]);
     });
 
     if (rawDataInBackground) {
-      aggregatedChartData = modelRecords.map(
+      modelChartData = modelRecords.map(
         (item) => [item[DATA_INDEX_TIME],
-                   item[DATA_INDEX_VALUE],
-                   null]);
+          item[DATA_INDEX_VALUE],
+          null]);
 
-      aggregatedChartData = insertIntoGaps(aggregatedChartData,
-                                           [NaN, null]);
+      modelChartData = insertIntoGaps(modelChartData,
+        [NaN, null], gapThreshold);
     } else {
-      aggregatedChartData = modelRecords.map(
+      modelChartData = modelRecords.map(
         (item) => [item[DATA_INDEX_TIME],
-                   item[DATA_INDEX_VALUE]]);
+          item[DATA_INDEX_VALUE]]);
 
-      aggregatedChartData = insertIntoGaps(aggregatedChartData,
-                                           [NaN]);
+      modelChartData = insertIntoGaps(modelChartData,
+        [NaN], gapThreshold);
     }
   }
 
   let rawChartData = null;
-  if (metricRecords.length && (!aggregated || rawDataInBackground)) {
+  if (metricRecords.length && (!modelRecords.length || rawDataInBackground)) {
     metricRecords.forEach((item) => {
-      minVal = Math.min(minVal, item[DATA_INDEX_VALUE]);
-      maxVal = Math.max(maxVal, item[DATA_INDEX_VALUE]);
+      xValues.push(item[DATA_INDEX_TIME]);
+      yValues.push(item[DATA_INDEX_VALUE]);
     });
 
     if (rawDataInBackground) {
       rawChartData = metricRecords.map(
         (item) => [item[DATA_INDEX_TIME],
-                   null,
-                   item[DATA_INDEX_VALUE]]);
+          null,
+          item[DATA_INDEX_VALUE]]);
 
       rawChartData = insertIntoGaps(rawChartData,
-                                    [null, NaN]);
+        [null, NaN], gapThreshold);
     } else {
       rawChartData = metricRecords.map(
         (item) => [item[DATA_INDEX_TIME],
-                   item[DATA_INDEX_VALUE]]);
+          item[DATA_INDEX_VALUE]]);
 
       rawChartData = insertIntoGaps(rawChartData,
-                                    [NaN]);
+        [NaN], gapThreshold);
     }
   }
 
   let data = sortedMerge(
-    aggregatedChartData, rawChartData,
+    modelChartData, rawChartData,
     (a, b) => a[DATA_INDEX_TIME].getTime() - b[DATA_INDEX_TIME].getTime());
 
-  return [data, minVal, maxVal];
+  return [data, xValues, yValues, minDelta];
+}
+
+/**
+ * Determine an x scale using the current x scale and the model data.
+ *
+ * @param {Object} context - a ModelData instance
+ * @param {Dygraph} g - a Dygraph instance
+ * @returns {Array} the new x extent [min, max]
+ */
+function xScaleCalculate(context, g) {
+  // Set a zoom limit.
+  let dateWindow = g.xAxisRange();
+  let adjusted = [dateWindow[0], dateWindow[1]];
+  let {modelData} = context.props;
+
+  /* eslint-disable max-depth */
+  if (modelData.data.length) {
+    let data = modelData.data;
+
+    // When there are only a few results, Dygraphs adds some padding.
+    adjusted[0] = Math.max(adjusted[0], data[0][DATA_INDEX_TIME]);
+
+    // Must be zoomed out enough that the space is filled with anomaly bars.
+    let anomalyBarCount = g.canvas_.offsetWidth / ANOMALY_BAR_WIDTH;
+    let minSpread = context._minTimeDelta * anomalyBarCount;
+    let discrepancy = minSpread - (adjusted[1] - adjusted[0]);
+    if (discrepancy > 0) {
+      if (context._previousDateWindow &&
+          (context._previousDateWindow[0] === adjusted[0] ||
+           context._previousDateWindow[1] === adjusted[1]) &&
+          minSpread <= (context._previousDateWindow[1] -
+                        context._previousDateWindow[0])) {
+        // If the old window was good and it partly matches the current window,
+        // just use it.
+        adjusted[0] = context._previousDateWindow[0];
+        adjusted[1] = context._previousDateWindow[1];
+      } else {
+        // Grow both sides, trying to hold the midpoint constant.
+        adjusted[0] = Math.max(data[0][DATA_INDEX_TIME],
+                               adjusted[0] - discrepancy/2);
+        adjusted[1] = Math.min(data[data.length-1][DATA_INDEX_TIME],
+                               adjusted[1] + discrepancy/2);
+        discrepancy = minSpread - (adjusted[1] - adjusted[0]);
+        if (discrepancy > 0) {
+          // One of the sides hit the end. Put the remainder on the other side.
+          adjusted[0] = Math.max(data[0][DATA_INDEX_TIME],
+                                 adjusted[0] - discrepancy);
+          adjusted[1] = Math.min(data[data.length-1][DATA_INDEX_TIME],
+                                 adjusted[1] + discrepancy);
+          discrepancy = minSpread - (adjusted[1] - adjusted[0]);
+          if (discrepancy > 0) {
+            // Both sides hit the end.
+            // Force extra space to the right.
+            adjusted[1] += discrepancy;
+          }
+        }
+      }
+    }
+
+    let spread = adjusted[1] - adjusted[0];
+    if (spread !== minSpread) {
+      // It's not at the max zoom. This might have come from a user interaction
+      // on the chart, encapsulated by Dygraphs. Record the zoom level.
+      let zoomLevel =
+            spread / (data[data.length - 1][DATA_INDEX_TIME].getTime() -
+                      data[0][DATA_INDEX_TIME].getTime());
+
+      // Don't cause a render. It would be nice to update the zoom text, but
+      // it's very broken if a chart render causes a chart render.
+      context._zoomOverride = zoomLevel;
+    }
+  }
+
+  context._previousDateWindow = adjusted;
+  return adjusted;
+}
+
+/**
+ * Determine a y scale using the seen and unseen y values.
+ *
+ * Current strategy: use the minimum and maximum for the entire time series.
+ * Additionally, make room for green anomaly bars.
+ *
+ * @param {Object} context - a ModelData instance
+ * @param {Dygraph} g - a Dygraph instance
+ * @returns {Array} the new y extent [min, max]
+ */
+function yScaleCalculate(context, g) {
+  let yExtentAdjusted = [context._yExtent[0], context._yExtent[1]];
+
+  // Add space for green anomaly bars.
+  yExtentAdjusted[0] -= anomalyScale(0) * (yExtentAdjusted[1] -
+                                           yExtentAdjusted[0]);
+
+  return yExtentAdjusted;
+}
+
+function onChartResize(context) {
+  // Get chart actual width used to calculate the initial number of bars
+  let modelId = context.props.modelId;
+  let chart = ReactDOM.findDOMNode(context.refs[`chart-${modelId}`]);
+  context.setState({chartWidth: chart.offsetWidth});
 }
 
 /**
@@ -202,21 +370,54 @@ export default class ModelData extends React.Component {
     this._config = this.context.getConfigClient();
 
     let muiTheme = this.context.muiTheme;
-    let displayPointCount = this._config.get('chart:points');
-
     this._styles = {
       container: {
         position: 'relative'
       },
-      legendSection: {
-        height: '1rem',
-        fontSize: 12
-      },
       legend: {
-        float: 'left'
+        section: {
+          height: '1rem',
+          fontSize: 12
+        },
+        label: {
+          float: 'left'
+        }
+      },
+      zoom: {
+        section: {
+          height: '1rem',
+          fontSize: 12,
+          float: 'right'
+        },
+        label: {
+          color: muiTheme.rawTheme.palette.accent3Color,
+          paddingRight: '1rem',
+          fontWeight: 'bold'
+        },
+        link: {
+          color: muiTheme.rawTheme.palette.primary1Color,
+          paddingRight: '0.5rem',
+          textDecoration: 'underline',
+          cursor: 'pointer'
+        },
+        linkActive: {
+          color: muiTheme.rawTheme.palette.textColor,
+          paddingRight: '0.5rem',
+          textDecoration: 'none',
+          cursor: 'default'
+        }
       }
     }
-    this._anomalyBarWidth = Math.round(displayPointCount / 16, 10);
+
+    this._xScaleCalculate = function (context, dygraph) {
+      return xScaleCalculate(context, dygraph);
+    }.bind(null, this);
+
+    this._yScaleCalculate = function (context, dygraph) {
+      return yScaleCalculate(context, dygraph);
+    }.bind(null, this);
+
+    this._onChartResize = onChartResize.bind(null, this);
 
     // Dygraphs Chart Options: Global and per-Series/Axis settings.
     this._chartOptions = {
@@ -224,8 +425,7 @@ export default class ModelData extends React.Component {
       options: {
         axisLineColor: muiTheme.rawTheme.palette.accent4Color,
         connectSeparatedPoints: true,  // required for raw+agg overlay
-        includeZero: true,
-        interactionModel: Dygraph.Interaction.dragIsPanInteractionModel,
+        interactionModel: chartInteraction,
         labelsShowZeroValues: true,
         labelsDiv: `legend-${props.modelId}`,
         plugins: [RangeSelectorBarChart],
@@ -233,12 +433,11 @@ export default class ModelData extends React.Component {
         rangeSelectorPlotStrokeColor: muiTheme.rawTheme.palette.primary1Color,
         showRangeSelector: true,
         underlayCallback: function (context, ...args) {
-          highlightedProbationUnderlay(context, ...args);
           axesCustomLabelsUnderlay(context, ...args);
           anomalyBarChartUnderlay(context, ...args);
         }.bind(null, this),
         xRangePad: 0,
-        yRangePad: 0
+        yRangePad: 4
       },
 
       // main value data chart line (could be either Raw OR Aggregated data)
@@ -274,18 +473,9 @@ export default class ModelData extends React.Component {
       // non-aggregated line chart overlay on top of aggregated data line chart
       raw: {
         labels: ['NonAggregated'],
-        axes: {
-          y2: {
-            axisLabelOverflow: false,
-            axisLabelWidth: 0,
-            drawAxis: false,
-            drawGrid: false,
-            valueFormatter: ::this._legendValueFormatter
-          }
-        },
         series: {
           NonAggregated: {
-            axis: 'y2',
+            axis: 'y',
             color: muiTheme.rawTheme.palette.primary1Color,  // light blue
             independentTicks: false,
             showInRangeSelector: false,
@@ -294,6 +484,14 @@ export default class ModelData extends React.Component {
         }
       }
     }; // chartOptions
+
+    this.state = {
+      zoomLevel: 0,
+      chartWidth: 400 // Replace with actual width when we know it.
+    };
+
+    // When the zoom is updated from Dygraphs, save the value here.
+    this._zoomOverride = null;
   } // constructor
 
   /**
@@ -324,28 +522,105 @@ export default class ModelData extends React.Component {
         return current[DATA_INDEX_TIME].getTime() - key;
       });
       let anomalyValue;
-      if (anomalyIdx >= 0) {
+      if (anomalyIdx < PROBATION_LENGTH) {
+        anomalyValue = null;
+      } else if (anomalyIdx >= 0) {
         // Found exact value
         anomalyValue = modelData[anomalyIdx][DATA_INDEX_ANOMALY];
       } else {
         // Get max value from neighboring points
-        let first = -anomalyIdx;
+        let first = ~anomalyIdx;
         let second = first + 1;
         if (second >= modelData.length - 1) {
           second = modelData.length - 1;
         }
         anomalyValue = Math.max(modelData[first][DATA_INDEX_ANOMALY],
-                                modelData[second][DATA_INDEX_ANOMALY]);
+          modelData[second][DATA_INDEX_ANOMALY]);
       }
       // Format anomaly value
-      if (anomalyValue) {
+      if (anomalyValue || anomalyValue === null) {
         let color = mapAnomalyColor(anomalyValue);
         let anomalyText = mapAnomalyText(anomalyValue);
         displayValue += ` <font color="${color}"><b>Anomaly: ${anomalyText}` +
-                        `</b></font>`;
+          `</b></font>`;
       }
     }
     return displayValue;
+  }
+
+  _handleZoom(zoomLevel) {
+    this._zoomOverride = null;
+    this.setState({zoomLevel});
+  }
+
+  /**
+   * Translate the zoom level into a resolution.
+   *
+   * A resolution has a timespan and a 'per' field.
+   *
+   * @param  {number} zoomLevel Percentage of data to display. [0..1]
+   * @return {Object} a 'timespan' + 'per' pair
+   */
+  _getResolution(zoomLevel) {
+    let {metricData, modelData} = this.props;
+
+    let resolution;
+    if (zoomLevel === 0) {
+      let timespan;
+      if (modelData.data.length) {
+        timespan = this._minTimeDelta;
+      } else {
+        // Assume evenly distributed points. It might not be evenly distributed,
+        // but it won't cause problems. If we used the min delta, it would cause
+        // the chart to zoom too far if the data contains a single small delta.
+        timespan = (this._xValues[this._xValues.length - 1] -
+                    this._xValues[0]) / metricData.length;
+      }
+
+      resolution = {
+        timespan,
+        per: 'anomaly bar'
+      };
+    } else {
+      resolution = {
+        timespan: zoomLevel * (this._xValues[this._xValues.length - 1] -
+                               this._xValues[0]),
+        per: 'chart width'
+      };
+    }
+
+    return resolution;
+  }
+
+  /**
+   * Describe time zoom level rounding time rounded to the closest time
+   * description (minute,  hour, day, week, month, ...) based .
+   * @param  {number} zoomLevel Percentage of data to display. [0..1]
+   * @return {string}           Human readable time period description.
+   *                            For example:
+   *                              All
+   *                              15 minutes
+   *                              8 hours
+   *                              1 day
+   *                              2 weeks
+   *                              6 months
+   */
+  _describeZoomLevel(zoomLevel) {
+    if (zoomLevel === 1) {
+      // No zoom
+      return this._config.get('chart:zoom:all');
+    }
+
+    let resolution = this._getResolution(zoomLevel);
+    let chartWidthTimespan;
+    if (resolution.per === 'anomaly bar') {
+      chartWidthTimespan = resolution.timespan * (this.state.chartWidth /
+                                                  ANOMALY_BAR_WIDTH);
+    } else if (resolution.per === 'chart width') {
+      chartWidthTimespan = resolution.timespan;
+    }
+
+    return moment.duration(chartWidthTimespan).humanize();
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -355,57 +630,128 @@ export default class ModelData extends React.Component {
     if (showNonAgg !== nextProps.showNonAgg) {
       return true;
     }
+    if (nextState.zoomLevel !== this.state.zoomLevel) {
+      return true;
+    }
+    if (nextState.chartWidth !== this.state.chartWidth) {
+      return true;
+    }
 
     // Only update if the model is visible and model data has changed
     if (model.visible && modelData.data.length) {
-      return modelData.modified !== nextProps.modelData.modified;
+      return modelData.modified !== nextProps.modelData.modified ||
+        this.props.model.active !== nextProps.model.active;
     }
 
     return true;
   }
 
-  render() {
-    let {
-      metric, metricData, model, modelData, showNonAgg, modelId
-    } = this.props;
-    let {options, raw, value} = this._chartOptions;
-    let {axes, labels, series} = value;
-    let metaData = {metric, model, min: -Infinity, max: Infinity};
+  componentDidMount() {
+    this._onChartResize();
+    window.addEventListener('resize', this._onChartResize);
+  }
 
-    if (metricData.length) {
-      metaData.metric.dataSize = metricData.length;
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._onChartResize);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.model.active) {
+      // Reset zoom level
+      this._zoomOverride = null;
+      this.setState({zoomLevel: 0});
     }
+  }
 
-    if (modelData.data.length) {
+  _calculateState(props) {
+    let {metric, metricData, model, modelData, showNonAgg} = props;
+    let {options, raw, value} = this._chartOptions;
+
+    metric.dataSize = metricData.length;
+    model.dataSize = modelData.data.length;
+
+    if (model.dataSize) {
       options.modelData = modelData.data;
-      metaData.model.dataSize = modelData.data.length;
     }
 
     const rawDataInBackground = (modelData.data.length &&
                                  model.aggregated &&
                                  showNonAgg);
+
+    // Calculate axes, labels, and series. Grab them from the "value" options,
+    // maybe insert the "raw" options, then overwrite the actual "options" that
+    // get passed into Dygraphs.
+    let {axes, labels, series} = value;
     if (rawDataInBackground) {
       labels = labels.concat(raw.labels);
       Object.assign(axes, raw.axes);
       Object.assign(series, raw.series);
     }
-
-    let [data, minVal, maxVal] = prepareData(metricData, modelData.data,
-                                             model.aggregated,
-                                             rawDataInBackground);
-
-    metaData.min = minVal;
-    metaData.max = maxVal;
-
-    // RENDER
     Object.assign(options, {axes, labels, series});
+
+    let [data,
+         xValues,
+         yValues,
+         minDelta] = prepareData(metricData, modelData.data, model.aggregated,
+                                 rawDataInBackground);
+
+    this._data = data;
+    this._xValues = xValues;
+    this._yValues = yValues;
+    this._minTimeDelta = minDelta;
+    this._yExtent = [Math.min(...yValues),
+                     Math.max(...yValues)];
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+    this._calculateState(nextProps);
+  }
+
+  componentWillMount() {
+    this._calculateState(this.props);
+  }
+
+  render() {
+    let {metric, model, modelData, modelId} = this.props;
+    let metaData = {metric, model, modelData};
+    let zoomLevel = this._zoomOverride || this.state.zoomLevel;
+
+    let zoomSection;
+    if (!model.active) {
+      // Render Zoom buttons
+      let zoomButtons = [0, 0.25, 1].map((level) => {
+        let style;
+        if (level === zoomLevel) {
+          style = this._styles.zoom.linkActive;
+        } else {
+          style = this._styles.zoom.link;
+        }
+        // Generate friendly zoom level description
+        let label = this._describeZoomLevel(level);
+        return (<a style={style} onClick={this._handleZoom.bind(this, level)}>
+          {label}</a>);
+      });
+      zoomSection = (<section style={this._styles.zoom.section}>
+        <span style={this._styles.zoom.label}>Zoom:</span>
+        {zoomButtons}
+      </section>);
+    }
+
     return (
       <div style={this._styles.container}>
-        <section style={this._styles.legendSection}>
-          <span id={`legend-${modelId}`} style={this._styles.legend}></span>
+        {zoomSection}
+        <section style={this._styles.legend.section}>
+          <span id={`legend-${modelId}`} style={this._styles.legend.label}/>
         </section>
         <section>
-          <Chart data={data} metaData={metaData} options={options} />
+          <Chart ref={`chart-${modelId}`}
+                 data={this._data}
+                 metaData={metaData}
+                 canZoom={!model.active}
+                 options={this._chartOptions.options}
+                 resolution={this._getResolution(zoomLevel)}
+                 xScaleCalculate={this._xScaleCalculate}
+                 yScaleCalculate={this._yScaleCalculate}/>
         </section>
       </div>
     );

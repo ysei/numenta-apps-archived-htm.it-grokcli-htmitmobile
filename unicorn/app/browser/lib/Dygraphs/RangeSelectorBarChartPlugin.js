@@ -21,10 +21,11 @@ import RGBColor from 'rgbcolor';
 import {
   DATA_FIELD_INDEX, ANOMALY_YELLOW_VALUE, PROBATION_LENGTH
 } from '../Constants';
-import Dygraph from './DygraphsExtended';
+
+import Dygraph from 'dygraphs';
 import {mapAnomalyColor} from '../browser-utils';
 
-const {DATA_INDEX_ANOMALY} = DATA_FIELD_INDEX;
+const {DATA_INDEX_TIME, DATA_INDEX_ANOMALY} = DATA_FIELD_INDEX;
 
 
 /**
@@ -172,9 +173,18 @@ export default class {
     }
 
     // Calculate dimensions for, and highlight probation period
-    probationWidth = (
-      canvasWidth * (Math.min(PROBATION_LENGTH, data.length) / data.length)
-    );
+    if (data.length < PROBATION_LENGTH) {
+      probationWidth = canvasWidth;
+    } else {
+      let probationTimeWidth = (
+        data[PROBATION_LENGTH][DATA_INDEX_TIME] - data[0][DATA_INDEX_TIME]
+      );
+      let totalTimeWidth = (
+        data[data.length-1][DATA_INDEX_TIME] - data[0][DATA_INDEX_TIME]
+      );
+      probationWidth = canvasWidth * (probationTimeWidth / totalTimeWidth);
+    }
+
     this._drawProbationPeriod(
       context, probationWidth, canvasHeight, probationColor
     );
@@ -343,7 +353,7 @@ export default class {
    */
   _xValueToPixel(x, xMax, xFactor) {
     if (x !== null) {
-      return Math.round((x - xMax) * xFactor, 10);
+      return Math.round((x - xMax) * xFactor);
     }
     return NaN;
   }
@@ -358,7 +368,7 @@ export default class {
    */
   _yValueToPixel(y, yMin, yMax, yFactor) {
     if (y !== null) {
-      return Math.round(yMax - ((y - yMin) * yFactor), 10);
+      return Math.round(yMax - ((y - yMin) * yFactor));
     }
     return NaN;
   }

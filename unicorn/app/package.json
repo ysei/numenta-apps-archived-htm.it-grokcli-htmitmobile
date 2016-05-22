@@ -1,7 +1,7 @@
 {
   "name": "htmstudio",
   "productName": "HTM Studio",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Numenta HTM Studio Cross-platform HTM Example Desktop Application",
   "main": "main/loader.js",
   "private": true,
@@ -48,7 +48,6 @@
   },
   "dependencies": {
     "babel-core": "6.7.2",
-    "babel-eslint": "4.1.8",
     "babel-loader": "6.2.4",
     "babel-plugin-add-module-exports": "0.1.2",
     "babel-plugin-transform-decorators-legacy": "1.3.4",
@@ -72,6 +71,7 @@
     "level-sublevel": "6.5.4",
     "leveldown": "1.4.4",
     "levelup": "1.3.1",
+    "lodash": "^4.11.2",
     "material-ui": "0.14.4",
     "moment": "2.11.2",
     "nconf": "0.8.4",

@@ -95,7 +95,7 @@ export function anomalyScale(value) {
  *                            }
  *                            ```
  * @return {integer} element index if found,
- *                   or negative value representing the insertion index if not found
+ *                   or 2s complement of the insertion index if not found
  */
 export function binarySearch(array, key, compare) {
   let max = array.length - 1;
@@ -113,7 +113,7 @@ export function binarySearch(array, key, compare) {
       return mid;
     }
   }
-  return -max; // Insertion index
+  return ~max; // Insertion index
 }
 
 /**
@@ -122,6 +122,9 @@ export function binarySearch(array, key, compare) {
  * @returns {String} - Anomaly text
  */
 export function mapAnomalyText(anomaly) {
+  if (anomaly === null) {
+    return 'N/A';
+  }
   if (anomaly >= ANOMALY_RED_VALUE) {
     return 'HIGH';
   } else if (anomaly >= ANOMALY_YELLOW_VALUE) {

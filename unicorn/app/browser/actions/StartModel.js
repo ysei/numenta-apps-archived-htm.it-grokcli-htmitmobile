@@ -34,6 +34,9 @@ export default function (actionContext, payload) {
     let {aggOpts, inputOpts, metricId, modelOpts} = payload;
     let aggregated = (Object.keys(aggOpts).length >= 1);
 
+    // Update metricStore
+    actionContext.dispatch(ACTIONS.UPDATE_METRIC, payload);
+
     // Save to database
     let db = actionContext.getDatabaseClient();
     return promisify(::db.updateMetric, metricId, {

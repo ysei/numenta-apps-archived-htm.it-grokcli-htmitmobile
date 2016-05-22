@@ -110,8 +110,12 @@ div.loading > div > svg > circle {
   z-index: 20 !important;
 }
 
-img.dygraph-rangesel-zoomhandle {
+.dygraph-chart-nozoom  img.dygraph-rangesel-zoomhandle {
   /* do not set display:none, it'll break dygraps range selector */
   cursor: pointer !important;
-  opacity: 0 !important;
+  z-index: -1 !important;
+}
+.dygraph-chart-zoom  img.dygraph-rangesel-zoomhandle {
+  cursor: pointer !important;
+  z-index: 30 !important;
 }
