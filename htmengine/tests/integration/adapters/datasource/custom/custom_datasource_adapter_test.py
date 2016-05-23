@@ -42,6 +42,10 @@ from nta.utils.config import Config
 from nta.utils.logging_support_raw import LoggingSupport
 
 
+# Disable warning: Access to a protected member
+# pylint: disable=W0212
+
+
 g_log = None
 
 
