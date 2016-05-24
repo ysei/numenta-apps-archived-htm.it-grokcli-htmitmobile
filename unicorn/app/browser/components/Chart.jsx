@@ -951,9 +951,9 @@ export default class Chart extends React.Component {
       .attr('stroke', 'black')
       .attr('stroke-width', 2)
       .attr('x1', -GRIPPER_WIDTH/2)
-      .attr('y1', rangeSelectorY + 3)
+      .attr('y1', rangeSelectorY + 2.5)
       .attr('x2', -GRIPPER_WIDTH/2)
-      .attr('y2', rangeSelectorY +  gripperHeight - 3);
+      .attr('y2', rangeSelectorY +  gripperHeight - 2.5);
 
     brushNode
       .select('.resize.e')
@@ -961,9 +961,9 @@ export default class Chart extends React.Component {
       .attr('stroke', 'black')
       .attr('stroke-width', 2)
       .attr('x1', GRIPPER_WIDTH/2)
-      .attr('y1', rangeSelectorY + 3)
+      .attr('y1', rangeSelectorY + 2.5)
       .attr('x2', GRIPPER_WIDTH/2)
-      .attr('y2', rangeSelectorY +  gripperHeight - 3);
+      .attr('y2', rangeSelectorY +  gripperHeight - 2.5);
 
     this._paintBrush();
     this._paintZoomText();
