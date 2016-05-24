@@ -261,8 +261,16 @@ export default class Chart extends React.Component {
     let start = this._data[0][DATA_INDEX_TIME];
     let end = this._data[this._data.length-1][DATA_INDEX_TIME];
 
+    if (this.props.model.active) {
+      // Don't show the links if the model is active.
+      d3.select(chartNode).select('.zoomLinks')
+        .style('visibility', 'hidden');
+      return;
+    }
+
     let that = this;
     d3.select(chartNode).select('.zoomLinks')
+      .style('visibility', null)
       .selectAll('.zoomLink')
       .data([0, 0.25, 1])
       .call((zoomLink) => {
@@ -295,28 +303,15 @@ export default class Chart extends React.Component {
                   ? (end - start) * zoomLevel
                   : minTimespan;
 
-            // If the current window contains an endpoint, stay next to that
-            // endpoint. Otherwise center on the current window's midpoint.
-            let prevDateWindow = that._xScale.domain();
-            let dateWindow;
-            if (end === prevDateWindow[1]) {
-              dateWindow = [end - targetTimespan, end];
-            } else if (start === prevDateWindow[0]) {
-              dateWindow = [start,
-                            start + targetTimespan];
-            } else {
-              let midpoint = that._xScale.invert(chartNode.offsetWidth / 2);
-              dateWindow = [Math.max(start, midpoint - targetTimespan/2),
-                            Math.min(end, midpoint + targetTimespan/2)];
-              let discrepancy = targetTimespan - (dateWindow[1] -
-                                                  dateWindow[0]);
+            let midpoint = that._xScale.invert(chartNode.offsetWidth / 2);
+            let dateWindow = [Math.max(start, midpoint - targetTimespan/2),
+                              Math.min(end, midpoint + targetTimespan/2)];
+            let discrepancy = targetTimespan - (dateWindow[1] - dateWindow[0]);
+            if (discrepancy > 0) {
+              dateWindow[0] = Math.max(start, dateWindow[0] - discrepancy);
+              discrepancy = targetTimespan - (dateWindow[1] - dateWindow[0]);
               if (discrepancy > 0) {
-                dateWindow[0] = Math.max(start, dateWindow[0] - discrepancy);
-                discrepancy = targetTimespan - (dateWindow[1] -
-                                                dateWindow[0]);
-                if (discrepancy > 0) {
-                  dateWindow[1] += discrepancy;
-                }
+                dateWindow[1] += discrepancy;
               }
             }
 
