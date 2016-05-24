@@ -478,13 +478,13 @@ export default class Model extends React.Component {
         );
 
         actions = (
-          <CardActions style={this._styles.actions}>
+          <CardActions style={this._styles.actions} title="">
             {showNonAggAction}
           </CardActions>
         );
       } else {
         actions = (
-        <CardActions style={this._styles.actions}>
+        <CardActions style={this._styles.actions} title="">
           {showNonAggAction}
           <RaisedButton
             label={this._config.get('button:model:summary')}
@@ -514,7 +514,7 @@ export default class Model extends React.Component {
     } else {
       // Create Action buttons
       actions = (
-        <CardActions style={this._styles.actions}>
+        <CardActions style={this._styles.actions} title="">
           <RaisedButton
             primary={true}
             label={this._config.get('button:model:create')}
