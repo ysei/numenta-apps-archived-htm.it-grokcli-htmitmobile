@@ -1012,6 +1012,8 @@ export default class Chart extends React.Component {
   _computeState(props) {
     let {values, values2} = props;
 
+    if (values.length < 1) return;
+
     let adjustedValues2;
     if (this.props.model.active) {
       // Since we receive all nonaggregated values immediately, only display the
