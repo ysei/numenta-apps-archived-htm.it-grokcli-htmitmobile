@@ -885,6 +885,7 @@ export default class Chart extends React.Component {
 
     let brushNode = rangeSelectorOverlay
           .append('g')
+          .attr('shape-rendering', 'crispEdges')
           .attr('class', 'x brush');
 
     brushNode.append('rect')
@@ -906,9 +907,10 @@ export default class Chart extends React.Component {
 
     brushNode
       .select('.extent')
-      .attr('y', 1)
-      .attr('height', rangeSelectorHeight - 2)
+      .attr('y', 0.5)
+      .attr('height', rangeSelectorHeight - 1)
       .attr('stroke', 'black')
+      .attr('stroke-width', 1)
       .attr('fill', 'transparent')
       .style('cursor', null); // use css
 
@@ -933,33 +935,35 @@ export default class Chart extends React.Component {
       .select('.resize.w rect')
       .attr('x', -GRIPPER_WIDTH)
       .attr('fill', 'white')
-      .attr('stroke', 'black');
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1);
 
     brushNode
       .select('.resize.e rect')
       .attr('x', 0)
       .attr('fill', 'white')
-      .attr('stroke', 'black');
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1);
 
     brushNode
       .select('.resize.w')
       .append('line')
       .attr('stroke', 'black')
-      .attr('stroke-width', 1.25)
-      .attr('x1', -GRIPPER_WIDTH + GRIPPER_WIDTH/2)
-      .attr('y1', rangeSelectorY + 2)
-      .attr('x2', -GRIPPER_WIDTH + GRIPPER_WIDTH/2)
-      .attr('y2', rangeSelectorY +  gripperHeight - 2);
+      .attr('stroke-width', 2)
+      .attr('x1', -GRIPPER_WIDTH/2)
+      .attr('y1', rangeSelectorY + 3)
+      .attr('x2', -GRIPPER_WIDTH/2)
+      .attr('y2', rangeSelectorY +  gripperHeight - 3);
 
     brushNode
       .select('.resize.e')
       .append('line')
       .attr('stroke', 'black')
-      .attr('stroke-width', 1.25)
+      .attr('stroke-width', 2)
       .attr('x1', GRIPPER_WIDTH/2)
-      .attr('y1', rangeSelectorY + 2)
+      .attr('y1', rangeSelectorY + 3)
       .attr('x2', GRIPPER_WIDTH/2)
-      .attr('y2', rangeSelectorY +  gripperHeight - 2);
+      .attr('y2', rangeSelectorY +  gripperHeight - 3);
 
     this._paintBrush();
     this._paintZoomText();
