@@ -885,7 +885,6 @@ export default class Chart extends React.Component {
 
     let brushNode = rangeSelectorOverlay
           .append('g')
-          .attr('shape-rendering', 'crispEdges')
           .attr('class', 'x brush');
 
     brushNode.append('rect')
@@ -910,7 +909,6 @@ export default class Chart extends React.Component {
       .attr('y', 0.5)
       .attr('height', rangeSelectorHeight - 1)
       .attr('stroke', 'black')
-      .attr('stroke-width', 1)
       .attr('fill', 'transparent')
       .style('cursor', null); // use css
 
@@ -949,21 +947,23 @@ export default class Chart extends React.Component {
       .select('.resize.w')
       .append('line')
       .attr('stroke', 'black')
-      .attr('stroke-width', 2)
+      .attr('stroke-width', 1)
+      .attr('stroke-linecap', 'butt')
       .attr('x1', -GRIPPER_WIDTH/2)
-      .attr('y1', rangeSelectorY + 2.5)
+      .attr('y1', rangeSelectorY + 2)
       .attr('x2', -GRIPPER_WIDTH/2)
-      .attr('y2', rangeSelectorY +  gripperHeight - 2.5);
+      .attr('y2', rangeSelectorY +  gripperHeight - 2);
 
     brushNode
       .select('.resize.e')
       .append('line')
       .attr('stroke', 'black')
-      .attr('stroke-width', 2)
+      .attr('stroke-width', 1)
+      .attr('stroke-linecap', 'butt')
       .attr('x1', GRIPPER_WIDTH/2)
-      .attr('y1', rangeSelectorY + 2.5)
+      .attr('y1', rangeSelectorY + 2)
       .attr('x2', GRIPPER_WIDTH/2)
-      .attr('y2', rangeSelectorY +  gripperHeight - 2.5);
+      .attr('y2', rangeSelectorY +  gripperHeight - 2);
 
     this._paintBrush();
     this._paintZoomText();
