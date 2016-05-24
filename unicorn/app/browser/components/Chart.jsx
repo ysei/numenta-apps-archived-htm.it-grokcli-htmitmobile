@@ -228,6 +228,8 @@ export default class Chart extends React.Component {
         bottom += belowMin;
         top = Math.min(max, top + belowMin);
       }
+
+      this._xScale.domain([bottom, top]);
     }
 
     this._xScale
