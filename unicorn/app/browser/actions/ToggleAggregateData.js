@@ -27,5 +27,6 @@ import {ACTIONS} from '../lib/Constants';
  * @emits {TOGGLE_AGGREGATE_DATA}
  */
 export default function (actionContext, payload) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.TOGGLE_AGGREGATE_DATA);
   actionContext.dispatch(ACTIONS.TOGGLE_AGGREGATE_DATA, payload);
 }
