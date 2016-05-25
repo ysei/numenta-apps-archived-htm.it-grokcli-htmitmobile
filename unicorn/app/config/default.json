@@ -3,7 +3,7 @@
   "desc": "HTM Studio Desktop Application",
   "company": "Numenta",
   "update": {
-    "readyTitle": "Software Updated ready",
+    "readyTitle": "Software Update ready",
     "errorTitle": "Update Error",
     "message": "A new update is ready to install.\nWould you like to install it now?",
     "detail": "What's new in %releaseName:\n%releaseNotes",

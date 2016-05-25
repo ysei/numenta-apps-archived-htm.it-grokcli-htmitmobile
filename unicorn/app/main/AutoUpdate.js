@@ -36,7 +36,7 @@ function _updateWin32(args) {
     spawn(UPDATE_EXE, args, {detached: true})
       .on('close', app.quit);
   } catch (error) {
-    dialog.showErrorBox(title, error);
+    dialog.showErrorBox('Update Error', error);
     app.quit();
   }
 }
@@ -99,7 +99,8 @@ export default class AppUpdater {
   }
 
   /**
-   * Handle squirrel windows start up process
+   * Handle squirrel windows start up process,
+   * See https://github.com/electron/windows-installer#handling-squirrel-events
    * @return {boolean} Whether or not an update was applied at start up
    */
   _handleSquirrelWindowsEvents() {
@@ -110,7 +111,7 @@ export default class AppUpdater {
 
       const squirrelEvent = process.argv[1];
       switch (squirrelEvent) {
-      case '--squirrel-install': // no-break
+      case '--squirrel-install': // fallthrough
       case '--squirrel-updated':
         let target = path.basename(process.execPath);
         _updateWin32([`--createShortcut=${target}`]);
