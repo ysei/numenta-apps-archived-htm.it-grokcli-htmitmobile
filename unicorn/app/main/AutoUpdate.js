@@ -100,13 +100,16 @@ export default class AppUpdater {
   }
 
   /**
-   * Handle squirrel windows start up process,
+   * Handle squirrel windows start up process as described in
+   * `electron/windows-installer`
    * See https://github.com/electron/windows-installer#handling-squirrel-events
+   * for more information
    * @return {boolean} Whether or not an update was applied at start up
    */
   _handleSquirrelWindowsEvents() {
     if (process.platform === 'win32') {
       if (process.argv.length === 1) {
+        // No update event was passed at start up
         return false;
       }
 
