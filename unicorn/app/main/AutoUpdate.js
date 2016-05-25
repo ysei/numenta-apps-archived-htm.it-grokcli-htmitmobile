@@ -58,14 +58,15 @@ export default class AppUpdater {
     });
 
     autoUpdater.addListener('update-downloaded', (event,
-      releaseNotes, releaseName, releaseDate, updateURL) => {
+      notes, name, pubDate, url) => {
       // Format release notes if given. May not be avaialbe on all platforms
       let detail = null;
-      if (releaseNotes) {
+      if (notes) {
         detail = config.get('update:detail')
-                       .replace('%releaseName', releaseName)
-                       .replace('%releaseNotes', releaseNotes)
-                       .replace('%releaseDate', releaseDate);
+                       .replace('%url', url)
+                       .replace('%name', name)
+                       .replace('%notes', notes)
+                       .replace('%pub_date', pubDate);
       }
 
       // Ask the user whether or not we should quit and install the new version

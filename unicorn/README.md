@@ -504,3 +504,12 @@ HTM Studio uses Electron built-in support for automatic updates based on [Squirr
     pub_date: "2016-02-02T21:51:58Z"
   }
   ```
+  These variables can be used to format the update message displayed to the user once a new update is available. See  `app/config/default.json` under `update:detail`.
+
+    Here is a sample message formatting:
+    ```javascript
+    "update": {
+        "detail": "What's new in %name:\n%notes",
+        ...
+    }
+    ```

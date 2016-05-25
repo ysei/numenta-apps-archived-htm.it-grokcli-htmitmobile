@@ -6,7 +6,7 @@
     "readyTitle": "Software Update ready",
     "errorTitle": "Update Error",
     "message": "A new update is ready to install.\nWould you like to install it now?",
-    "detail": "What's new in %releaseName:\n%releaseNotes",
+    "detail": "What's new in %name\n%notes",
     "url": "http://public.numenta.com/updates/htmstudio"
   },
   "browser": {
