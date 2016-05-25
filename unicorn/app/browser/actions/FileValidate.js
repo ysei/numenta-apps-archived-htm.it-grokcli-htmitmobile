@@ -27,10 +27,14 @@ import {ACTIONS} from '../lib/Constants';
 export default function (actionContext, filename) {
   return new Promise((resolve, reject) => {
     let fs = actionContext.getFileClient();
-    fs.validate(filename, (error, results) => {
+    fs.validate(filename, (error, warning, results) => {
       if (error) {
         actionContext.dispatch(ACTIONS.VALIDATE_FILE_FAILED, {
-          error, ...results
+          error, warning, ...results
+        });
+      } else if (warning) {
+        actionContext.dispatch(ACTIONS.VALIDATE_FILE_WARNING, {
+          error, warning, ...results
         });
       } else {
         actionContext.dispatch(ACTIONS.VALIDATE_FILE, results);
