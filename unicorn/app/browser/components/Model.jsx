@@ -165,7 +165,7 @@ export default class Model extends React.Component {
         }
       },
       progress: {
-        // marginTop: '-5rem',
+        marginTop: '6px',
         float: 'right'
       },
       showNonAgg: {
@@ -252,7 +252,7 @@ export default class Model extends React.Component {
           // reset chart viewpoint so we can start fresh on next chart re-create
           this.context.executeAction(ChartUpdateViewpoint, {
             metricId: modelId,
-            viewpoint: null
+            dateWindow: null
           });
 
           this.context.executeAction(DeleteModelAction, modelId);
@@ -449,12 +449,7 @@ export default class Model extends React.Component {
     let modalDialog = this.state.modalDialog || {};
     let actions, progress, titleColor;
 
-    // Model is running, show progress bar
-    if (model.active) {
-      progress = (
-        <ModelProgress modelId={model.modelId} style={this._styles.progress}/>
-      );
-    } else if (model.ran) {
+    if (model.ran) {
       let showNonAggAction = (<noscript/>);
       if (model.aggregated) {
         showNonAggAction = (
@@ -476,8 +471,19 @@ export default class Model extends React.Component {
         );
       }
 
-      // Results Action buttons
-      actions = (
+      if (model.active) {
+        // Model is running, show progress bar
+        progress = (
+          <ModelProgress modelId={model.modelId} style={this._styles.progress}/>
+        );
+
+        actions = (
+          <CardActions style={this._styles.actions} title="">
+            {showNonAggAction}
+          </CardActions>
+        );
+      } else {
+        actions = (
         <CardActions style={this._styles.actions} title="">
           {showNonAggAction}
           <RaisedButton
@@ -503,7 +509,8 @@ export default class Model extends React.Component {
             onTouchTap={this._deleteModel.bind(this, model.modelId)}
           />
         </CardActions>
-      );
+        );
+      }
     } else {
       // Create Action buttons
       actions = (

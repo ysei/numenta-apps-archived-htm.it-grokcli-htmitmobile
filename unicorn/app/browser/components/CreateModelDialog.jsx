@@ -99,7 +99,7 @@ export default class CreateModelDialog extends React.Component {
     // reset chart viewpoint so we can scroll with new data again
     this.context.executeAction(ChartUpdateViewpoint, {
       metricId: payload.metricId,
-      viewpoint: null
+      dateWindow: null
     });
 
     this.context.executeAction(StartModelAction, payload);
