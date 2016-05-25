@@ -63,12 +63,12 @@ export default class ModelClient {
   _handleIPCEvent(event, modelId, command, payload) {
     if (this._context) {
       if (command === 'data') {
-        setTimeout(() => this._handleModelData(modelId, payload));
+        this._handleModelData(modelId, payload);
       } else if (command === 'error') {
         let {error, ipcevent} = payload;
-        setTimeout(() => this._handleIPCError(modelId, error, ipcevent));
+        this._handleIPCError(modelId, error, ipcevent);
       } else if (command === 'close') {
-        setTimeout(() => this._handleCloseModel(modelId ,payload));
+        this._handleCloseModel(modelId, payload);
       } else {
         console.error(`Unknown command: ${command} ${payload}`); // eslint-disable-line
       }

@@ -48,7 +48,14 @@ export default class ModelDataStore extends BaseStore {
   }
 
   /**
-   * Append data to the specified model
+   * Append data to the specified model.
+   *
+   * We assume that we're receiving the data in the correct order. It would be
+   * easy to implement an "insertModelData" method rather than
+   * "appendModelData", but it's not necessarily the right behavior. If the
+   * model's input isn't ordered, this part of the code shouldn't reorder the
+   * model's output.
+   *
    * @param  {string} modelId   The model to add data
    * @param  {Array} data       New data to be appended
    */
