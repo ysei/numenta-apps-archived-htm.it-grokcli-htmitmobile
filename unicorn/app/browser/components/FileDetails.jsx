@@ -83,6 +83,11 @@ const STYLES = {
     width: '200px',
     height: '2rem',
     textOverflow: 'ellipsis'
+  },
+  recordsDisplay: {
+    float: 'left',
+    marginLeft: '1rem',
+    marginBottom: '1rem'
   }
 };
 
@@ -245,23 +250,37 @@ export default class FileDetails extends React.Component {
   }
 
   _renderActions() {
+    let file = this.props.file;
+    let numRecords, recordsDisplay;
+    if (file) {
+      numRecords = file.records;
+      recordsDisplay = (<p style={STYLES.recordsDisplay}>
+                           Displaying 20 records of {numRecords}.
+                        </p>);
+    }
     if (this.props.newFile) {
       return [
-        <FlatButton label="Cancel"
-                    onRequestClose={this._onRequestClose.bind(this)}
-                    onTouchTap={this._onRequestClose.bind(this)}/>,
+        <div>
+          {recordsDisplay}
+          <FlatButton label="Cancel"
+                      onRequestClose={this._onRequestClose.bind(this)}
+                      onTouchTap={this._onRequestClose.bind(this)}/>
 
-        <RaisedButton label="Add File" primary={true} ref="submit"
-                    disabled={this.props.error}
-                    style={STYLES.button}
-                    onRequestClose={this._onRequestClose.bind(this)}
-                    onTouchTap={this._onSave.bind(this)}/>
+          <RaisedButton label="Add File" primary={true} ref="submit"
+                      disabled={this.props.error}
+                      style={STYLES.button}
+                      onRequestClose={this._onRequestClose.bind(this)}
+                      onTouchTap={this._onSave.bind(this)}/>
+        </div>
       ];
     }
-    return(<RaisedButton label="Close" primary={true}
+    return(<div>
+             {recordsDisplay}
+             <RaisedButton label="Close" primary={true}
                        style={STYLES.button}
                        onRequestClose={this._onRequestClose.bind(this)}
-                       onTouchTap={this._onRequestClose.bind(this)}/>);
+                       onTouchTap={this._onRequestClose.bind(this)}/>
+           </div>);
   }
 
   render() {
