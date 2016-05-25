@@ -53,7 +53,7 @@ export default class ModelDataStore extends BaseStore {
    * @param  {Array} data       New data to be appended
    */
   _appendModelData(modelId, data) {
-    let newData = data.map((row) => [new Date(row[0]), row[1], row[2]]);
+    let newData = data.map((row) => [row[0], row[1], row[2]]);
     let model = this._models.get(modelId);
     if (model) {
       // Append payload data to existing model

@@ -54,7 +54,7 @@ function _drawRectangle(ctx, xStart, yStart, width, height, color) {
  * @see  {@link binarySearch}
  */
 function _compare(current, key) {
-  return current[DATA_INDEX_TIME].getTime() - key;
+  return current[DATA_INDEX_TIME] - key;
 }
 
 /**
@@ -64,15 +64,15 @@ function _compare(current, key) {
  *  customzing Dygraph's Underlay Callback. This is a much better simulation
  *  of a y3 axes, instead of a full custom plugin. Model Result data is forced
  *  in via the Dygraph.option with the key "modelData".
- * @param {Object} context - ModelData.jsx component context w/settings.
+ * @param {Object} context - Chart.jsx component context.
  * @param {CanvasRenderingContext2D} canvasCtx - Dygraphs Canvas context.
  * @param {Object} area - Canvas drawing area metadata, Width x Height info etc.
  * @param {Object} dygraph - Instantiated Dygraph library object itself.
  * @requries Dygraphs
  * @see view-source:http://dygraphs.com/tests/underlay-callback.html
  */
-export default function (context, canvasCtx, area, dygraph) {
-  let modelData = dygraph.getOption('modelData') || [];
+export default function (context, canvasCtx, area, dygraph) { // eslint-disable-line max-statements
+  let modelData = dygraph.getOption('modelData');
   if (modelData.length < 2) {
     // Not enough data
     return;
@@ -85,7 +85,7 @@ export default function (context, canvasCtx, area, dygraph) {
   let timestampBucketWidth =
         (timespan[1] - timespan[0]) / visibleBucketCount;
   let bucketStart0 =
-        modelData[0][DATA_INDEX_TIME].getTime() - timestampBucketWidth/2;
+        modelData[0][DATA_INDEX_TIME] - timestampBucketWidth/2;
   let firstVisibleBucket =
         Math.floor((timespan[0] - bucketStart0) / timestampBucketWidth);
 
@@ -104,13 +104,13 @@ export default function (context, canvasCtx, area, dygraph) {
 
     let matchStart = iData;
     while (matchStart < modelData.length &&
-           modelData[matchStart][DATA_INDEX_TIME].getTime() < bucketStart) {
+           modelData[matchStart][DATA_INDEX_TIME] < bucketStart) {
       matchStart++;
     }
 
     let matchEnd = matchStart;
     while (matchEnd < modelData.length &&
-           modelData[matchEnd][DATA_INDEX_TIME].getTime() < bucketEnd) {
+           modelData[matchEnd][DATA_INDEX_TIME] < bucketEnd) {
       matchEnd++;
     }
 
