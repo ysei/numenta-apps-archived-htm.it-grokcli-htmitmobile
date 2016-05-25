@@ -66,7 +66,7 @@ function _getDefaultDatabaseLocation() {
     try {
       // This module is only available inside 'Electron' main process
       const app = require('app'); // eslint-disable-line
-      location = path.join(app.getPath('userData'), 'database');
+      location = path.join(app.getPath('userData'), 'database2');
     } catch (error) { /* no-op */ }
   }
   return location;

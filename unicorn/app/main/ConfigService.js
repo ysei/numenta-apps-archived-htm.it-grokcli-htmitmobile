@@ -43,7 +43,7 @@ function createConfigService() {
   if (!isElectronRenderer) {
     try {
       const app = require('app'); // eslint-disable-line
-      location = path.join(app.getPath('userData'), 'settings.json')
+      location = path.join(app.getPath('userData'), 'settings2.json');
     } catch (error) { /* no-op */ }
   }
   // User settings
