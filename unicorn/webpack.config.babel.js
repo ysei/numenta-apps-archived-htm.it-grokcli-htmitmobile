@@ -15,12 +15,15 @@
 //
 // http://numenta.org/licenses/
 
+// Get current environment ('development' or 'production')
+const DEVELOPMENT = process.env.NODE_ENV === 'development'; // eslint-disable-line
+
 /**
  * WebPack ES6 Config File
  */
 export default {
   bail: true,
-  devtool: 'source-map',
+  devtool: DEVELOPMENT ? 'source-map' : null,
   entry: ['babel-polyfill', './app/browser/entry'],
   module: {
     loaders: [

@@ -58,7 +58,7 @@ export default class ModelDataStore extends BaseStore {
     // Assume we're receiving a timestamp without timezone data, e.g. output of
     // Python's datetime.isoformat(). If there's non-UTC timezone data,
     // e.g. "+04:00", this will shift the timestamp, which we don't want.
-    let newData = data.map((row) => [moment.utc(row[0]).toDate(),
+    let newData = data.map((row) => [moment.utc(row[0]).valueOf(),
                                      row[1], row[2]]);
     let model = this._models.get(modelId);
     if (model) {
