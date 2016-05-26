@@ -116,6 +116,9 @@ export default class ModelList extends React.Component {
    * background. On Mac OS X with a "retina" display, it often fails
    * to unhibernate, leaving a blank canvas.
    *
+   * This won't be necessary with the next version of Electron.
+   * FIXME: https://jira.numenta.com/browse/UNI-484
+   *
    * @see https://bugs.chromium.org/p/chromium/issues/detail?id=588434
    */
   _onVisibilityChange() {
@@ -143,7 +146,8 @@ export default class ModelList extends React.Component {
 
   componentDidMount() {
     this._onVisibilityChangeWrapper = () => this._onVisibilityChange();
-    document.addEventListener('visibilitychange', this._onVisibilityChangeWrapper);
+    document.addEventListener('visibilitychange',
+                              this._onVisibilityChangeWrapper);
   }
 
   componentWillUnmount() {
