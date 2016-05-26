@@ -481,3 +481,36 @@ does [not yet work with Electron](https://github.com/atom/electron/issues/915).
 * Update `app/package.json` with new version number
 * The convention for version numbers is [semantic versioning](http://semver.org/)
 * For example, we have a branch called [`htm-studio-v0.0.1`](https://github.com/numenta/numenta-apps/tree/htm-studio-v0.0.1)
+
+## Automatic Updates
+
+HTM Studio uses Electron built-in support for automatic updates based on [Squirrel.Mac](https://github.com/Squirrel/Squirrel.Mac) and [Squirrel.Windows](https://github.com/Squirrel/Squirrel.Windows). For more information see http://electron.atom.io/docs/api/auto-updater/
+
+### Mac OSX (darwin)
+
+1. Create update package using `npm run build:osx`
+1. Upload update package `dist/HTM Studio-darwin-x64/HTM Studio-version-mac.zip` to update site.
+  > The update site URL is composed of the update URL specified in `app/config/default.json` under `update:url` key and the platform name. For example, if the update URL points to http://public.numenta.com/updates/htmstudio then the darwin version should be uploaded to http://public.numenta.com/updates/htmstudio/darwin.
+
+1. Upload manifest to update site. The update manifest should be named after the old version describing the new version. For example, if updating from version `0.0.1` to version `0.0.2` then the update manifest should be named `update.0.0.1.json` and point to `HTM Studio-0.0.2-mac.zip`. For more information on the `update.version.json` format see https://github.com/Squirrel/Squirrel.Mac#update-json-format.
+
+  Sample manifest file:
+  * *update.0.0.2.json*
+  ```javascript
+  {
+    url: "http://public.numenta.com/updates/htmstudio/darwin/HTM%20Studio-0.0.3-mac.zip",
+    name: "0.0.3",
+    notes: "* Automatic Updates \n* Improved Charts \n* Fix timezone when exporting results",
+    pub_date: "2016-02-02T21:51:58Z"
+  }
+  ```
+  These variables can be used to format the update [dialog](https://github.com/electron/electron/blob/master/docs/api/dialog.md#dialogshowmessageboxbrowserwindow-options-callback) shown to the user once a new update is available. See  `app/config/default.json` under `update:message` and `update:detail`.
+
+    Here is a sample message formatting:
+    ```javascript
+    "update": {
+        "message": "A new version of HTM Studio (%name) is available",
+        "detail": "What's new in version %name:\n%notes",
+        ...
+    }
+    ```
