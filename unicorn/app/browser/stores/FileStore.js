@@ -43,13 +43,15 @@ export default class FileStore extends BaseStore {
    * @listens {UPDATE_FILE}
    * @listens {UPLOADED_FILE}
    * @listens {LIST_FILES}
+   * @listens {SET_FILE_EXPANDED_STATE}
    */
   static get handlers() {
     return {
       DELETE_FILE: '_handleDeleteFile',
       UPDATE_FILE: '_handleSetFile',
-      UPLOADED_FILE: '_handleSetFile',
-      LIST_FILES: '_handleListFiles'
+      UPLOADED_FILE: '_handleUploadedFile',
+      LIST_FILES: '_handleListFiles',
+      SET_FILE_EXPANDED_STATE: '_handleSetFileExpandedState'
     }
   }
 
@@ -81,7 +83,7 @@ export default class FileStore extends BaseStore {
   _handleListFiles(files) {
     if (files) {
       files.forEach((file) => {
-        this._files.set(file.filename, Object.assign({},file));
+        this._files.set(file.filename, Object.assign({expanded: true},file));
       });
       this.emitChange();
     }
@@ -91,4 +93,24 @@ export default class FileStore extends BaseStore {
     this._files.set(file.filename, Object.assign({},file));
     this.emitChange();
   }
+
+  /**
+   * Set expanded/collapsed view state of file.
+   *
+   * @param {object} payload - Action payload
+   * @param {String} payload.filename - File Name
+   * @param {Boolean} payload.expanded - true for expanded file view; false for
+   *   collapsed
+   */
+  _handleSetFileExpandedState(payload) {
+    this._files.get(payload.filename).expanded = payload.expanded;
+    this.emitChange()
+  }
+
+  _handleUploadedFile(file) {
+    this._files.set(file.filename, Object.assign({expanded: true},file));
+    this.emitChange();
+  }
+
+
 }

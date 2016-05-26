@@ -28,6 +28,7 @@ Object.assign(module.exports, CommonConstants);
  * - File
  *  - DELETE_FILE: {@link DeleteFile}
  *  - LIST_FILES: {@link ListFiles}
+ *  - SET_FILE_EXPANDED_STATE: {@link SetFileExpandedState}
  *  - UPLOADED_FILE: {@link FileUpload}
  *  - UPDATE_FILE: {@link FileUpdate}
  *  - VALIDATE_FILE: {@link FileValidate}
@@ -101,6 +102,7 @@ export const ACTIONS = Object.freeze({
   // File
   DELETE_FILE: 'DELETE_FILE',
   LIST_FILES: 'LIST_FILES',
+  SET_FILE_EXPANDED_STATE: 'SET_FILE_EXPANDED_STATE',
   UPLOADED_FILE: 'UPLOADED_FILE',
   UPDATE_FILE: 'UPDATE_FILE',
   VALIDATE_FILE: 'VALIDATE_FILE',
