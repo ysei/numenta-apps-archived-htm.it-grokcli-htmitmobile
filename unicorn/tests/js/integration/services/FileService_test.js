@@ -87,6 +87,8 @@ const EXPECTED_FIELDS = [
 ];
 
 const INVALID_CSV_FILE = path.join(FIXTURES, 'invalid.csv');
+const EMPTY_CSV_FILE = path.join(FIXTURES, 'empty.csv');
+const SMALL_NO_DATA_FILE = path.join(FIXTURES, 'small-no-data.csv')
 const TWO_DATES_FILE = path.join(FIXTURES, 'two-dates.csv');
 const NO_DATES_FILE = path.join(FIXTURES, 'no-dates.csv');
 const INVALID_DATE_FILE = path.join(FIXTURES, 'invalid-date.csv');
@@ -242,6 +244,18 @@ describe('FileService', () => {
       service.getFields(IGNORE_FIELDS_FILE, (error, results) => {
         assert.ifError(error);
         assert.deepEqual(results.fields, EXPECTED_FIELDS_IGNORED);
+        done();
+      });
+    });
+    it('should throw an error on an empty csv file', (done) => {
+      service.getFields(EMPTY_CSV_FILE, (error, fields) => {
+        assert.equal(error, 'Csv has no valid data rows to read');
+        done();
+      });
+    });
+    it('should throw an error on a file with less than 2 rows and no data rows', (done) => {
+      service.getFields(SMALL_NO_DATA_FILE, (error, fields) => {
+        assert.equal(error, 'Csv has no valid data rows to read');
         done();
       });
     });
