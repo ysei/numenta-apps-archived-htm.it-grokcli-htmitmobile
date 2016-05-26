@@ -58,9 +58,11 @@ const {app} = require('electron').remote;
 
 const modelClient = new ModelClient();
 const paramFinderClient = new ParamFinderClient();
-const gaTracker = new GoogleAnalytics(config.get('GA_TRACKING_ID'),
+/* eslint-disable no-process-env */
+const gaTracker = new GoogleAnalytics(process.env.GA_TRACKING_ID,
                                       app.getName(), app.getVersion(),
-                                      config.get('NODE_ENV') === 'development');
+                                      process.env.NODE_ENV === 'development');
+/* eslint-enable no-process-env */
 
 /**
  * HTM Studio: Cross-platform Desktop Application to showcase basic HTM features
