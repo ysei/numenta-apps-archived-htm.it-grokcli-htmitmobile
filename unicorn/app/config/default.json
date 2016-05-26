@@ -5,8 +5,12 @@
   "update": {
     "readyTitle": "Software Update ready",
     "errorTitle": "Update Error",
-    "message": "A new update is ready to install.\nWould you like to install it now?",
-    "detail": "What's new in %name\n%notes",
+    "detail": "A new version of HTM Studio (%name) is available.\nTo install the update, the application needs to be closed.\nDo you want to close the application now or later?",
+    "message": "",
+    "button": {
+      "yes": "Close and update now",
+      "no": "Wait until I close the app"
+    },
     "url": "http://public.numenta.com/updates/htmstudio"
   },
   "browser": {

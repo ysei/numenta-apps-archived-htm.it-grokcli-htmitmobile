@@ -59,20 +59,26 @@ export default class AppUpdater {
 
     autoUpdater.addListener('update-downloaded', (event,
       notes, name, pubDate, url) => {
+      let title = config.get('update:readyTitle');
+
       // Format release notes if given. May not be avaialbe on all platforms
-      let detail = null;
-      if (notes) {
-        detail = config.get('update:detail')
-                       .replace('%url', url)
-                       .replace('%name', name)
-                       .replace('%notes', notes)
-                       .replace('%pub_date', pubDate);
-      }
+      let detail = config.get('update:detail')
+                     .replace('%url', url)
+                     .replace('%name', name)
+                     .replace('%notes', notes)
+                     .replace('%pub_date', pubDate);
+
+      // Format update message
+      let message = config.get('update:message')
+                          .replace('%url', url)
+                          .replace('%name', name)
+                          .replace('%notes', notes)
+                          .replace('%pub_date', pubDate);
 
       // Ask the user whether or not we should quit and install the new version
-      let buttons = [config.get('button:yes'), config.get('button:no')];
-      let title = config.get('update:readyTitle');
-      let message = config.get('update:message');
+      let buttons = [
+        config.get('update:button:yes'),
+        config.get('update:button:no')];
 
       dialog.showMessageBox(this._window, {
         buttons, title, message, detail,
