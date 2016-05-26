@@ -142,10 +142,11 @@ export default class GoogleAnalytics {
 
   /**
    * Upload pending hits to server
+   * @return {Promise}  Returns promise that could be used to check for errors
    */
   _upload() {
     // Get all pending hits from database
-    this._getAllPening()
+    return this._getAllPening()
       .then((records) => {
         while (records.length > 0) {
           // Batch at most GA_BATCH_SIZE hits per request
@@ -153,9 +154,7 @@ export default class GoogleAnalytics {
           let values = batch.map((item) => item.value);
           let keys = batch.map((item) => item.key);
           // Post cached hits and delete successfuly uploaded hits from database
-          this._post(values)
-            .then(() => this._deletePending(keys))
-            .catch((error) => this.exception(error));
+          this._post(values).then(() => this._deletePending(keys));
         }
       });
   }
@@ -163,14 +162,13 @@ export default class GoogleAnalytics {
   /**
    * Synchronize local data with server.
    * Keep pending hits in local database until they are successfuly uploaded
+   * @return {Promise}  Returns promise that could be used to check for errors
    */
   synchronize() {
     // Empty memory queue
     let hits = this._queue.splice(0);
     // Persist hits before uploading to server in case of network error
-    this._savePending(hits)
-        .then(() => this._upload())
-        .catch((error) => this.exception(error));
+    return this._savePending(hits).then(() => this._upload());
   }
 
   /**

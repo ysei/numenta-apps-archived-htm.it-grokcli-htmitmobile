@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // global uncaught exception handler
   window.onerror = (message, file, line, col, error) => {
-    gaTracker.exception('Unknown Error', `Unknown Error: ${message}`);
+    gaTracker.exception('Unknown Error');
     dialog.showErrorBox('Unknown Error', `Unknown Error: ${message}`);
   };
 
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ReactDOM.render(contextEl, container);
     })
     .catch((error) => {
-      gaTracker.exception(error);
+      gaTracker.exception('Startup Error');
       console.log(error); // eslint-disable-line
       dialog.showErrorBox('Startup Error', `Startup Error: ${error}`);
     });
