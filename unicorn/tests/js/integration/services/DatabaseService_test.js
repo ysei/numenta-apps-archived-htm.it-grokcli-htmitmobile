@@ -58,7 +58,7 @@ const EXPECTED_FILE = Object.assign({}, INSTANCES.File, {
   filename: EXPECTED_FILENAME,
   name: path.basename(EXPECTED_FILENAME),
   uid: EXPECTED_FILENAME_ID,
-  records: 7
+  records: 400
 });
 
 const EXPECTED_FILE_WITH_OPTIONAL_FIELDS = Object.assign({}, EXPECTED_FILE, {
@@ -485,6 +485,8 @@ describe('DatabaseService:', () => {
                 assert.equal(JSON.parse(actual).length, 0);
                 service.getMetricData(EXPECTED_METRIC_ID, (error, actual) => {
                   assert.ifError(error);
+                  // likely a bug in the async code for the db. There is a race condition
+                  // here.
                   assert.equal(JSON.parse(actual).length, 0);
                   done();
                 });

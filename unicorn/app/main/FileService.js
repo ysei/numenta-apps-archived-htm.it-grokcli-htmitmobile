@@ -578,12 +578,14 @@ export class FileService {
       .once('end', () => {
         file.records = row;
         file.rowOffset = offset;
+        if (file.records < 400) {
+          dataError = 'File does not have at least 400 rows';
+        }
         callback(dataError, {file, fields});
       });
       stream.pipe(newliner).pipe(csvParser);
     });
   }
-
 }
 
 // Returns singleton

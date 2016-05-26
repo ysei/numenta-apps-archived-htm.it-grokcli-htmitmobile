@@ -144,11 +144,11 @@ const EXPECTED_FIELDS_IGNORED = [
 // Expected statistics for the whole file
 const EXPECTED_MIN = 16;
 const EXPECTED_MAX = 22;
-const EXPECTED_SUM = 116;
-const EXPECTED_MEAN = 19.333333333333332;
-const EXPECTED_COUNT = 6;
-const EXPECTED_VARIANCE = 5.866666666666665 ;
-const EXPECTED_STDEV = 2.422120283277993 ;
+const EXPECTED_SUM = 7716;
+const EXPECTED_MEAN = 19.338345864661665;
+const EXPECTED_COUNT = 399;
+const EXPECTED_VARIANCE = 4.902822382589636;
+const EXPECTED_STDEV = 2.2142317815869315;
 
 // Expected statistics for the first 2 lines
 const EXPECTED_MIN_PARTIAL = 17;
@@ -182,7 +182,9 @@ describe('FileService', () => {
     it('should get File Contents', (done) => {
       service.getContents(FILENAME_SMALL, (error, data) => {
         assert.ifError(error);
-        assert.equal(data, EXPECTED_CONTENT, 'Got different file content');
+        assert.equal(data.slice(0, EXPECTED_CONTENT.length),
+                                EXPECTED_CONTENT,
+                                'Got different file content');
         done();
       });
     });
@@ -269,7 +271,7 @@ describe('FileService', () => {
         assert.deepEqual(results.file,
           createFileInstance(FILENAME_SMALL, {
             rowOffset: 1,
-            records: 7
+            records: 400
           }));
         done();
       });
@@ -290,7 +292,7 @@ describe('FileService', () => {
         assert.deepEqual(results.file,
           createFileInstance(INVALID_DATE_CONTENT_FILE, {
             rowOffset: 1,
-            records: 7
+            records: 400
           }));
         done();
       });
@@ -304,7 +306,7 @@ describe('FileService', () => {
         assert.deepEqual(results.file,
           createFileInstance(INVALID_DATE_FORMAT_FILE, {
             rowOffset: 1,
-            records: 7
+            records: 400
           }));
         done();
       });
@@ -315,7 +317,18 @@ describe('FileService', () => {
         assert.deepEqual(results.file,
           createFileInstance(INVALID_NUMBER_FILE, {
             rowOffset: 1,
-            records: 7
+            records: 400
+          }));
+        done();
+      });
+    });
+    it('should reject file with less than 400 rows', (done) => {
+      service.validate(NO_HEADER_CSV_FILE, (error, results) => {
+        assert.equal(error, 'File does not have at least 400 rows');
+        assert.deepEqual(results.file,
+          createFileInstance(NO_HEADER_CSV_FILE, {
+            rowOffset: 0,
+            records: 6
           }));
         done();
       });
@@ -329,7 +342,10 @@ describe('FileService', () => {
         assert.ifError(error);
         if (data) {
           let row = JSON.parse(data);
-          assert.deepEqual(row, EXPECTED_DATA[i++]);
+          // exploits the fact that the test file is repeated on a interval
+          // the period being EXPECTED_DATA.length rows. This avoids having
+          // to make EXPECTED_DATA 400 lines long.
+          assert.deepEqual(row, EXPECTED_DATA[i++ % EXPECTED_DATA.length]);
         } else {
           done();
         }
@@ -352,7 +368,7 @@ describe('FileService', () => {
         assert.ifError(error);
         if (data) {
           let row = JSON.parse(data);
-          assert.deepEqual(row, EXPECTED_DATA[i++]);
+          assert.deepEqual(row, EXPECTED_DATA[i++ % EXPECTED_DATA.length]);
         } else {
           done();
         }
