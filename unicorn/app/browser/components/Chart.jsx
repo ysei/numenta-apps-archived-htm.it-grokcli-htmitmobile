@@ -719,7 +719,7 @@ export default class Chart extends React.Component {
     let {metric} = this.props;
     let element = ReactDOM.findDOMNode(this.refs['chart']);
 
-    this._onWindowResizeWrapper = () => this._onWindowResize();
+    this._onWindowResizeWrapper = this._onWindowResize.bind(this);
     window.addEventListener('resize', this._onWindowResizeWrapper);
 
     let dateWindow;

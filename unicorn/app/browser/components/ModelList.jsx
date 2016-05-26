@@ -145,7 +145,7 @@ export default class ModelList extends React.Component {
   }
 
   componentDidMount() {
-    this._onVisibilityChangeWrapper = () => this._onVisibilityChange();
+    this._onVisibilityChangeWrapper = this._onVisibilityChange.bind(this);
     document.addEventListener('visibilitychange',
                               this._onVisibilityChangeWrapper);
   }
