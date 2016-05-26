@@ -432,14 +432,6 @@ export default class Model extends React.Component {
     let {model, file, valueField, timestampField} = this.props;
     let title = model.metric;
 
-    // Fixme: UNI-440
-    // The convention is to ignore timezones when rendering or exporting time
-    // in the app until UNI-440 is fixed.
-    let exportedTimestampFormat = timestampField.format;
-    if (exportedTimestampFormat.slice(-1) === 'Z') {
-      exportedTimestampFormat = timestampField.format.slice(0, -1);
-    }
-
     // prep UI
     let muiTheme = this.context.muiTheme;
     let checkboxColor = muiTheme.rawTheme.palette.primary1Color;
@@ -499,7 +491,7 @@ export default class Model extends React.Component {
             labelStyle={this._styles.actionButtonLabel}
             style={this._styles.actionButton}
             onTouchTap={this._exportModelResults.bind(this, model.modelId,
-             exportedTimestampFormat)}
+                                                      timestampField.format)}
           />
           <RaisedButton
             label={this._config.get('button:model:delete')}
