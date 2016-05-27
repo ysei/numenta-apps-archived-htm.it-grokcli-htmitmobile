@@ -89,7 +89,7 @@
     "webpack": "1.12.14"
   },
   "optionalDependencies": {
-    "portable_python_darwin": "https://ci.numenta.com/artifact/UN-UN/shared/build-latestSuccessful/portable_python-darwin/portable_python.tar.gz",
-    "portable_python_win32": "https://ci.numenta.com/artifact/UN-UN/shared/build-latestSuccessful/portable_python-win64/portable_python.tar.gz"
+    "portable_python_darwin": "../scripts/OSX/portable_python.tar.gz",
+    "portable_python_win32": "../scripts/Windows64/portable_python.tar.gz"
   }
 }

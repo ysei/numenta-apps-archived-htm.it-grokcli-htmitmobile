@@ -15,6 +15,7 @@
   },
   "python": "app/node_modules/.bin/python",
   "scripts": {
+    "preinstall": "node scripts/download_python.js",
     "postinstall": "install-app-deps",
     "build:osx": "npm install && npm run prepare && npm run dist:osx",
     "build:win": "npm install && npm run prepare && npm run dist:win",
