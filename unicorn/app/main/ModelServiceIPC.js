@@ -115,12 +115,9 @@ export default class ModelServiceIPC {
             error: new UserError(payload)
           });
         } else if (command === 'data') {
-          let msg = JSON.stringify([payload.naive_time,
-                                    payload.metric_value,
-                                    payload.anomaly_score]);
-          this._webContents.send(
-            MODEL_SERVER_IPC_CHANNEL, modelId, command, msg
-          );
+          // Do nothing.
+          //
+          // After the data is in the database, call _notifyNewModelResult.
         } else {
           this._webContents.send(
             MODEL_SERVER_IPC_CHANNEL, modelId, command, payload
@@ -128,6 +125,12 @@ export default class ModelServiceIPC {
         }
       }
     });
+  }
+
+  _notifyNewModelResult(modelId) {
+    this._webContents.send(
+      MODEL_SERVER_IPC_CHANNEL, modelId, 'notifyNewModelResults', null
+    );
   }
 
   /**

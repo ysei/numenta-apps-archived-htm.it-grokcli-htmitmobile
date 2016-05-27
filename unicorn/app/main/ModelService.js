@@ -123,6 +123,7 @@ export class ModelService extends EventEmitter {
       this.emit(modelId, 'error', error);
     });
 
+    let index = 0;
     child.stdout.on('data', (data) => {
       // Model data chunks are separated by '\n', see 'model_runner_2' for details
       data.split('\n').forEach((line) => {
@@ -131,13 +132,13 @@ export class ModelService extends EventEmitter {
           let [m] = parseIsoTimestampFallbackUtc(timestamp);
 
           let modelData = {
-            metric_uid: modelId,
             iso_timestamp: timestamp,
             naive_time: getNaiveTime(m),
             metric_value: value,
             anomaly_score: score
           };
-          this.emit(modelId, 'data', modelData);
+          this.emit(modelId, 'data', [index, modelData]);
+          index++;
         }
       });
     });

@@ -16,9 +16,11 @@
 // http://numenta.org/licenses/
 
 import BaseStore from 'fluxible/addons/BaseStore';
-import moment from 'moment';
-import {DATA_FIELD_INDEX} from '../lib/Constants';
 
+import {DATA_FIELD_INDEX} from '../lib/Constants';
+import databaseClient from '../lib/HTMStudio/DatabaseClient';
+
+const TIME_BUFFER = 400;
 
 /**
  * Maintains model results data store
@@ -29,15 +31,12 @@ export default class ModelDataStore extends BaseStore {
     return 'ModelDataStore';
   }
 
-  /**
-   * @listens {RECEIVE_MODEL_DATA}
-   * @listens {DELETE_MODEL}
-   */
   static get handlers() {
     return {
-      RECEIVE_MODEL_DATA: '_handleReceiveModelData',
-      HIDE_MODEL: '_handleHideModel',
+      PREPARE_FOR_MODEL_RESULTS: '_handlePrepareForResults',
+      NOTIFY_NEW_MODEL_RESULTS: '_handleNewModelResults',
       LOAD_MODEL_DATA: '_handleLoadModelData',
+      HIDE_MODEL: '_handleHideModel',
       DELETE_MODEL: '_handleDeleteModel'
     };
   }
@@ -45,48 +44,79 @@ export default class ModelDataStore extends BaseStore {
   constructor(dispatcher) {
     super(dispatcher);
     this._models = new Map();
+    this._pendingModels = new Map();
+
+    this._fetchTimeoutId = null;
+    this._lastFetchTime = 0;
   }
 
-  /**
-   * Append data to the specified model.
-   *
-   * We assume that we're receiving the data in the correct order. It would be
-   * easy to implement an "insertModelData" method rather than
-   * "appendModelData", but it's not necessarily the right behavior. If the
-   * model's input isn't ordered, this part of the code shouldn't reorder the
-   * model's output.
-   *
-   * @param  {string} modelId   The model to add data
-   * @param  {Array} data       New data to be appended
-   */
-  _appendModelData(modelId, data) {
-    let newData = data.map((row) => [row[0], row[1], row[2]]);
-    let model = this._models.get(modelId);
-    if (model) {
-      // Append payload data to existing model
-      model.data.push(...newData);
-      // Record last time this model was modified
-      model.modified = moment().toDate();
-    } else {
-      // New model
-      this._models.set(modelId, {
-        modelId,
-        data: newData,
-        // Record last time this model was modified
-        modified: moment().toDate()
-      });
+  _handlePrepareForResults(modelId) {
+    this._pendingModels.set(modelId, {
+      shouldFetch: false
+    });
+  }
+
+  _handleNewModelResults(modelId) {
+    if (this._models.has(modelId)) {
+      this._fetchNewResultsSoon(modelId);
+    } else if (this._pendingModels.has(modelId)) {
+      this._pendingModels.get(modelId).shouldFetch = true;
     }
-    this.emitChange();
-  }
-
-  _handleReceiveModelData(payload) {
-    let {modelId, data} = payload;
-    this._appendModelData(modelId, data);
   }
 
   _handleLoadModelData(payload) {
     let {modelId, data} = payload;
-    this._appendModelData(modelId, data);
+
+    let pendingModel = this._pendingModels.get(modelId);
+    if (!pendingModel) {
+      throw new Error('Listen for new results before querying.', modelId);
+    }
+    this._pendingModels.delete(modelId);
+
+    let model = {modelId, data, modified: new Date()};
+    this._models.set(modelId, model);
+
+    if (pendingModel.shouldFetch) {
+      this._fetchNewResultsSoon(modelId);
+    }
+
+    this.emitChange();
+  }
+
+  _fetchNewResultsSoon(modelId) {
+    if (this._fetchTimeoutId === null) {
+      let fetch = () => {
+        // Immediately begin listening for new notifications. Don't wait for the
+        // database query to finish.
+        this._fetchTimeoutId = null;
+        this._lastFetchTime = Date.now();
+
+        // The model may have been hidden during the delay.
+        let model = this._models.get(modelId);
+        if (model) {
+          let offset = model.data.length;
+
+          databaseClient.getModelData(modelId, offset, (error, data) => {
+            if (error) {
+              throw new Error('getModelData failed', modelId, offset);
+            } else {
+              let records = JSON.parse(data);
+              model.data.splice(offset, records.length, ...records);
+              model.modified = new Date();
+              this.emitChange();
+            }
+          });
+        }
+      };
+
+      let delay = TIME_BUFFER - (Date.now() - this._lastFetchTime);
+      if (delay > 0) {
+        this._fetchTimeoutId =
+          setTimeout(fetch, delay);
+      } else {
+        fetch();
+      }
+    }
   }
 
   /**
