@@ -85,9 +85,8 @@ const STYLES = {
     textOverflow: 'ellipsis'
   },
   recordsDisplay: {
-    float: 'left',
-    marginLeft: '1rem',
-    marginBottom: '1rem'
+    fontStyle: 'italic',
+    marginTop: '2.5rem'
   }
 };
 
@@ -215,9 +214,16 @@ export default class FileDetails extends React.Component {
 
   _renderBody() {
     let file = this.props.file;
+    let error, numRecords, recordsDisplay;
     // File Size in KB
     let fileSize = (this.state.fileSize / 1024).toFixed();
-    let error;
+
+    if (file) {
+      numRecords = file.records;
+      recordsDisplay = (<p style={STYLES.recordsDisplay}>
+                          Displaying 20 rows out of {numRecords}
+                        </p>);
+    }
     if (this.props.error) {
       error =  (<p style={STYLES.error}>{this.props.error}</p>);
     }
@@ -243,6 +249,7 @@ export default class FileDetails extends React.Component {
             underlineFocusStyle={{display:'none'}}
             underlineStyle={{display:'none'}}
             value={file.records.toString()}/>
+            {recordsDisplay}
         </div>
         {this._renderDataTable()}
       </div>
@@ -250,18 +257,9 @@ export default class FileDetails extends React.Component {
   }
 
   _renderActions() {
-    let file = this.props.file;
-    let numRecords, recordsDisplay;
-    if (file) {
-      numRecords = file.records;
-      recordsDisplay = (<p style={STYLES.recordsDisplay}>
-                           Displaying 20 records of {numRecords}.
-                        </p>);
-    }
     if (this.props.newFile) {
       return [
         <div>
-          {recordsDisplay}
           <FlatButton label="Cancel"
                       onRequestClose={this._onRequestClose.bind(this)}
                       onTouchTap={this._onRequestClose.bind(this)}/>
@@ -274,13 +272,10 @@ export default class FileDetails extends React.Component {
         </div>
       ];
     }
-    return(<div>
-             {recordsDisplay}
-             <RaisedButton label="Close" primary={true}
+    return(<RaisedButton label="Close" primary={true}
                        style={STYLES.button}
                        onRequestClose={this._onRequestClose.bind(this)}
-                       onTouchTap={this._onRequestClose.bind(this)}/>
-           </div>);
+                       onTouchTap={this._onRequestClose.bind(this)}/>);
   }
 
   render() {
