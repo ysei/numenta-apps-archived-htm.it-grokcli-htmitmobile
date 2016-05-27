@@ -138,24 +138,25 @@ export default class ModelData extends React.Component {
   } // constructor
 
   shouldComponentUpdate(nextProps, nextState) {
-    let {model, modelData, showNonAgg} = this.props;
+    let {modelData, showNonAgg} = this.props;
 
     // allow chart to switch between "show non-agg data" toggle states
     if (showNonAgg !== nextProps.showNonAgg) {
       return true;
     }
 
-    // Only update if the model is visible and model data has changed
-    if (model.visible && modelData.data.length) {
-      return modelData.modified !== nextProps.modelData.modified ||
-        this.props.model.active !== nextProps.model.active;
+    if (!nextProps.model.visible) {
+      return false;
     }
 
-    return true;
-  }
+    if (nextProps.modelData.data.length < 1) {
+      // We're showing metric data. It only needs to render once.
+      return false;
+    }
 
-  componentWillReceiveProps(nextProps) {
-    this._calculateState(nextProps);
+    // Only update if the model data has changed.
+    return modelData.modified !== nextProps.modelData.modified ||
+      this.props.model.active !== nextProps.model.active;
   }
 
   _calculateState(props) {
@@ -189,6 +190,10 @@ export default class ModelData extends React.Component {
       this._values = insertIntoGaps(this._values, [NaN], gapThreshold);
       this._values2 = [];
     }
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+    this._calculateState(nextProps);
   }
 
   componentWillMount() {
