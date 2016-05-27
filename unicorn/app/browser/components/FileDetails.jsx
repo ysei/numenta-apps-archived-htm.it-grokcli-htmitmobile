@@ -86,7 +86,8 @@ const STYLES = {
   },
   recordsDisplay: {
     fontStyle: 'italic',
-    marginTop: '2.5rem'
+    marginTop: '2.5rem',
+    whiteSpace: 'nowrap'
   }
 };
 
