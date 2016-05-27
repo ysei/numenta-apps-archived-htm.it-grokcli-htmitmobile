@@ -101,6 +101,7 @@ const SUPPORTED_FORMAT_ERRORS = ['The CSV file does not have any valid data']
   file: context.getStore(FileDetailsStore).getFile(),
   fields: context.getStore(FileDetailsStore).getFields(),
   error: context.getStore(FileDetailsStore).getError(),
+  warning: context.getStore(FileDetailsStore).getWarning(),
   visible: context.getStore(FileDetailsStore).isVisible(),
   newFile: context.getStore(FileDetailsStore).isNewFile()
 }))
@@ -223,7 +224,7 @@ export default class FileDetails extends React.Component {
     let file = this.props.file;
     // File Size in KB
     let fileSize = (this.state.fileSize / 1024).toFixed();
-    let error, supportedFormats;
+    let error, warning, supportedFormats;
     if (this.props.error) {
       if (SUPPORTED_FORMAT_ERRORS.indexOf(this.props.error) > -1) {
         supportedFormats = (
@@ -235,10 +236,12 @@ export default class FileDetails extends React.Component {
       } else {
         error =  (<p style={STYLES.error}>{this.props.error}</p>);
       }
+    } else if (this.props.warning) {
+      warning = (<p style={STYLES.error}>{this.props.warning}</p>);
     }
     return (
       <div style={STYLES.container}>
-        {error}
+        {error} {warning}
         <div style={STYLES.fields}>
           <TextField
             floatingLabelText="File Size"
