@@ -30,12 +30,15 @@ import {ACTIONS, PROBATION_LENGTH} from '../lib/Constants';
  * @return {Promise} - Promise to resolve when data is loaded
  */
 export default function (actionContext, payload) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.EXPORT_MODEL_RESULTS);
+
   return new Promise((resolve, reject) => {
     let {modelId, filename, timestampFormat} = payload;
     let database = actionContext.getDatabaseClient();
     database.exportModelData(
       modelId, filename, timestampFormat, PROBATION_LENGTH, (error) => {
         if (error) {
+          actionContext.getGATracker().exception(ACTIONS.EXPORT_MODEL_RESULTS_FAILED); // eslint-disable-line
           actionContext.dispatch(ACTIONS.EXPORT_MODEL_RESULTS_FAILED, error);
           reject(error);
         } else {

@@ -23,10 +23,7 @@ const CONFIG_FILE = 'default.json';
 const CONFIG_PATH = path.join(__dirname, '..', 'config');
 
 const Defaults = {
-  NODE_ENV: 'development',
-  TEST_HOST: 'http://localhost',
-  TEST_PATH: '',
-  TEST_PORT: 8008
+  NODE_ENV: 'production'
 };
 
 
@@ -43,7 +40,7 @@ function createConfigService() {
   if (!isElectronRenderer) {
     try {
       const app = require('app'); // eslint-disable-line
-      location = path.join(app.getPath('userData'), 'settings.json')
+      location = path.join(app.getPath('userData'), 'settings2.json');
     } catch (error) { /* no-op */ }
   }
   // User settings

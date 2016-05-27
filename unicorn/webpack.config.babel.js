@@ -15,14 +15,23 @@
 //
 // http://numenta.org/licenses/
 
+/* eslint-disable no-process-env */
+
+const webpack = require('webpack');
+
 // Get current environment ('development' or 'production')
-const DEVELOPMENT = process.env.NODE_ENV === 'development'; // eslint-disable-line
+const DEVELOPMENT = process.env.NODE_ENV === 'development';
 
 /**
  * WebPack ES6 Config File
  */
 export default {
   bail: true,
+  plugins: [
+    new webpack.EnvironmentPlugin([
+      'NODE_ENV', 'GA_TRACKING_ID'
+    ])
+  ],
   devtool: DEVELOPMENT ? 'source-map' : null,
   entry: ['babel-polyfill', './app/browser/entry'],
   module: {

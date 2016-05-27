@@ -59,11 +59,15 @@ describe('ModelService', () => {
   });
 
   describe('Model Events', () => {
-    it('Model Runner should return a list with 3 values', (done) => {
+    it('Model Runner should return a ModelData', (done) => {
       service.on(MODEL_ID, (type, data) => {
         assert.notEqual(type, 'error', data);
         if (type === 'data') {
-          assert.equal(JSON.parse(data).length, 3);
+          assert('metric_uid' in data);
+          assert('iso_timestamp' in data);
+          assert('naive_time' in data);
+          assert('metric_value' in data);
+          assert('anomaly_score' in data);
           service.removeAllListeners(MODEL_ID);
           done();
         }

@@ -122,18 +122,11 @@ export default class ModelClient {
   }
 
   _handleModelData(modelId, payload) {
-    // Multiple data records are separated by `\n`
-    let data = payload.trim().split('\n').map((row) => {
-      if (row) {
-        return  JSON.parse(row);
-      }
-    });
-
     // Add data to buffer
     if (!this._dataBuffer.has(modelId)) {
       this._dataBuffer.set(modelId, []);
     }
-    this._dataBuffer.get(modelId).push(...data);
+    this._dataBuffer.get(modelId).push(JSON.parse(payload));
 
     // Flush data every 200 ms
     let now = Date.now();
