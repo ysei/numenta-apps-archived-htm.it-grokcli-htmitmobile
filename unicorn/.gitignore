@@ -2,6 +2,9 @@
 *.egg-info
 *.log
 
+portable_python.tar.gz
+portable_python.zip
+
 .tags_swap
 tags
 
