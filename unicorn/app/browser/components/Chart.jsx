@@ -542,7 +542,9 @@ export default class Chart extends React.Component {
 
     keyvalue.append('span')
       .style('font-weight', 'bold')
-      .text(secondary ? 'Non-aggregated value: ' : 'Value: ');
+      .text((secondary || !this.props.model.aggregated)
+            ? `${this.props.metric.name}: `
+            : `Aggregated ${this.props.metric.name}: `);
 
     keyvalue.append('span')
       .text(formatDisplayValue(value));
@@ -719,8 +721,14 @@ export default class Chart extends React.Component {
     let {metric} = this.props;
     let element = ReactDOM.findDOMNode(this.refs['chart']);
 
-    this._onWindowResizeWrapper = () => this._onWindowResize();
+    this._onWindowResizeWrapper = this._onWindowResize.bind(this);
     window.addEventListener('resize', this._onWindowResizeWrapper);
+
+    if (this.props.modelData.length > 0 && !this.props.model.active) {
+      // This model already ran, but updates might still happen via
+      // the aggregated / non-aggregated checkbox.
+      this._jumpToNewResults = false;
+    }
 
     let dateWindow;
     if (metric.dateWindow) {

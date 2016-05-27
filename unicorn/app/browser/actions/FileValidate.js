@@ -25,10 +25,13 @@ import {ACTIONS} from '../lib/Constants';
  * @return {Promise}
  */
 export default function (actionContext, filename) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.VALIDATE_FILE);
+
   return new Promise((resolve, reject) => {
     let fs = actionContext.getFileClient();
     fs.validate(filename, (error, results) => {
       if (error) {
+        actionContext.getGATracker().exception(ACTIONS.VALIDATE_FILE_FAILED);
         actionContext.dispatch(ACTIONS.VALIDATE_FILE_FAILED, {
           error, ...results
         });

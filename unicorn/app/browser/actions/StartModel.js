@@ -30,6 +30,8 @@ import {promisify} from '../../common/common-utils';
  * @return {Promise}  Promise
  */
 export default function (actionContext, payload) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.START_MODEL);
+
   return new Promise((resolve, reject) => {
     let {aggOpts, inputOpts, metricId, modelOpts} = payload;
     let aggregated = (Object.keys(aggOpts).length >= 1);
@@ -58,6 +60,7 @@ export default function (actionContext, payload) {
       return resolve();
     })
     .catch((error) => {
+      actionContext.getGATracker().exception(ACTIONS.START_MODEL_FAILED);
       return reject(error);
     });
   });
