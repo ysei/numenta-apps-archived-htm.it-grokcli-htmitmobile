@@ -430,6 +430,14 @@ The resulting artifacts can be found in `dist/`
   be signed.
 * See [electron-builder#code-signing](https://github.com/electron-userland/electron-builder#code-signing) for more info.
 
+### Google Analytics
+
+* Set the environment variable `GA_TRACKING_ID` with Google Analytics tracking ID. See https://analytics.google.com/analytics for correct ID. It should be something like this:
+
+```shell
+export GA_TRACKING_ID="UA-XXXXXXXX-X"
+```
+
 ### App Store
 
 * Currently, the instructions to release an Electron app on the app store can

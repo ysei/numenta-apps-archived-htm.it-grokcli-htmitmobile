@@ -26,5 +26,6 @@ import {ACTIONS} from '../lib/Constants';
  * @emits {OVERRIDE_PARAM_FINDER_RESULTS}
  */
 export default function (actionContext, payload) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.OVERRIDE_PARAM_FINDER_RESULTS); // eslint-disable-line
   actionContext.dispatch(ACTIONS.OVERRIDE_PARAM_FINDER_RESULTS, payload);
 }
