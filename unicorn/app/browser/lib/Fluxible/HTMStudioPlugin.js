@@ -27,7 +27,7 @@ export default {
   plugContext(options, context, app) {
     let {
       configClient, loggerClient, databaseClient, fileClient, modelClient,
-      paramFinderClient
+      paramFinderClient, gaTracker
     } = options;
 
     return {
@@ -50,6 +50,9 @@ export default {
         actionContext.getParamFinderClient = function () {
           return paramFinderClient;
         };
+        actionContext.getGATracker = function () {
+          return gaTracker;
+        };
       },
 
       plugComponentContext(componentContext, context, app) {
@@ -71,6 +74,9 @@ export default {
         componentContext.getParamFinderClient = function () {
           return paramFinderClient;
         };
+        componentContext.getGATracker = function () {
+          return gaTracker;
+        };
       },
 
       plugStoreContext(storeContext, context, app) {
@@ -91,6 +97,9 @@ export default {
         };
         storeContext.getParamFinderClient = function () {
           return paramFinderClient;
+        };
+        storeContext.getGATracker = function () {
+          return gaTracker;
         };
       }
     };

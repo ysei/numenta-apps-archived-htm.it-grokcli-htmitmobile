@@ -99,6 +99,7 @@ const STYLES = {
   file: context.getStore(FileDetailsStore).getFile(),
   fields: context.getStore(FileDetailsStore).getFields(),
   error: context.getStore(FileDetailsStore).getError(),
+  warning: context.getStore(FileDetailsStore).getWarning(),
   visible: context.getStore(FileDetailsStore).isVisible(),
   newFile: context.getStore(FileDetailsStore).isNewFile()
 }))
@@ -215,7 +216,7 @@ export default class FileDetails extends React.Component {
 
   _renderBody() {
     let file = this.props.file;
-    let error, numRecords, recordsDisplay;
+    let error, warning, numRecords, recordsDisplay;
     // File Size in KB
     let fileSize = (this.state.fileSize / 1024).toFixed();
 
@@ -227,10 +228,13 @@ export default class FileDetails extends React.Component {
     }
     if (this.props.error) {
       error =  (<p style={STYLES.error}>{this.props.error}</p>);
+    } else if (this.props.warning) {
+      warning = (<p style={STYLES.error}>{this.props.warning}</p>);
     }
+
     return (
       <div style={STYLES.container}>
-        {error}
+        {error} {warning}
         <div style={STYLES.fields}>
           <TextField
             floatingLabelText="File Size"

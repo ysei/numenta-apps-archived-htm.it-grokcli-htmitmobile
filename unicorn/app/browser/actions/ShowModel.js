@@ -30,6 +30,8 @@ import LoadMetricDataAction from './LoadMetricData';
  * @returns {Promise} - A Promise to be resolved with return value
  */
 export default function (actionContext, modelId) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.SHOW_MODEL);
+
   return Promise.all([
     actionContext.executeAction(LoadModelDataAction, modelId),
     actionContext.executeAction(LoadMetricDataAction, modelId)
