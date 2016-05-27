@@ -506,7 +506,7 @@ export class FileService {
    *
    * @param  {string}   filename  Full path name
    * @param  {Function} callback called when the operation is complete with
-   *                             results or error message
+   *                             results, warning, or error message
    * @see {@link #getFields}
    * @see File.json
    * @see Metric.json
@@ -521,6 +521,7 @@ export class FileService {
     // Validate fields
     this.getFields(filename, (error, validFields) => {
       let dataError = error;
+      let dataWarning = null;
 
       // Update file and fields
       let fields = [];
@@ -569,6 +570,11 @@ export class FileService {
             return true;
           }
         });
+        if (row > 20000) {
+          dataWarning = 'The number of rows exceeds 20,000. While you can' +
+           ' proceed with this file, note that HTM Studio will be unresponsive' +
+           ' during the loading of very large files.'
+        }
         if (!valid) {
           dataError = message;
           return;
@@ -578,7 +584,7 @@ export class FileService {
       .once('end', () => {
         file.records = row;
         file.rowOffset = offset;
-        callback(dataError, {file, fields});
+        callback(dataError, dataWarning, {file, fields});
       });
       stream.pipe(newliner).pipe(csvParser);
     });
