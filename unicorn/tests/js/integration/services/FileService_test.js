@@ -249,13 +249,13 @@ describe('FileService', () => {
     });
     it('should throw an error on an empty csv file', (done) => {
       service.getFields(EMPTY_CSV_FILE, (error, fields) => {
-        assert.equal(error, 'Csv has no valid data rows to read');
+        assert.equal(error, 'The CSV file does not have any valid data');
         done();
       });
     });
     it('should throw an error on a file with less than 2 rows and no data rows', (done) => {
       service.getFields(SMALL_NO_DATA_FILE, (error, fields) => {
-        assert.equal(error, 'Csv has no valid data rows to read');
+        assert.equal(error, 'The CSV file does not have any valid data');
         done();
       });
     });
