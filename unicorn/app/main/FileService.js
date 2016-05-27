@@ -571,8 +571,9 @@ export class FileService {
           }
         });
         if (row > 20000) {
-          dataWarning = 'Warning: number of rows exceeds 20,000.' +
-                        ' Fitting a Model might be slower than usual.';
+          dataWarning = 'The number of rows exceeds 20,000. While you can' +
+           ' proceed with this file, note that HTM Studio will be unresponsive' +
+           ' during the loading of very large files.'
         }
         if (!valid) {
           dataError = message;

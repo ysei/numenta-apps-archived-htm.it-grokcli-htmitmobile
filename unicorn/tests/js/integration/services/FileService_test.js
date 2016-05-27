@@ -328,8 +328,9 @@ describe('FileService', () => {
     it('should give a warning when the number of rows exceeds 20,000', (done) => {
       service.validate(INVALID_ROWS_FILE, (error, warning, results) => {
         assert.ifError(error);
-        assert.equal(warning, 'Warning: number of rows exceeds 20,000.' +
-                        ' Fitting a Model might be slower than usual.');
+        assert.equal(warning, 'The number of rows exceeds 20,000. While you can' +
+           ' proceed with this file, note that HTM Studio will be unresponsive' +
+           ' during the loading of very large files.');
         assert.deepEqual(results.file,
           createFileInstance(INVALID_ROWS_FILE, {
             rowOffset: 1,
