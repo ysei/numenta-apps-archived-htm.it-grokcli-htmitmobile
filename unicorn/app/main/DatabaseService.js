@@ -55,6 +55,17 @@ const SCHEMAS = [
 
 
 /**
+ * determine if a value is NA.
+ * @param  {string} the field to test for NA.
+ * @return {boolean} true if it is NA, false otherwise
+ */
+function isNA(field) {
+  let naStrings = ['nan','none', 'null', 'n/a', 'na'];
+  return (naStrings.indexOf(field.toLowerCase()) > -1);
+}
+
+
+/**
  * Calculate default database location. If running inside `Electron` then use
  * the application user data folder.
  * See https://github.com/atom/electron/blob/master/docs/api/app.md
@@ -867,7 +878,7 @@ export class DatabaseService {
    * Upload a new file to the database performing the following steps:
    * - Save file metadata
    * - Save fields/metrics metadata
-   * - Save metric data
+   * - Save metric data (that is not NA)
    *
    * > NOTE: It assumes the file passed validation. See {@link FileService#validate}
    *
@@ -918,7 +929,7 @@ export class DatabaseService {
             records++;
             metrics.forEach((field) => {
               // Collect data for each numeric field
-              if (field.type === 'number') {
+              if (field.type === 'number' && !isNA(data[field.index].toString())) {
                 let [m, hasTimeZone] = parseTimestampFallbackUtc(
                   data[timestampField.index], timestampField.format);
                 let metricData = {

@@ -93,6 +93,7 @@ const INVALID_DATE_FILE = path.join(FIXTURES, 'invalid-date.csv');
 const INVALID_DATE_CONTENT_FILE = path.join(FIXTURES, 'invalid-date-content.csv'); // eslint-disable-line
 const INVALID_DATE_FORMAT_FILE = path.join(FIXTURES, 'invalid-date-format.csv');
 const INVALID_NUMBER_FILE = path.join(FIXTURES, 'invalid-number.csv');
+const INVALID_ROWS_FILE = path.join(FIXTURES, 'invalid-rows.csv');
 const NO_SCALAR_FILE = path.join(FIXTURES, 'no-scalar.csv');
 const NO_HEADER_CSV_FILE = path.join(FIXTURES, 'no-header-no-tz.csv');
 const NO_HEADER_CSV_FILE_ID = generateFileId(NO_HEADER_CSV_FILE);
@@ -265,8 +266,9 @@ describe('FileService', () => {
     });
 
     it('should accept valid file', (done) => {
-      service.validate(FILENAME_SMALL, (error, results) => {
+      service.validate(FILENAME_SMALL, (error, warning, results) => {
         assert.ifError(error);
+        assert.ifError(warning);
         assert.deepEqual(results.fields, EXPECTED_FIELDS);
         assert.deepEqual(results.file,
           createFileInstance(FILENAME_SMALL, {
@@ -277,18 +279,19 @@ describe('FileService', () => {
       });
     });
     it('should reject invalid CSV file', (done) => {
-      service.validate(INVALID_CSV_FILE, (error, results) => {
+      service.validate(INVALID_CSV_FILE, (error, warning, results) => {
         assert.equal(error, 'Invalid CSV file');
         done();
       });
     });
     it('should reject invalid date', (done) => {
-      service.validate(INVALID_DATE_CONTENT_FILE, (error, results) => {
+      service.validate(INVALID_DATE_CONTENT_FILE, (error, warning, results) => {
         assert.equal(error,
           "Invalid date/time at row 5: The date/time value is 'Not a Date' " +
           "instead of having a format matching 'YYYY-MM-DDTHH:mm:ssZ'. For " +
           `example: '${EXPECTED_DATE}'`
-        )
+        );
+        assert.ifError(warning);
         assert.deepEqual(results.file,
           createFileInstance(INVALID_DATE_CONTENT_FILE, {
             rowOffset: 1,
@@ -298,11 +301,12 @@ describe('FileService', () => {
       });
     });
     it('should reject invalid format', (done) => {
-      service.validate(INVALID_DATE_FORMAT_FILE, (error, results) => {
+      service.validate(INVALID_DATE_FORMAT_FILE, (error, warning, results) => {
         assert.equal(error,
           'Invalid date/time at row 5: The date/time value is ' +
           "'08/26/2015 19:50' instead of having a format matching " +
           `'YYYY-MM-DDTHH:mm:ssZ'. For example: '${EXPECTED_DATE}'`);
+        assert.ifError(warning);
         assert.deepEqual(results.file,
           createFileInstance(INVALID_DATE_FORMAT_FILE, {
             rowOffset: 1,
@@ -312,8 +316,9 @@ describe('FileService', () => {
       });
     });
     it('should reject invalid number', (done) => {
-      service.validate(INVALID_NUMBER_FILE, (error, results) => {
+      service.validate(INVALID_NUMBER_FILE, (error, warning, results) => {
         assert.equal(error, "Invalid number at row 5: Found 'metric' = 'A21'");
+        assert.ifError(warning);
         assert.deepEqual(results.file,
           createFileInstance(INVALID_NUMBER_FILE, {
             rowOffset: 1,
@@ -329,6 +334,20 @@ describe('FileService', () => {
           createFileInstance(NO_HEADER_CSV_FILE, {
             rowOffset: 0,
             records: 6
+          }));
+        done();
+      });
+    });
+    it('should give a warning when the number of rows exceeds 20,000', (done) => {
+      service.validate(INVALID_ROWS_FILE, (error, warning, results) => {
+        assert.ifError(error);
+        assert.equal(warning, 'The number of rows exceeds 20,000. While you can' +
+           ' proceed with this file, note that HTM Studio will be unresponsive' +
+           ' during the loading of very large files.');
+        assert.deepEqual(results.file,
+          createFileInstance(INVALID_ROWS_FILE, {
+            rowOffset: 1,
+            records: 20004
           }));
         done();
       });

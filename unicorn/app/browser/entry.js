@@ -39,6 +39,7 @@ import databaseClient from './lib/HTMStudio/DatabaseClient';
 import fileClient from './lib/HTMStudio/FileClient';
 import FileDetailsStore from './stores/FileDetailsStore';
 import FileStore from './stores/FileStore';
+import GoogleAnalytics from './lib/analytics/GoogleAnalytics';
 import HTMStudioPlugin from './lib/Fluxible/HTMStudioPlugin';
 import loggerConfig from '../config/logger';
 import MainComponent from './components/Main';
@@ -53,10 +54,15 @@ import {trims} from '../common/common-utils';
 
 const dialog = remote.require('dialog');
 const logger = bunyan.createLogger(loggerConfig);
+const {app} = require('electron').remote;
 
-let modelClient = new ModelClient();
-let paramFinderClient = new ParamFinderClient();
-
+const modelClient = new ModelClient();
+const paramFinderClient = new ParamFinderClient();
+/* eslint-disable no-process-env */
+const gaTracker = new GoogleAnalytics(process.env.GA_TRACKING_ID,
+                                      app.getName(), app.getVersion(),
+                                      process.env.NODE_ENV === 'development');
+/* eslint-enable no-process-env */
 
 /**
  * HTM Studio: Cross-platform Desktop Application to showcase basic HTM features
@@ -68,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // global uncaught exception handler
   window.onerror = (message, file, line, col, error) => {
+    gaTracker.exception('Unknown Error');
     dialog.showErrorBox('Unknown Error', `Unknown Error: ${message}`);
   };
 
@@ -100,7 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
     databaseClient,
     fileClient,
     modelClient,
-    paramFinderClient
+    paramFinderClient,
+    gaTracker
   });
 
   // Start listening for model events
@@ -111,6 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // app exit handler
   window.onbeforeunload = (event) => {
+    // Synchronize google analytics
+    gaTracker.synchronize();
+
+    // Check for running model
     let models = context.getStore(ModelStore).getModels();
     let active = models.filter((model) => model.active === true) || [];
     let modelCount = active.length || 0;
@@ -144,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ReactDOM.render(contextEl, container);
     })
     .catch((error) => {
+      gaTracker.exception('Startup Error');
       console.log(error); // eslint-disable-line
       dialog.showErrorBox('Startup Error', `Startup Error: ${error}`);
     });

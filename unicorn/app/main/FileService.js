@@ -54,6 +54,37 @@ SCHEMAS.forEach((schema) => {
   VALIDATOR.addSchema(schema);
 });
 
+const NA_STRINGS = ['nan','none', 'null', 'n/a', 'na']
+
+
+/**
+ * Check if a row in the csv file has an empty or NA string in one of its
+ * columns.
+ * @param  {array}  row: entries of the csv row to be checked for empty or
+ *                       an NA string
+ * @return {boolean}  returns true if there contains an empty or NA string value
+ *                    in the array, and false otherwise.
+ */
+function containsNA(row) {
+  return row.some((entry) =>
+    entry === '' || NA_STRINGS.indexOf(entry.toString().toLowerCase()) > -1);
+}
+
+/**
+ * Check if a row in the csv file is valid (exactly one date and at least
+ * one numeric type)
+ * @param  {array}  row: entries of the csv row to be validated
+ * @return {boolean}  returns true if the row fits the above criteria and false
+ *                    otherwise.
+ */
+function isValidRow(row) {
+  let numdates = row.map((entry) =>
+                    (typeof guessTimestampFormat(entry) !== 'undefined'))
+                    .reduce((curr,prev) => curr + prev);
+  let hasNumeric = row.some((entry) => Number.isFinite(Number(entry)))
+  return (!containsNA(row) && numdates === 1 && hasNumeric);
+}
+
 
 /**
  * Check if the given value is a valid datetime value and returns the best
@@ -69,7 +100,8 @@ function guessTimestampFormat(timestamp) {
 }
 
 /**
- * Check whether or not the given string can be converted into a valid {@link Date}
+ * Check whether or not the given string can be converted into a valid
+ *  {@link Date}
  * > NOTE: Based on 'Date.parse' which is browser and locale dependent and may
  * >			 not work in all cases.
  * @param  {string}  value string value to chaeck
@@ -236,6 +268,7 @@ export class FileService {
   getFields(filename, callback) {
     let stream = fs.createReadStream(filename , {encoding: 'utf8'});
     let offset = 0;
+    let validRowCounter = 0;
     let headers = null;
     let parser = csv({
       objectMode: true,
@@ -246,12 +279,19 @@ export class FileService {
       .pipe(parser)
       .on('data', (line) => {
         let values = Object.values(line);
+        let isHeader = validRowCounter === 0 && !isValidRow(line);
         // Make sure it is a valid CSV file
         if (values.length <= 1) {
           // Could not parse any columns out of this file
           parser.removeAllListeners();
           stream.destroy();
           callback('Invalid CSV file');
+          return;
+        }
+        // could either be a header or a data row. If it is a data row, we only
+        // want to use it to determine fields if it has no missing values.
+        if (!isHeader && containsNA(line)) {
+          validRowCounter++;
           return;
         }
 
@@ -286,6 +326,7 @@ export class FileService {
         // Use first line as headers and wait for the second line
         headers = values;
         offset++;
+        validRowCounter++;
       });
   }
 
@@ -406,8 +447,9 @@ export class FileService {
    *                       limit: Number.MAX_SAFE_INTEGER
    *                     }
    *
-   * @param {Function} callback - This callback will be called with the results in
-   *                              the following format: `function (error, stats)`
+   * @param {Function} callback - This callback will be called with the results
+   *                              in the following format:
+   *                              `function (error, stats)`
    *
    *                              stats = {
    *                                count: '100',
@@ -506,7 +548,7 @@ export class FileService {
    *
    * @param  {string}   filename  Full path name
    * @param  {Function} callback called when the operation is complete with
-   *                             results or error message
+   *                             results, warning, or error message
    * @see {@link #getFields}
    * @see File.json
    * @see Metric.json
@@ -521,6 +563,7 @@ export class FileService {
     // Validate fields
     this.getFields(filename, (error, validFields) => {
       let dataError = error;
+      let dataWarning = null;
 
       // Update file and fields
       let fields = [];
@@ -539,12 +582,16 @@ export class FileService {
       let row = 0;
 
       csvParser.on('data', (data) => {
+        if (containsNA(data)) {
+          return;
+        }
         row++;
         // Skip header row offset
         if (row <= offset) {
           return;
         }
-        // Stop validating of first error but keep loading file to get total records
+        // Stop validating of first error but keep loading file
+        // to get total records
         if (dataError) {
           return;
         }
@@ -569,6 +616,11 @@ export class FileService {
             return true;
           }
         });
+        if (row > 20000) {
+          dataWarning = 'The number of rows exceeds 20,000. While you can' +
+           ' proceed with this file, note that HTM Studio will be' +
+           ' unresponsive during the loading of very large files.'
+        }
         if (!valid) {
           dataError = message;
           return;
@@ -579,9 +631,10 @@ export class FileService {
         file.records = row;
         file.rowOffset = offset;
         if (file.records < 400) {
-          dataError = 'File does not have at least 400 rows';
+          dataError = 'The CSV file needs to have at least 400 rows with' +
+                      ' valid values';
         }
-        callback(dataError, {file, fields});
+        callback(dataError, dataWarning, {file, fields});
       });
       stream.pipe(newliner).pipe(csvParser);
     });
