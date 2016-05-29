@@ -258,8 +258,11 @@ class _CustomDatasourceAdapter(DatasourceAdapterIface):
       already being monitored
     """
     # Attempt to build swarm params from complete model params if present
-    swarmParams = (
-      scalar_metric_utils.generateSwarmParamsFromCompleteModelParams(modelSpec))
+    swarmParams = None
+    if "completeModelParams" in modelSpec:
+      swarmParams = (
+        scalar_metric_utils.generateSwarmParamsFromCompleteModelParams(
+          modelSpec))
 
     metricSpec = modelSpec["metricSpec"]
     with self.connectionFactory() as conn:

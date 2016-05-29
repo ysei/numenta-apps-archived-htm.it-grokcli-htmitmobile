@@ -34,30 +34,30 @@
       }
     },
     "completeModelParams": {
-      "description": "Complete model params to be passed to nupic.frameworks.opf.modelfactory.ModelFactory.create().",
+      "description": "Complete set of model params for a valid model; namely, one with timestamp and single scalar value metric as well as 'TemporalAnomaly' inference type.",
       "required": false,
       "type": "object",
       "additionalProperties":false,
       "properties": {
-        "modelParams": {
-          "description": "Model params for a model having a single scalar volume metric and a 'TemporalAnomaly' inference type.",
+        "modelConfig": {
+          "description": "Complete model config to be passed to nupic.frameworks.opf.modelfactory.ModelFactory.create().",
           "type": "object",
-          "required": false
+          "required": true
         },
         "inferenceArgs": {
           "description": "OPF Model Inference parameters (JSON object) for passing to the resulting model's `enableInference()` method as the `inferenceArgs` parameter.",
           "type": "object",
-          "required": false
+          "required": true
         },
         "timestampFieldName": {
           "description": "The name of the field in modelParams corresponding to the metric timestamp; for example, this is c0 in the model params returned by nupic.frameworks.opf.common_models.cluster_params.getScalarMetricWithTimeOfDayAnomalyParams().",
           "type": "string",
-          "required": false
+          "required": true
         },
         "valueFieldName": {
           "description": "The name of the field in modelParams corresponding to the metric value; for example, this is c1 in the model params returned by nupic.frameworks.opf.common_models.cluster_params.getScalarMetricWithTimeOfDayAnomalyParams().",
           "type": "string",
-          "required": false
+          "required": true
         }
       }
     }

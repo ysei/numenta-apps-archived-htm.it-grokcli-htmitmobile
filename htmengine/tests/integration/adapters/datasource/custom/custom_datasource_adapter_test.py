@@ -422,9 +422,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
     metricId = adapter.createMetric(metricName)
     self.addCleanup(adapter.deleteMetricByName, metricName)
 
-    fileName = "custom_datasource_adapter_test_model_params.json"
-    with self._openTestDataFile(fileName) as modelParamsFile:
-      modelParams = json.load(modelParamsFile)
+    fileName = "custom_datasource_adapter_test_model_config.json"
+    with self._openTestDataFile(fileName) as modelConfigFile:
+      modelConfig = json.load(modelConfigFile)
 
     # Turn on monitoring
     modelSpec = {
@@ -433,7 +433,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
         "metric": metricName
       },
       "completeModelParams": {
-        "modelParams": modelParams,
+        "modelConfig": modelConfig,
         "inferenceArgs": {"predictionSteps": [1], "predictedField": "bar",
                           "inputPredictedField": "auto"},
         "timestampFieldName": "foo",
@@ -466,9 +466,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     adapter = datasource_adapter_factory.createCustomDatasourceAdapter()
 
-    fileName = "custom_datasource_adapter_test_model_params.json"
-    with self._openTestDataFile(fileName) as modelParamsFile:
-      modelParams = json.load(modelParamsFile)
+    fileName = "custom_datasource_adapter_test_model_config.json"
+    with self._openTestDataFile(fileName) as modelConfigFile:
+      modelConfig = json.load(modelConfigFile)
 
     modelSpec = {
       "datasource": "custom",
@@ -476,7 +476,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
         "metric": metricName
       },
       "completeModelParams": {
-        "modelParams": modelParams,
+        "modelConfig": modelConfig,
         "inferenceArgs": {"predictionSteps": [1], "predictedField": "bar",
                           "inputPredictedField": "auto"},
         "timestampFieldName": "foo",
@@ -505,9 +505,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     adapter = datasource_adapter_factory.createCustomDatasourceAdapter()
 
-    fileName = "custom_datasource_adapter_test_model_params.json"
-    with self._openTestDataFile(fileName) as modelParamsFile:
-      modelParams = json.load(modelParamsFile)
+    fileName = "custom_datasource_adapter_test_model_config.json"
+    with self._openTestDataFile(fileName) as modelConfigFile:
+      modelConfig = json.load(modelConfigFile)
 
     modelSpec = {
       "datasource": "custom",
@@ -515,7 +515,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
         "metric": metricName
       },
       "completeModelParams": {
-        "modelParams": modelParams,
+        "modelConfig": modelConfig,
         "inferenceArgs": {"predictionSteps": [1], "predictedField": "bachman",
                           "inputPredictedField": "auto"},
         "timestampFieldName": "erlich"
@@ -539,9 +539,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     adapter = datasource_adapter_factory.createCustomDatasourceAdapter()
 
-    fileName = "custom_datasource_adapter_test_model_params.json"
-    with self._openTestDataFile(fileName) as modelParamsFile:
-      modelParams = json.load(modelParamsFile)
+    fileName = "custom_datasource_adapter_test_model_config.json"
+    with self._openTestDataFile(fileName) as modelConfigFile:
+      modelConfig = json.load(modelConfigFile)
 
     modelSpec = {
       "datasource": "custom",
@@ -549,7 +549,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
         "metric": metricName
       },
       "completeModelParams": {
-        "modelParams": modelParams,
+        "modelConfig": modelConfig,
         "inferenceArgs": {"predictionSteps": [1], "predictedField": "snow",
                           "inputPredictedField": "auto"},
         "valueFieldName": "snow"
@@ -573,9 +573,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     adapter = datasource_adapter_factory.createCustomDatasourceAdapter()
 
-    fileName = "custom_datasource_adapter_test_model_params.json"
-    with self._openTestDataFile(fileName) as modelParamsFile:
-      modelParams = json.load(modelParamsFile)
+    fileName = "custom_datasource_adapter_test_model_config.json"
+    with self._openTestDataFile(fileName) as modelConfigFile:
+      modelConfig = json.load(modelConfigFile)
 
     modelSpec = {
       "datasource": "custom",
@@ -583,7 +583,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
         "metric": metricName
       },
       "completeModelParams": {
-        "modelParams": modelParams,
+        "modelConfig": modelConfig,
         "timestampFieldName": "jon",
         "valueFieldName": "snow"
       }
@@ -606,9 +606,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
 
     adapter = datasource_adapter_factory.createCustomDatasourceAdapter()
 
-    fileName = "custom_datasource_adapter_test_model_params.json"
-    with self._openTestDataFile(fileName) as modelParamsFile:
-      modelParams = json.load(modelParamsFile)
+    fileName = "custom_datasource_adapter_test_model_config.json"
+    with self._openTestDataFile(fileName) as modelConfigFile:
+      modelConfig = json.load(modelConfigFile)
 
     modelSpec = {
       "datasource": "custom",
@@ -616,7 +616,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
         "metric": metricName
       },
       "completeModelParams": {
-        "modelParams": modelParams,
+        "modelConfig": modelConfig,
         "inferenceArgs": {"predictionSteps": [1], "predictedField": "baz",
                           "inputPredictedField": "auto"},
         "timestampFieldName": "snorf",
@@ -922,9 +922,9 @@ class CustomDatasourceAdapterTest(TestCaseBase):
     with self.engine.connect() as conn:
       repository.addMetricData(conn, metricId, data)
 
-    fileName = "custom_datasource_adapter_test_model_params.json"
-    with self._openTestDataFile(fileName) as modelParamsFile:
-      modelParams = json.load(modelParamsFile)
+    fileName = "custom_datasource_adapter_test_model_config.json"
+    with self._openTestDataFile(fileName) as modelConfigFile:
+      modelConfig = json.load(modelConfigFile)
 
     # Turn on monitoring
     modelSpec = {
@@ -933,7 +933,7 @@ class CustomDatasourceAdapterTest(TestCaseBase):
         "metric": metricName
       },
       "completeModelParams": {
-        "modelParams": modelParams,
+        "modelConfig": modelConfig,
         "inferenceArgs": {"predictionSteps": [1], "predictedField": "bar",
                           "inputPredictedField": "auto"},
         "timestampFieldName": "foo",
