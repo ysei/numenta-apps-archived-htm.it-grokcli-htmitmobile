@@ -114,6 +114,13 @@ export default class ModelServiceIPC {
           this._webContents.send(MODEL_SERVER_IPC_CHANNEL, modelId, 'error', {
             error: new UserError(payload)
           });
+        } else if (command === 'data') {
+          let msg = JSON.stringify([payload.naive_time,
+                                    payload.metric_value,
+                                    payload.anomaly_score]);
+          this._webContents.send(
+            MODEL_SERVER_IPC_CHANNEL, modelId, command, msg
+          );
         } else {
           this._webContents.send(
             MODEL_SERVER_IPC_CHANNEL, modelId, command, payload

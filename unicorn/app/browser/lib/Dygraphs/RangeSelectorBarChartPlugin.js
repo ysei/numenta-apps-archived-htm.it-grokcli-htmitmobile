@@ -154,17 +154,23 @@ export default class {
   /**
    * Draws the mini plot on the canvas.
    */
-  _drawMiniPlot() {
+  _drawMiniPlot() { // eslint-disable-line max-statements
     let context = this._canvas_context;
     let xExtremes = this._dygraph.xAxisExtremes();
     let xRange = Math.max(xExtremes[1] - xExtremes[0], 1.e-30);
     let margin = 0.5;
     let canvasWidth = this._canvasRect.w - margin;
     let canvasHeight = this._canvasRect.h - margin;
+
+    // During a window resize, sometimes
+    //   this._dygraph.layout_.getPlotArea()
+    // returns negative widths and heights.
+    if (canvasWidth < 0 || canvasHeight < 0) return;
+
     let xFactor = canvasWidth / xRange;
     let previous = {x: null, value: null};
     let stroke = this._getOption('rangeSelectorPlotLineWidth');
-    let data = this._getOption('modelData') || [];
+    let data = this._getOption('modelData');
     let probationColor = muiTheme.palette.accent3Color;
     let barWidth, color, point, probationWidth, value, x;
 

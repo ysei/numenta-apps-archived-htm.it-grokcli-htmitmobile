@@ -2,6 +2,17 @@
   "title": "HTM Studio",
   "desc": "HTM Studio Desktop Application",
   "company": "Numenta",
+  "update": {
+    "readyTitle": "Software Update ready",
+    "errorTitle": "Update Error",
+    "detail": "A new version of HTM Studio (%name) is available.\nTo install the update, the application needs to be closed.\nDo you want to close the application now or later?",
+    "message": "",
+    "button": {
+      "yes": "Close and update now",
+      "no": "Wait until I close the app"
+    },
+    "url": "http://public.numenta.com/updates/htmstudio"
+  },
   "browser": {
     "entry": "../browser/index.html"
   },
@@ -16,7 +27,9 @@
       "summary": "Results"
     },
     "okay": "OK",
-    "analyze": "Analyze"
+    "analyze": "Analyze",
+    "yes": "Yes",
+    "no": "No"
   },
   "chart": {
     "showNonAgg": "Show non-aggregated data",

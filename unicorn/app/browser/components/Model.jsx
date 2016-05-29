@@ -165,7 +165,7 @@ export default class Model extends React.Component {
         }
       },
       progress: {
-        // marginTop: '-5rem',
+        marginTop: '6px',
         float: 'right'
       },
       showNonAgg: {
@@ -252,7 +252,7 @@ export default class Model extends React.Component {
           // reset chart viewpoint so we can start fresh on next chart re-create
           this.context.executeAction(ChartUpdateViewpoint, {
             metricId: modelId,
-            viewpoint: null
+            dateWindow: null
           });
 
           this.context.executeAction(DeleteModelAction, modelId);
@@ -432,14 +432,6 @@ export default class Model extends React.Component {
     let {model, file, valueField, timestampField} = this.props;
     let title = model.metric;
 
-    // Fixme: UNI-440
-    // The convention is to ignore timezones when rendering or exporting time
-    // in the app until UNI-440 is fixed.
-    let exportedTimestampFormat = timestampField.format;
-    if (exportedTimestampFormat.slice(-1) === 'Z') {
-      exportedTimestampFormat = timestampField.format.slice(0, -1);
-    }
-
     // prep UI
     let muiTheme = this.context.muiTheme;
     let checkboxColor = muiTheme.rawTheme.palette.primary1Color;
@@ -449,12 +441,7 @@ export default class Model extends React.Component {
     let modalDialog = this.state.modalDialog || {};
     let actions, progress, titleColor;
 
-    // Model is running, show progress bar
-    if (model.active) {
-      progress = (
-        <ModelProgress modelId={model.modelId} style={this._styles.progress}/>
-      );
-    } else if (model.ran) {
+    if (model.ran) {
       let showNonAggAction = (<noscript/>);
       if (model.aggregated) {
         showNonAggAction = (
@@ -476,9 +463,20 @@ export default class Model extends React.Component {
         );
       }
 
-      // Results Action buttons
-      actions = (
-        <CardActions style={this._styles.actions}>
+      if (model.active) {
+        // Model is running, show progress bar
+        progress = (
+          <ModelProgress modelId={model.modelId} style={this._styles.progress}/>
+        );
+
+        actions = (
+          <CardActions style={this._styles.actions} title="">
+            {showNonAggAction}
+          </CardActions>
+        );
+      } else {
+        actions = (
+        <CardActions style={this._styles.actions} title="">
           {showNonAggAction}
           <RaisedButton
             label={this._config.get('button:model:summary')}
@@ -493,7 +491,7 @@ export default class Model extends React.Component {
             labelStyle={this._styles.actionButtonLabel}
             style={this._styles.actionButton}
             onTouchTap={this._exportModelResults.bind(this, model.modelId,
-             exportedTimestampFormat)}
+                                                      timestampField.format)}
           />
           <RaisedButton
             label={this._config.get('button:model:delete')}
@@ -503,11 +501,12 @@ export default class Model extends React.Component {
             onTouchTap={this._deleteModel.bind(this, model.modelId)}
           />
         </CardActions>
-      );
+        );
+      }
     } else {
       // Create Action buttons
       actions = (
-        <CardActions style={this._styles.actions}>
+        <CardActions style={this._styles.actions} title="">
           <RaisedButton
             primary={true}
             label={this._config.get('button:model:create')}

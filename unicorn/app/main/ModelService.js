@@ -21,6 +21,7 @@ import system from 'os';
 
 import getPortablePython from './PortablePython';
 import UserError from './UserError';
+import {parseIsoTimestampFallbackUtc, getNaiveTime} from '../common/timestamp';
 
 const PYTHON_EXECUTABLE = getPortablePython();
 
@@ -126,7 +127,17 @@ export class ModelService extends EventEmitter {
       // Model data chunks are separated by '\n', see 'model_runner_2' for details
       data.split('\n').forEach((line) => {
         if (line && line.length > 0) {
-          this.emit(modelId, 'data', line)
+          let [timestamp, value, score] = JSON.parse(line);
+          let [m] = parseIsoTimestampFallbackUtc(timestamp);
+
+          let modelData = {
+            metric_uid: modelId,
+            iso_timestamp: timestamp,
+            naive_time: getNaiveTime(m),
+            metric_value: value,
+            anomaly_score: score
+          };
+          this.emit(modelId, 'data', modelData);
         }
       });
     });
