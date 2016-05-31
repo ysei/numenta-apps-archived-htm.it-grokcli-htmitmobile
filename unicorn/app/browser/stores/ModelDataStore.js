@@ -37,6 +37,7 @@ export default class ModelDataStore extends BaseStore {
       NOTIFY_NEW_MODEL_RESULTS: '_handleNewModelResults',
       LOAD_MODEL_DATA: '_handleLoadModelData',
       HIDE_MODEL: '_handleHideModel',
+      STOP_MODEL: '_handleStopModel',
       DELETE_MODEL: '_handleDeleteModel'
     };
   }
@@ -45,9 +46,6 @@ export default class ModelDataStore extends BaseStore {
     super(dispatcher);
     this._models = new Map();
     this._pendingModels = new Map();
-
-    this._fetchTimeoutId = null;
-    this._lastFetchTime = 0;
   }
 
   _handlePrepareForResults(modelId) {
@@ -73,7 +71,13 @@ export default class ModelDataStore extends BaseStore {
     }
     this._pendingModels.delete(modelId);
 
-    let model = {modelId, data, modified: new Date()};
+    let model = {
+      modelId,
+      data,
+      modified: new Date(),
+      lastFetchTime: 0,
+      fetchTimeoutId: null
+    };
     this._models.set(modelId, model);
 
     if (pendingModel.shouldFetch) {
@@ -83,38 +87,40 @@ export default class ModelDataStore extends BaseStore {
     this.emitChange();
   }
 
-  _fetchNewResultsSoon(modelId) {
-    if (this._fetchTimeoutId === null) {
-      let fetch = () => {
-        // Immediately begin listening for new notifications. Don't wait for the
-        // database query to finish.
-        this._fetchTimeoutId = null;
-        this._lastFetchTime = Date.now();
+  _fetchNewResults(modelId) {
+    // The model may have been hidden during the delay.
+    let model = this._models.get(modelId);
 
-        // The model may have been hidden during the delay.
-        let model = this._models.get(modelId);
-        if (model) {
-          let offset = model.data.length;
+    if (model) {
+      // Immediately begin listening for new notifications. Don't wait for the
+      // database query to finish.
+      model.fetchTimeoutId = null;
+      model.lastFetchTime = Date.now();
 
-          databaseClient.getModelData(modelId, offset, (error, data) => {
-            if (error) {
-              throw new Error('getModelData failed', modelId, offset);
-            } else {
-              let records = JSON.parse(data);
-              model.data.splice(offset, records.length, ...records);
-              model.modified = new Date();
-              this.emitChange();
-            }
-          });
+      let offset = model.data.length;
+
+      databaseClient.getModelData(modelId, offset, (error, data) => {
+        if (error) {
+          throw new Error('getModelData failed', modelId, offset);
+        } else {
+          let records = JSON.parse(data);
+          model.data.splice(offset, records.length, ...records);
+          model.modified = new Date();
+          this.emitChange();
         }
-      };
+      });
+    }
+  }
 
-      let delay = TIME_BUFFER - (Date.now() - this._lastFetchTime);
+  _fetchNewResultsSoon(modelId) {
+    let model = this._models.get(modelId);
+    if (model && model.fetchTimeoutId === null) {
+      let delay = TIME_BUFFER - (Date.now() - model.lastFetchTime);
       if (delay > 0) {
-        this._fetchTimeoutId =
-          setTimeout(fetch, delay);
+        model.fetchTimeoutId =
+          setTimeout(this._fetchNewResults.bind(this, modelId), delay);
       } else {
-        fetch();
+        this._fetchNewResults(modelId);
       }
     }
   }
@@ -126,6 +132,18 @@ export default class ModelDataStore extends BaseStore {
   _handleHideModel(modelId) {
     this._models.delete(modelId);
     this.emitChange();
+  }
+
+  /**
+   * Stop model.
+   * @param {string} modelId - Model to stop
+   */
+  _handleStopModel(modelId) {
+    let model = this._models.get(modelId);
+    if (model && model.fetchTimeoutId !== null) {
+      clearTimeout(model.fetchTimeoutId);
+      model.fetchTimeoutId = null;
+    }
   }
 
   /**
@@ -167,8 +185,9 @@ export default class ModelDataStore extends BaseStore {
    * @property {Date} modified - Last time the data was modified
    */
   getData(modelId) {
-    return Object.assign({
-      modelId, data:[], modified:0
-    }, this._models.get(modelId));
+    let model = this._models.get(modelId);
+    return model
+      ? {modelId, data: model.data, modified: model.modified}
+      : {modelId, data: [], modified: 0};
   }
 }
