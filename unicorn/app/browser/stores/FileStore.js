@@ -80,11 +80,35 @@ export default class FileStore extends BaseStore {
     }
   }
 
+  /**
+   * Initialize FileStore from the given list of files
+   *
+   * Algorithm for determinining the initial expanded/collapsed state of files:
+   *
+   *   If there are no files of type `uploaded` (i.e. only sample files), then
+   *   collapse all the sample files except the first one in the list
+   *
+   *   If there is at least one file of type `uploaded`, then collapse
+   *   everything
+   *
+   * @param  {Array} files - List of FileStore.File objects
+   */
   _handleListFiles(files) {
     if (files) {
+      let haveUploadedFiles = false;
+
       files.forEach((file) => {
-        this._files.set(file.filename, Object.assign({expanded: true},file));
+        this._files.set(file.filename, Object.assign({expanded: false},file));
+        if (file.type === 'uploaded') {
+          haveUploadedFiles = true;
+        }
       });
+
+      if (!haveUploadedFiles) {
+        // Assumes that getFiles returns array in display order
+        this._files.get(this.getFiles()[0].filename).expanded = true;
+      }
+
       this.emitChange();
     }
   }
