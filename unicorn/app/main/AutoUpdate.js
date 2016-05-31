@@ -53,8 +53,9 @@ export default class AppUpdater {
     autoUpdater.setFeedURL(feedUrl);
 
     autoUpdater.addListener('error', (event, error) => {
-      let title = config.get('update:errorTitle');
-      dialog.showErrorBox(title, error);
+      // Ingore auto update errors
+      // See https://github.com/electron/electron/issues/4699
+      console.warn('AppUpdater:error', error);
     });
 
     autoUpdater.addListener('update-downloaded', (event,
