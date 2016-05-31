@@ -65,6 +65,30 @@ const gaTracker = new GoogleAnalytics(process.env.GA_TRACKING_ID,
 /* eslint-enable no-process-env */
 
 /**
+ * Start' application Main Compenent once the application is initialized
+ * @param  {FluxibleContext} context application Context
+ */
+function startApplication(context) {
+  let initialized = config.get('initialized');
+  if (!initialized) {
+     // Wait until initialization is done
+    setTimeout(startApplication, 100, context);
+    return;
+  }
+  // fire initial app action to load all files
+  context.executeAction(StartApplicationAction)
+    .then(() => {
+      let contextEl = FluxibleReact.createElementWithContext(context);
+      let container = document.getElementById('main');
+      ReactDOM.render(contextEl, container);
+    })
+    .catch((error) => {
+      gaTracker.exception('Startup Error');
+      console.log(error); // eslint-disable-line
+      dialog.showErrorBox('Startup Error', `Startup Error: ${error}`);
+    });
+}
+/**
  * HTM Studio: Cross-platform Desktop Application to showcase basic HTM features
  *  to a user using their own data stream or files. Main browser web code
  *  Application GUI entry point.
@@ -148,16 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // fire initial app action to load all files
-  context.executeAction(StartApplicationAction)
-    .then(() => {
-      let contextEl = FluxibleReact.createElementWithContext(context);
-      let container = document.getElementById('main');
-      ReactDOM.render(contextEl, container);
-    })
-    .catch((error) => {
-      gaTracker.exception('Startup Error');
-      console.log(error); // eslint-disable-line
-      dialog.showErrorBox('Startup Error', `Startup Error: ${error}`);
-    });
+  // Start Main componet
+  startApplication(context);
 }); // DOMContentLoaded
