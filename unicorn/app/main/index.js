@@ -18,9 +18,9 @@
 
 import {app, BrowserWindow, crashReporter, dialog, Menu} from 'electron';
 import bunyan from 'bunyan';
-import moment from 'moment';
 import path from 'path';
 
+import AutoUpdate from './AutoUpdate';
 import config from './ConfigService';
 import database from './DatabaseService';
 import fileService from './FileService';
@@ -70,21 +70,13 @@ function initializeApplicationData() {
 
 /**
  * Handles model data event saving the results to the database
- * @param  {string} modelId Model receiving data
- * @param  {Array} data    model data in the following format:
- *                         [timestamp, metric_value, anomaly_score]
+ * @param  {string} modelId - Model receiving data
+ * @param  {Object} modelData - Parsed model data
  */
-function receiveModelData(modelId, data) {
-  let [timestamp, value, score] = data; // eslint-disable-line
-  let metricData = {
-    metric_uid: modelId,
-    timestamp: moment.utc(timestamp).valueOf(),
-    metric_value: value,
-    anomaly_score: score
-  };
-  database.putModelData(metricData, (error) => {
+function receiveModelData(modelId, modelData) {
+  database.putModelData(modelData, (error) => {
     if (error) {
-      log.error('Error saving model data', error, metricData);
+      log.error('Error saving model data', error, modelData);
     }
   });
 }
@@ -100,7 +92,7 @@ function handleModelEvents() {
         try {
           if (command === 'data') {
             // Handle model data
-            receiveModelData(modelId, JSON.parse(data));
+            receiveModelData(modelId, data);
           }
         } catch (e) {
           log.error('Model Error', e, modelId, command, data);
@@ -172,6 +164,20 @@ app.on('ready', () => {
   mainWindow.webContents.on('dom-ready', () => {
     log.info('Electron Main: Renderer DOM is now ready!');
   });
+
+  // Handle Auto Update events
+  // Updater is only avaialbe is release mode, when the app is properly signed
+  let updater = null;
+  let environment = config.get('env');
+  if (environment === 'prod') {
+    updater = new AutoUpdate(mainWindow);
+    // Check for updates
+    mainWindow.webContents.once('did-frame-finish-load', (event) => {
+      if (updater) {
+        updater.checkForUpdates();
+      }
+    });
+  }
 
   // Handle model service events
   handleModelEvents();

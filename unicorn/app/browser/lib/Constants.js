@@ -38,10 +38,12 @@ Object.assign(module.exports, CommonConstants);
  *  - UPDATE_FILE_FAILED
  *  - DELETE_FILE_FAILED
  *  - VALIDATE_FILE_FAILED
+ *  - VALIDATE_FILE_WARNING
  *
  * - Metric
  *  - LIST_METRICS: {@link ListMetrics}
  *  - LIST_METRICS_FAILURE
+ *  - UPDATE_METRIC: {@link UpdateMetric}
  *
  * - Metric Data
  *  - LOAD_METRIC_DATA: {@link LoadMetricData}
@@ -108,10 +110,12 @@ export const ACTIONS = Object.freeze({
   UPLOADED_FILE_FAILED: 'UPLOADED_FILE_FAILED',
   UPDATE_FILE_FAILED: 'UPDATE_FILE_FAILED',
   VALIDATE_FILE_FAILED: 'VALIDATE_FILE_FAILED',
+  VALIDATE_FILE_WARNING: 'VALIDATE_FILE_WARNING',
 
   // Metric
   LIST_METRICS: 'LIST_METRICS',
   LIST_METRICS_FAILURE: 'LIST_METRICS_FAILURE',
+  UPDATE_METRIC: 'UPDATE_METRIC',
 
   // Metric Data
   LOAD_METRIC_DATA: 'LOAD_METRIC_DATA',
@@ -176,3 +180,10 @@ export const DATA_FIELD_INDEX = Object.freeze({
   DATA_INDEX_VALUE: 1,
   DATA_INDEX_ANOMALY: 2
 });
+
+
+/**
+ * Anomaly bar width in pixels
+ * @type {Number}
+ */
+export const ANOMALY_BAR_WIDTH = 10;

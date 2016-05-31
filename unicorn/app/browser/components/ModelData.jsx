@@ -16,56 +16,16 @@
 // http://numenta.org/licenses/
 
 import connectToStores from 'fluxible-addons-react/connectToStores';
-import moment from 'moment';
 import React from 'react';
-import anomalyBarChartUnderlay from '../lib/Dygraphs/AnomalyBarChartUnderlay';
-import axesCustomLabelsUnderlay from '../lib/Dygraphs/AxesCustomLabelsUnderlay';
-import chartInteraction from '../lib/Dygraphs/ChartInteraction.js';
+
 import Chart from './Chart';
-import {DATA_FIELD_INDEX, PROBATION_LENGTH} from '../lib/Constants';
-import {
-  formatDisplayValue, mapAnomalyColor
-} from '../lib/browser-utils';
-import {anomalyScale, binarySearch, mapAnomalyText} from '../../common/common-utils';
+import {DATA_FIELD_INDEX} from '../lib/Constants';
 import MetricStore from '../stores/MetricStore';
 import MetricDataStore from '../stores/MetricDataStore';
 import ModelStore from '../stores/ModelStore';
 import ModelDataStore from '../stores/ModelDataStore';
-import RangeSelectorBarChart from '../lib/Dygraphs/RangeSelectorBarChartPlugin';
 
-const {
-  DATA_INDEX_TIME, DATA_INDEX_VALUE, DATA_INDEX_ANOMALY
-} = DATA_FIELD_INDEX;
-
-/**
- * Merge two sorted arrays to create a new sorted array.
- * @param {Array} a - sorted array
- * @param {Array} b - sorted array
- * @param {Function} compareFunction - returns a negative number if arg1 < arg2
- * @returns {Array} - new sorted array
- */
-function sortedMerge(a, b, compareFunction) {
-  if (!a && !b) return [];
-  if (!a) return b;
-  if (!b) return a;
-
-  let ret = [];
-  let j = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    for (; compareFunction(b[j], a[i]) < 0; j++) {
-      ret.push(b[j]);
-    }
-    ret.push(a[i]);
-  }
-
-  for (; j < b.length; j++) {
-    ret.push(b[j]);
-  }
-
-  return ret;
-}
-
+const {DATA_INDEX_TIME, DATA_INDEX_VALUE} = DATA_FIELD_INDEX;
 
 /**
  * Use a heuristic to compute the gap threshold which will be used to represent
@@ -81,24 +41,26 @@ function sortedMerge(a, b, compareFunction) {
  *
  * The result is the gap threshold.
  *
- * @param {Array} data - Array of arrays: [[Date, ...], [Date, ...], ...]
- * @returns {Number} - gap threshold.
+ * @param {Array} data - Array of arrays: [[time, ...], [time, ...], ...]
+ * @returns {Array} - Tuple:
+ *                    number: gap threshold
+ *                    number: minimum time delta
  */
 function computeGapThreshold(data) {
   let deltas = [];
   for (let i = 1; i < data.length; i++) {
-    let delta = (data[i][DATA_INDEX_TIME].getTime() -
-                 data[i-1][DATA_INDEX_TIME].getTime());
+    let delta = data[i][DATA_INDEX_TIME] - data[i - 1][DATA_INDEX_TIME];
     if (delta > 0) {
       deltas.push(delta);
     }
   }
-  deltas.sort();
+  deltas.sort((a, b) => a - b);
 
   let percentile = 0.1;
-  let smallTimestampGap =  deltas[Math.floor(deltas.length*percentile)];
+  let smallTimestampGap = deltas[Math.floor(deltas.length * percentile)];
   let maxMissingBars = 2;
-  return (1 + maxMissingBars) * smallTimestampGap;
+  let gapThreshold = (1 + maxMissingBars) * smallTimestampGap;
+  return gapThreshold;
 }
 
 
@@ -108,7 +70,7 @@ function computeGapThreshold(data) {
  *
  * At each gap, insert [midpointOfGap, vals[0], vals[1], ...] as a new datum.
  *
- * @param {Array} data - Array of arrays: [[Date, ...], [Date, ...], ...]
+ * @param {Array} data - Array of arrays: [[time, ...], [time, ...], ...]
  * @param {Array} vals - Values concatenated to timestamp at every single gap
  * @param {Number} gapThreshold - Lines will be drawn for every time-delta that
  *                                is less than the gap threshold.
@@ -120,166 +82,17 @@ function insertIntoGaps(data, vals, gapThreshold) {
     newData.push(item);
 
     if (rowid + 1 < data.length) {
-      let curr = item[DATA_INDEX_TIME].getTime();
-      let next = data[rowid+1][DATA_INDEX_TIME].getTime();
+      let curr = item[DATA_INDEX_TIME];
+      let next = data[rowid + 1][DATA_INDEX_TIME];
       let delta = next - curr;
       if (delta > gapThreshold) {
-        let gapItem = [new Date(curr + delta/2)].concat(vals);
+        let gapItem = [curr + delta / 2].concat(vals);
         newData.push(gapItem);
       }
     }
   });
 
   return newData;
-}
-
-
-/**
- * Compute Dygraphs input from the metric and model data.
- *
- * If aggregated, the return value will contain properly formatted model
- * records, possibly with nonaggregated raw metric records inserted.
- *
- * If not aggregated, or if there are no modelRecords, the return value will
- * contain properly formatted raw metric records.
- *
- * In all cases, gaps are detected. NaN values are inserted to designate gaps.
- *
- * @param {Array} metricRecords - Input data record list, raw metric data.
- * @param {Array} modelRecords - Input data record list, model data.
- * @param {boolean} aggregated - Whether the model is aggregated.
- * @param {boolean} rawDataInBackground - Whether the raw data should be drawn
- *                                        (in addition to the aggregated data)
- * @returns {Array} - Tuple:
- *                    Array: Dygraphs multi-dimensional array
- *                    Array: The x values in the prepared data
- *                    Array: The y values in the prepared data
- * @see http://dygraphs.com/tests/independent-series.html
- */
-function prepareData(
-  metricRecords, modelRecords, aggregated, rawDataInBackground) {
-  let xValues = [];
-  let yValues = [];
-
-  let gapThreshold = computeGapThreshold(modelRecords.length > 0
-                                         ? modelRecords
-                                         : metricRecords);
-
-  let aggregatedChartData = null;
-  if (modelRecords.length && aggregated) {
-    modelRecords.forEach((item) => {
-      xValues.push(item[DATA_INDEX_TIME]);
-      yValues.push(item[DATA_INDEX_VALUE]);
-    });
-
-    if (rawDataInBackground) {
-      aggregatedChartData = modelRecords.map(
-        (item) => [item[DATA_INDEX_TIME],
-                   item[DATA_INDEX_VALUE],
-                   null]);
-
-      aggregatedChartData = insertIntoGaps(aggregatedChartData,
-                                           [NaN, null], gapThreshold);
-    } else {
-      aggregatedChartData = modelRecords.map(
-        (item) => [item[DATA_INDEX_TIME],
-                   item[DATA_INDEX_VALUE]]);
-
-      aggregatedChartData = insertIntoGaps(aggregatedChartData,
-                                           [NaN], gapThreshold);
-    }
-  }
-
-  let rawChartData = null;
-  if (metricRecords.length && (!aggregated || rawDataInBackground)) {
-    metricRecords.forEach((item) => {
-      xValues.push(item[DATA_INDEX_TIME]);
-      yValues.push(item[DATA_INDEX_VALUE]);
-    });
-
-    if (rawDataInBackground) {
-      rawChartData = metricRecords.map(
-        (item) => [item[DATA_INDEX_TIME],
-                   null,
-                   item[DATA_INDEX_VALUE]]);
-
-      rawChartData = insertIntoGaps(rawChartData,
-                                    [null, NaN], gapThreshold);
-    } else {
-      rawChartData = metricRecords.map(
-        (item) => [item[DATA_INDEX_TIME],
-                   item[DATA_INDEX_VALUE]]);
-
-      rawChartData = insertIntoGaps(rawChartData,
-                                    [NaN], gapThreshold);
-    }
-  }
-
-  let data = sortedMerge(
-    aggregatedChartData, rawChartData,
-    (a, b) => a[DATA_INDEX_TIME].getTime() - b[DATA_INDEX_TIME].getTime());
-
-  return [data, xValues, yValues];
-}
-
-/**
- * Determine a y scale using the seen and unseen y values.
- *
- * If we base the y scale on the maximum and minimum for the entire time series,
- * datasets that have large spikes become mostly unreadable. The y scale should
- * change based on the range of visible values.
- *
- * If we base the y scale on the visible minimum and maximum, the chart is
- * deceptive. As you view different part of the time series, the fact that the
- * data's peaks and troughs are changing is obscured.
- *
- * Current strategy: by default, use a fixed scale, but make sure the visible
- * data is using at least 20% of the vertical space. If it's not, change the
- * scale so that it is.
- *
- * Additionally, make room for green anomaly bars.
- *
- * @param {Object} context - a ModelData instance
- * @param {Dygraph} g - a Dygraph instance
- * @returns {Array} the new y extent [min, max]
- */
-function yScaleCalculate(context, g) {
-  let xExtentVisible = g.xAxisRange();
-  let xValues = context._xValues;
-  let yValues = context._yValues;
-  let yExtentVisible = [Infinity, -Infinity];
-  for (let i = 0; i < xValues.length; i++) {
-    if (xValues[i] < xExtentVisible[0]) continue;
-    if (xValues[i] > xExtentVisible[1]) break;
-
-    yExtentVisible[0] = Math.min(yExtentVisible[0], yValues[i]);
-    yExtentVisible[1] = Math.max(yExtentVisible[1], yValues[i]);
-  }
-
-  let ySpread = context._yExtent[1] - context._yExtent[0];
-  let ySpreadVisible = yExtentVisible[1] - yExtentVisible[0];
-  let spreadCovered = ySpreadVisible / ySpread;
-  let minVerticalSpaceUsage = 1/5;
-
-  let yExtentAdjusted;
-
-  if (spreadCovered < minVerticalSpaceUsage) {
-    let adjustment = spreadCovered / minVerticalSpaceUsage;
-    yExtentAdjusted = [
-      yExtentVisible[0] -
-        (yExtentVisible[0] - context._yExtent[0]) * adjustment,
-      yExtentVisible[1] +
-        (context._yExtent[1] - yExtentVisible[1]) * adjustment
-    ];
-  } else {
-    yExtentAdjusted = [context._yExtent[0], context._yExtent[1]];
-  }
-
-  // Add space for green anomaly bars.
-  yExtentAdjusted[0] -= anomalyScale(0) * (yExtentAdjusted[1] -
-                                           yExtentAdjusted[0]);
-
-  return yExtentAdjusted;
 }
 
 /**
@@ -317,199 +130,66 @@ export default class ModelData extends React.Component {
     super(props, context);
     this._config = this.context.getConfigClient();
 
-    let muiTheme = this.context.muiTheme;
-    let displayPointCount = this._config.get('chart:points');
-
     this._styles = {
       container: {
         position: 'relative'
-      },
-      legendSection: {
-        height: '1rem',
-        fontSize: 12
-      },
-      legend: {
-        float: 'left'
       }
-    }
-    this._anomalyBarWidth = Math.round(displayPointCount / 16, 10);
-
-    this._yScaleCalculate = function (context, dygraph) {
-      return yScaleCalculate(context, dygraph);
-    }.bind(null, this);
-
-    // Dygraphs Chart Options: Global and per-Series/Axis settings.
-    this._chartOptions = {
-      // Dygraphs global chart options
-      options: {
-        axisLineColor: muiTheme.rawTheme.palette.accent4Color,
-        connectSeparatedPoints: true,  // required for raw+agg overlay
-        interactionModel: chartInteraction,
-        labelsShowZeroValues: true,
-        labelsDiv: `legend-${props.modelId}`,
-        plugins: [RangeSelectorBarChart],
-        rangeSelectorPlotFillColor: muiTheme.rawTheme.palette.primary1FadeColor,
-        rangeSelectorPlotStrokeColor: muiTheme.rawTheme.palette.primary1Color,
-        showRangeSelector: true,
-        underlayCallback: function (context, ...args) {
-          axesCustomLabelsUnderlay(context, ...args);
-          anomalyBarChartUnderlay(context, ...args);
-        }.bind(null, this),
-        xRangePad: 0,
-        yRangePad: 4
-      },
-
-      // main value data chart line (could be either Raw OR Aggregated data)
-      value: {
-        labels: ['Time', 'Value'],
-        axes: {
-          x: {
-            axisLabelOverflow: false,
-            axisLabelWidth: 0,
-            drawAxis: false,
-            drawGrid: false,
-            valueFormatter: (time) => moment.utc(time).format('llll')
-          },
-          y: {
-            axisLabelOverflow: false,
-            axisLabelWidth: 0,
-            drawAxis: false,
-            drawGrid: false,
-            valueFormatter: ::this._legendValueFormatter
-          }
-        },
-        series: {
-          Value: {
-            axis: 'y',
-            color: muiTheme.rawTheme.palette.primary2Color,  // dark blue
-            independentTicks: false,
-            showInRangeSelector: true,  // plot alone in range selector
-            strokeWidth: 2
-          }
-        }
-      },
-
-      // non-aggregated line chart overlay on top of aggregated data line chart
-      raw: {
-        labels: ['NonAggregated'],
-        series: {
-          NonAggregated: {
-            axis: 'y',
-            color: muiTheme.rawTheme.palette.primary1Color,  // light blue
-            independentTicks: false,
-            showInRangeSelector: false,
-            strokeWidth: 2
-          }
-        }
-      }
-    }; // chartOptions
+    };
   } // constructor
 
-  /**
-   * Format Values & Anomalies for Dygraph Chart Legend. Add Anomaly when there.
-   * @param {Number} numOrTime - UTC epoch milisecond stamp of current value point
-   * @param {Function} options - options('key') same as dygraph.getOption('key')
-   * @param {String} series - Name of series
-   * @param {Object} dygraph - Instantiated Dygraphs charting object
-   * @param {Number} row - Current row (series)
-   * @param {Number} column - Current column (data index)
-   * @returns {Number|String} - Valueset for display in Legend
-   * @see http://dygraphs.com/options.html#valueFormatter
-   */
-  _legendValueFormatter(numOrTime, options, series, dygraph, row, column) {
-    let modelData = options('modelData');  // custom
-    let value = formatDisplayValue(dygraph.getValue(row, column));
-
-    // Format data value
-    let valueColor = options('series')[series]['color'];
-    let displayValue = `<font color="${valueColor}"><b>${value}</b></font>`;
-    // Show anomaly
-    if (modelData) {
-      // Get time value
-      let time = dygraph.getValue(row, 0);
-
-      // Find anomaly closest to the time
-      let anomalyIdx = binarySearch(modelData, time, (current, key) => {
-        return current[DATA_INDEX_TIME].getTime() - key;
-      });
-      let anomalyValue;
-      if (anomalyIdx < PROBATION_LENGTH) {
-        anomalyValue = null;
-      } else if (anomalyIdx >= 0) {
-        // Found exact value
-        anomalyValue = modelData[anomalyIdx][DATA_INDEX_ANOMALY];
-      } else {
-        // Get max value from neighboring points
-        let first = -anomalyIdx;
-        let second = first + 1;
-        if (second >= modelData.length - 1) {
-          second = modelData.length - 1;
-        }
-        anomalyValue = Math.max(modelData[first][DATA_INDEX_ANOMALY],
-                                modelData[second][DATA_INDEX_ANOMALY]);
-      }
-      // Format anomaly value
-      if (anomalyValue || anomalyValue === null) {
-        let color = mapAnomalyColor(anomalyValue);
-        let anomalyText = mapAnomalyText(anomalyValue);
-        displayValue += ` <font color="${color}"><b>Anomaly: ${anomalyText}` +
-                        `</b></font>`;
-      }
-    }
-    return displayValue;
-  }
-
   shouldComponentUpdate(nextProps, nextState) {
-    let {model, modelData, showNonAgg} = this.props;
+    let {modelData, showNonAgg} = this.props;
 
     // allow chart to switch between "show non-agg data" toggle states
     if (showNonAgg !== nextProps.showNonAgg) {
       return true;
     }
 
-    // Only update if the model is visible and model data has changed
-    if (model.visible && modelData.data.length) {
-      return modelData.modified !== nextProps.modelData.modified;
+    if (!nextProps.model.visible) {
+      return false;
     }
 
-    return true;
+    if (nextProps.modelData.data.length < 1) {
+      // We're showing metric data. It only needs to render once.
+      return false;
+    }
+
+    // Only update if the model data has changed.
+    return modelData.modified !== nextProps.modelData.modified ||
+      this.props.model.active !== nextProps.model.active;
   }
 
   _calculateState(props) {
     let {metric, metricData, model, modelData, showNonAgg} = props;
-    let {options, raw, value} = this._chartOptions;
 
     metric.dataSize = metricData.length;
     model.dataSize = modelData.data.length;
-
-    if (model.dataSize) {
-      options.modelData = modelData.data;
-    }
 
     const rawDataInBackground = (modelData.data.length &&
                                  model.aggregated &&
                                  showNonAgg);
 
-    // Calculate axes, labels, and series. Grab them from the "value" options,
-    // maybe insert the "raw" options, then overwrite the actual "options" that
-    // get passed into Dygraphs.
-    let {axes, labels, series} = value;
-    if (rawDataInBackground) {
-      labels = labels.concat(raw.labels);
-      Object.assign(axes, raw.axes);
-      Object.assign(series, raw.series);
+    if (model.dataSize) {
+      this._values = modelData.data.map((v) => [v[DATA_INDEX_TIME],
+                                                v[DATA_INDEX_VALUE]]);
+      let gapThreshold = computeGapThreshold(this._values);
+      this._values = insertIntoGaps(this._values, [NaN], gapThreshold);
+
+      if (rawDataInBackground) {
+        this._values2 =
+          insertIntoGaps(metricData.map((v) => [v[DATA_INDEX_TIME],
+                                                v[DATA_INDEX_VALUE]]),
+                         [NaN], gapThreshold);
+      } else {
+        this._values2 = [];
+      }
+    } else {
+      this._values = metricData.map((v) => [v[DATA_INDEX_TIME],
+                                            v[DATA_INDEX_VALUE]]);
+      let gapThreshold = computeGapThreshold(this._values);
+      this._values = insertIntoGaps(this._values, [NaN], gapThreshold);
+      this._values2 = [];
     }
-    Object.assign(options, {axes, labels, series});
-
-    let [data, xValues, yValues] = prepareData(metricData, modelData.data,
-                                               model.aggregated,
-                                               rawDataInBackground);
-
-    this._data = data;
-    this._xValues = xValues;
-    this._yValues = yValues;
-    this._yExtent = [Math.min(...yValues),
-                     Math.max(...yValues)];
   }
 
   componentWillUpdate(nextProps, nextState) {
@@ -521,18 +201,18 @@ export default class ModelData extends React.Component {
   }
 
   render() {
-    let {metric, model, modelData, modelId} = this.props;
-    let metaData = {metric, model, modelData};
+    let {model, modelData, metric, modelId} = this.props;
 
     return (
       <div style={this._styles.container}>
-        <section style={this._styles.legendSection}>
-          <span id={`legend-${modelId}`} style={this._styles.legend}></span>
-        </section>
         <section>
-          <Chart data={this._data} metaData={metaData}
-                 options={this._chartOptions.options}
-                 yScaleCalculate={this._yScaleCalculate}/>
+          <Chart ref={`chart-${modelId}`}
+                 values={this._values}
+                 values2={this._values2}
+                 model={model}
+                 modelData={modelData.data}
+                 metric={metric}
+           />
         </section>
       </div>
     );

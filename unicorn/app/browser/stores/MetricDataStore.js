@@ -56,17 +56,15 @@ export default class MetricDataStore extends BaseStore {
    *                          </code>
    */
   _handLoadData(payload) {
-    let metric, newData;
+    let metric;
     if (payload && 'metricId' in payload) {
-      // Convert timestamp to Date
-      newData = payload.data.map((row) => [new Date(row[0]), row[1]]);
       metric = this._metrics.get(payload._metrics);
       if (metric) {
         // Append payload data to existing metric
-        metric.push(...newData);
+        metric.push(...payload.data);
       } else {
         // Load New metric
-        this._metrics.set(payload.metricId, newData);
+        this._metrics.set(payload.metricId, payload.data);
       }
       this.emitChange();
     }
@@ -89,8 +87,8 @@ export default class MetricDataStore extends BaseStore {
    * Returns the date range stored for the given metric
    * @param {string} metricId - Metric to get
    * @return {Object} date range or null
-   * @property {Date} from From timestamp
-   * @property {Date} to  To timestamp
+   * @property {number} from From timestamp
+   * @property {number} to  To timestamp
    */
   getTimeRange(metricId) {
     let data = this._metrics.get(metricId);

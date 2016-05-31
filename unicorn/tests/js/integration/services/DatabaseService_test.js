@@ -81,7 +81,7 @@ const EXPECTED_METRIC = Object.assign({}, INSTANCES.Metric, {
   type: 'number'
 });
 
-const EXPECTED_TIMESTAMP =  Object.assign({}, INSTANCES.Metric, {
+const EXPECTED_TIMESTAMP = Object.assign({}, INSTANCES.Metric, {
   uid: EXPECTED_TIMESTAMP_ID,
   file_uid: EXPECTED_FILENAME_ID,
   index: 0,
@@ -94,23 +94,29 @@ const EXPECTED_METRICS = [EXPECTED_TIMESTAMP, EXPECTED_METRIC];
 
 const EXPECTED_METRIC_DATA = [
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:46:09Z'),
-    metric_value: 21},
+   naive_time: Date.parse('2015-08-26T19:46:09Z'),
+   iso_timestamp: '2015-08-26T19:46:09.000000+17:00',
+   metric_value: 21},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:47:31Z'),
-    metric_value: 17},
+   naive_time: Date.parse('2015-08-26T19:47:31Z'),
+   iso_timestamp: '2015-08-26T19:47:31.000000+17:00',
+   metric_value: 17},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:48:31Z'),
-    metric_value: 22},
+   naive_time: Date.parse('2015-08-26T19:48:31Z'),
+   iso_timestamp: '2015-08-26T19:48:31.000000+17:00',
+   metric_value: 22},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:49:31Z'),
-    metric_value: 21},
+   naive_time: Date.parse('2015-08-26T19:49:31Z'),
+   iso_timestamp: '2015-08-26T19:49:31.000000+17:00',
+   metric_value: 21},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:50:31Z'),
-    metric_value: 16},
+   naive_time: Date.parse('2015-08-26T19:50:31Z'),
+   iso_timestamp: '2015-08-26T19:50:31.000000+17:00',
+   metric_value: 16},
   {metric_uid: EXPECTED_METRIC_ID,
-    timestamp: Date.parse('2015-08-26T19:51:31Z'),
-    metric_value: 19}
+   naive_time: Date.parse('2015-08-26T19:51:31Z'),
+   iso_timestamp: '2015-08-26T19:51:31.000000+17:00',
+   metric_value: 19}
 ];
 
 const NO_HEADER_CSV_FILE = path.join(FIXTURES, 'no-header-no-tz.csv');
@@ -176,7 +182,7 @@ const EXPECTED_FIELDS_IGNORE_FIELDS_FILE = [
 ];
 
 const EXPECTED_METRIC_DATA_RESULT = EXPECTED_METRIC_DATA.map((data) => [
-  data.timestamp, data.metric_value
+  data.naive_time, data.metric_value
 ]);
 
 const EXPECTED_METRIC_WITH_INPUT = Object.assign({}, EXPECTED_METRIC, {
@@ -197,37 +203,95 @@ const EXPECTED_METRIC_WITH_INPUT_AGG_MODEL = Object.assign({}, EXPECTED_METRIC, 
   model_options: MODEL_OPTIONS
 });
 
-const BATCH_MODEL_DATA = Array.from([
-  1440557229000,
-  1440557311000,
-  1440557371000,
-  1440557431000
-], (timestamp) => {
-  return Object.assign({}, INSTANCES.ModelData, {
+const BATCH_MODEL_DATA = [
+  {
     metric_uid: EXPECTED_METRIC_ID,
-    metric_value: 1,
+    metric_value: 42,
     anomaly_score: 1,
-    timestamp
-  });
-});
+    naive_time: Date.parse('2015-08-26T02:47:09Z'),
+    iso_timestamp: '2015-08-26T02:47:09.000000+08:00'
+  },
+  {
+    metric_uid: EXPECTED_METRIC_ID,
+    metric_value: 43,
+    anomaly_score: 1,
+    naive_time: Date.parse('2015-08-26T02:48:31Z'),
+    iso_timestamp: '2015-08-26T02:48:31.000000+08:00'
+  },
+  {
+    metric_uid: EXPECTED_METRIC_ID,
+    metric_value: 44,
+    anomaly_score: 1,
+    naive_time: Date.parse('2015-08-26T02:49:31Z'),
+    iso_timestamp: '2015-08-26T02:49:31.000000+08:00'
+  },
+  {
+    metric_uid: EXPECTED_METRIC_ID,
+    metric_value: 45,
+    anomaly_score: 1,
+    naive_time: Date.parse('2015-08-26T02:50:31Z'),
+    iso_timestamp: '2015-08-26T02:50:31.000000+08:00'
+  }
+];
 
-const EXPECTED_MODEL_DATA = Array.from([
-  1440557229000,
-  1440557311000,
-  1440557371000,
-  1440557431000
-], (timestamp) => [timestamp, 1, 1]);
-
+const EXPECTED_MODEL_DATA = BATCH_MODEL_DATA.map(
+  (d) => [d.naive_time, d.metric_value, d.anomaly_score]);
 
 const EXPECTED_EXPORTED_RESULTS =
   `timestamp,metric_value,anomaly_level,raw_anomaly_score
-2015-08-26T02:47:09,1,N/A,1
-2015-08-26T02:48:31,1,N/A,1
-2015-08-26T02:49:31,1,HIGH,1
-2015-08-26T02:50:31,1,HIGH,1`;
+2015-08-26T02:47:09+08:00,42,N/A,1
+2015-08-26T02:48:31+08:00,43,N/A,1
+2015-08-26T02:49:31+08:00,44,HIGH,1
+2015-08-26T02:50:31+08:00,45,HIGH,1`;
 
 const TEMP_DIR = path.join(os.tmpDir(), 'unicorn_db');
-const EXPORTED_FILENAME = path.join(TEMP_DIR, 'file.csv');
+
+const BATCH_MODEL_DATA_NO_TZ = [
+  {
+    metric_uid: EXPECTED_METRIC_ID,
+    metric_value: 42,
+    anomaly_score: 1,
+    naive_time: Date.parse('2015-08-26T02:47:09Z'),
+    iso_timestamp: '2015-08-26T02:47:09.000000'
+  },
+  {
+    metric_uid: EXPECTED_METRIC_ID,
+    metric_value: 43,
+    anomaly_score: 1,
+    naive_time: Date.parse('2015-08-26T02:48:31Z'),
+    iso_timestamp: '2015-08-26T02:48:31.000000'
+  },
+  {
+    metric_uid: EXPECTED_METRIC_ID,
+    metric_value: 44,
+    anomaly_score: 1,
+    naive_time: Date.parse('2015-08-26T02:49:31Z'),
+    iso_timestamp: '2015-08-26T02:49:31.000000'
+  },
+  {
+    metric_uid: EXPECTED_METRIC_ID,
+    metric_value: 45,
+    anomaly_score: 1,
+    naive_time: Date.parse('2015-08-26T02:50:31Z'),
+    iso_timestamp: '2015-08-26T02:50:31.000000'
+  }
+];
+
+const EXPECTED_EXPORTED_RESULTS_NO_TZ =
+  `timestamp,metric_value,anomaly_level,raw_anomaly_score
+2015-08-26T02:47:09,42,N/A,1
+2015-08-26T02:48:31,43,N/A,1
+2015-08-26T02:49:31,44,HIGH,1
+2015-08-26T02:50:31,45,HIGH,1`;
+
+const EXPECTED_TIMESTAMP_NO_TZ = Object.assign({}, INSTANCES.Metric, {
+  uid: EXPECTED_TIMESTAMP_ID,
+  file_uid: EXPECTED_FILENAME_ID,
+  index: 0,
+  name: 'timestamp',
+  type: 'date',
+  format: 'YYYY-MM-DDTHH:mm:ss'
+});
 
 describe('DatabaseService:', () => {
   let service;
@@ -404,7 +468,7 @@ describe('DatabaseService:', () => {
               });
             });
           });
-        })
+        });
       });
     });
     it('should delete file by id from the database', (done) => {
@@ -426,7 +490,7 @@ describe('DatabaseService:', () => {
                 });
               });
             });
-          })
+          });
         });
       });
     });
@@ -493,7 +557,7 @@ describe('DatabaseService:', () => {
           done();
         });
       });
-    })
+    });
     it('should delete metric from the database', (done) => {
       // Add metric
       service.putMetric(EXPECTED_METRIC, (error) => {
@@ -565,7 +629,7 @@ describe('DatabaseService:', () => {
             assert.deepStrictEqual(JSON.parse(actual), EXPECTED_METRIC_WITH_MODEL);
             done();
           });
-        })
+        });
       });
     });
     it('should update input options for metric', (done) => {
@@ -578,7 +642,7 @@ describe('DatabaseService:', () => {
             assert.deepStrictEqual(JSON.parse(actual), EXPECTED_METRIC_WITH_INPUT);
             done();
           });
-        })
+        });
       });
     });
     it('should update metric', (done) => {
@@ -609,7 +673,7 @@ describe('DatabaseService:', () => {
     });
     it('should not add invalid MetricData record to the database', (done) => {
       let invalid = Object.assign({}, EXPECTED_METRIC_DATA[0]);
-      delete invalid.timestamp;
+      delete invalid.iso_timestamp;
       service.putMetricData(invalid, (error) => {
         assert(error, 'Invalid MetricData was created');
         done();
@@ -775,28 +839,46 @@ describe('DatabaseService:', () => {
         });
       });
     });
-    it('should export ModelData from the database', (done) => {
+    it('should export ModelData from the database (time zone: yes)', (done) => {
+      const EXPORTED_FILENAME = path.join(TEMP_DIR, 'file.csv');
       after(() => {
         fs.unlinkSync(EXPORTED_FILENAME); // eslint-disable-line no-sync
       });
       service.putModelDataBatch(BATCH_MODEL_DATA, (error) => {
         assert.ifError(error);
 
-        // Fixme: UNI-440
-        // The convention is to ignore timezones when rendering or exporting time
-        // in the app until UNI-440 is fixed.
-        let exportedTimestampFormat = EXPECTED_TIMESTAMP.format;
-        if (exportedTimestampFormat.slice(-1) === 'Z') {
-          exportedTimestampFormat = EXPECTED_TIMESTAMP.format.slice(0, -1);
-        }
-        service.exportModelData(EXPECTED_METRIC_ID, EXPORTED_FILENAME, exportedTimestampFormat, 2, (error, res) => {
-          assert.ifError(error);
-          fs.readFile(EXPORTED_FILENAME, 'utf8', (error, data) => {
+        service.exportModelData(
+          EXPECTED_METRIC_ID, EXPORTED_FILENAME, EXPECTED_TIMESTAMP.format, 2,
+          (error, res) => {
             assert.ifError(error);
-            assert.equal(data, EXPECTED_EXPORTED_RESULTS);
-            done();
+            fs.readFile(EXPORTED_FILENAME, 'utf8', (error, data) => {
+              assert.ifError(error);
+              assert.equal(data, EXPECTED_EXPORTED_RESULTS);
+              done();
+            });
           });
-        });
+      });
+    });
+
+    it('should export ModelData from the database (time zone: no)', (done) => {
+      const EXPORTED_FILENAME = path.join(TEMP_DIR, 'file2.csv');
+      after(() => {
+        fs.unlinkSync(EXPORTED_FILENAME); // eslint-disable-line no-sync
+      });
+      service.putModelDataBatch(BATCH_MODEL_DATA_NO_TZ, (error) => {
+        assert.ifError(error);
+
+        service.exportModelData(
+          EXPECTED_METRIC_ID, EXPORTED_FILENAME,
+          EXPECTED_TIMESTAMP_NO_TZ.format, 2,
+          (error, res) => {
+            assert.ifError(error);
+            fs.readFile(EXPORTED_FILENAME, 'utf8', (error, data) => {
+              assert.ifError(error);
+              assert.equal(data, EXPECTED_EXPORTED_RESULTS_NO_TZ);
+              done();
+            });
+          });
       });
     });
 
