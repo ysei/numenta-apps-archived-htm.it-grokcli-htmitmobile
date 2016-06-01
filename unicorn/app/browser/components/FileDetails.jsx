@@ -92,14 +92,10 @@ const STYLES = {
   },
   supportedFormats: {
     cursor: 'pointer',
-    textDecoration: 'underline'
+    textDecoration: 'underline',
+    color: 'black'
   }
 };
-
-// The errors that will trigger a (see supported formats) in the error message
-const SUPPORTED_FORMAT_ERRORS = ['The CSV file does not have any valid data',
-                                 'The CSV file needs to have at least 400' +
-                                 ' rows with valid values']
 
 /**
  * Show file details page. The file must be available from the {@link FileStore}
@@ -240,16 +236,12 @@ export default class FileDetails extends React.Component {
     }
 
     if (this.props.error) {
-      if (SUPPORTED_FORMAT_ERRORS.indexOf(this.props.error) > -1) {
-        supportedFormats = (
-            <a style={STYLES.supportedFormats} onClick={this._onSupportedFormatsClick}>
-              supported formats
-            </a>
-        );
-        error = (<p style={STYLES.error}>{this.props.error} (see {supportedFormats})</p>);
-      } else {
-        error =  (<p style={STYLES.error}>{this.props.error}</p>);
-      }
+      supportedFormats = (
+          <a style={STYLES.supportedFormats} onClick={this._onSupportedFormatsClick}>
+            supported formats
+          </a>
+      );
+      error = (<p style={STYLES.error}>{this.props.error} (see {supportedFormats})</p>);
     } else if (this.props.warning) {
       warning = (<p style={STYLES.error}>{this.props.warning}</p>);
     }
