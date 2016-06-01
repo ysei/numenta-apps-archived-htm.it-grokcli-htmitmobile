@@ -21,6 +21,7 @@
 
 const electron = require('electron');
 const name = electron.app.getName();
+const VERSION = require('../package.json').version;
 
 let crossPlatformMenu = [
   {
@@ -77,7 +78,10 @@ let crossPlatformMenu = [
       {
         label: 'Report Bug',
         click() {
-          let url = 'http://github.com/numenta/numenta-apps/issues/new';
+          let url = `mailto:htm-studio@numenta.com?
+          subject=HTM Studio ${VERSION} bug
+          &body=DO NOT REMOVE THIS INFORMATION: HTM Studio version ${VERSION}.
+          Please describe the steps to reproduce the bug below: `;
           electron.shell.openExternal(url);
         }
       }
