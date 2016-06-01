@@ -197,7 +197,7 @@ export class FileService {
   }
 
   /**
-   * Get all field definitions for the give file guessing header row and
+   * Get all field definitions for the given file, guessing header row and
    * data types based on first record, validating the file structure based on
    * the following criteria:
    * - The file must be valid CSV file
@@ -205,8 +205,9 @@ export class FileService {
    * - The file must have at least one scalar fields
    * - Ignore all other fields
    *
-   * If the first row only contain strings then use it as header row, otherwise
-   * the header should be based on data type, something like this:
+   * If the first row only contain a combination of strings and/or numbers, then
+   * use it as header row; otherwise, the header should be based on data type,
+   * something like this:
    *
    * ```
    *   timestamp, metric1, metric2, ...
@@ -263,19 +264,23 @@ export class FileService {
           let dateFields = fields.filter((field) => {
             return field.type === 'date';
           });
-          if (dateFields.length !== 1) {
-            error = 'The file should have one and only one date/time column';
-          } else if (!dateFields[0].format) {
-            error = `The date/time format used on column ` +
-                    `${dateFields[0].index + 1} is not supported`;
-          } else if (!fields.some((field) => field.type === 'number')) {
-            error = 'The file should have at least one numeric value';
-          }
+          if (dateFields.length === 0 && offset === 0) {
+            // No date field in first row: assume it's the header row
+          } else {
+            if (dateFields.length !== 1) {
+              error = 'The file should have one and only one date/time column';
+            } else if (!dateFields[0].format) {
+              error = `The date/time format used on column ` +
+                      `${dateFields[0].index + 1} is not supported`;
+            } else if (!fields.some((field) => field.type === 'number')) {
+              error = 'The file should have at least one numeric value';
+            }
 
-          parser.removeAllListeners();
-          stream.destroy();
-          callback(error, {fields, offset});
-          return;
+            parser.removeAllListeners();
+            stream.destroy();
+            callback(error, {fields, offset});
+            return;
+          }
         } else if (offset === 1) {
           // Unable to guess fields from first 2 lines.
           parser.removeAllListeners();
@@ -581,8 +586,8 @@ export class FileService {
         });
         if (row > 20000) {
           dataWarning = 'The number of rows exceeds 20,000. While you can' +
-           ' proceed with this file, note that HTM Studio will be unresponsive' +
-           ' during the loading of very large files.'
+           ' proceed with this file, note that HTM Studio will be' +
+           ' unresponsive during the loading of very large files.'
         }
         if (!valid) {
           dataError = message;

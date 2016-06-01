@@ -97,6 +97,12 @@ const INVALID_DATE_FORMAT_FILE = path.join(FIXTURES, 'invalid-date-format.csv');
 const INVALID_NUMBER_FILE = path.join(FIXTURES, 'invalid-number.csv');
 const INVALID_ROWS_FILE = path.join(FIXTURES, 'invalid-rows.csv');
 const NO_SCALAR_FILE = path.join(FIXTURES, 'no-scalar.csv');
+const NUMERIC_ONLY_HEADER_FILE = path.join(
+  FIXTURES,
+  'numeric-only-header.csv');
+const STRING_AND_NUMERIC_HEADER_FILE = path.join(
+  FIXTURES,
+  'string-and-numeric-header.csv');
 const NO_HEADER_CSV_FILE = path.join(FIXTURES, 'no-header-no-tz.csv');
 const NO_HEADER_CSV_FILE_ID = generateFileId(NO_HEADER_CSV_FILE);
 const EXPECTED_FIELDS_NO_HEADER_CSV_FILE = [
@@ -197,6 +203,20 @@ describe('FileService', () => {
         assert.ifError(error);
         assert.equal(results.offset, 1);
         assert.deepEqual(results.fields, EXPECTED_FIELDS);
+        done();
+      });
+    });
+    it('should identify first row with numbers only as header', (done) => {
+      service.getFields(NUMERIC_ONLY_HEADER_FILE, (error, results) => {
+        assert.ifError(error);
+        assert.equal(results.offset, 1);
+        done();
+      });
+    });
+    it('should identify first row with string/numbers as header', (done) => {
+      service.getFields(STRING_AND_NUMERIC_HEADER_FILE, (error, results) => {
+        assert.ifError(error);
+        assert.equal(results.offset, 1);
         done();
       });
     });
