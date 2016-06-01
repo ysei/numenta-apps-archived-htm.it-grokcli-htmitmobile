@@ -71,21 +71,28 @@ function initializeApplicationData() {
 
 /**
  * Handles model data event saving the results to the database
- * @param  {string} modelId - Model receiving data
- * @param  {Object} modelData - Parsed model data
+ * @param {string} modelId - Model receiving data
+ * @param {number} recordIndex - Result index
+ * @param {Object} modelData - Parsed model data
+ * @param {Object} modelServiceIPC - Communication channel to browser
  */
-function receiveModelData(modelId, modelData) {
-  database.putModelData(modelData, (error) => {
+function receiveModelData(modelId, recordIndex, modelData, modelServiceIPC) {
+  database.putModelData(modelId, recordIndex, modelData, (error) => {
     if (error) {
-      log.error('Error saving model data', error, modelData);
+      log.error('Error saving model data', error, modelId, recordIndex,
+                modelData);
+    } else {
+      modelServiceIPC._notifyNewModelResult(modelId);
     }
   });
 }
 
 /**
  * Handle application wide model services events
+ *
+ * @param {Object} modelServiceIPC - Communication channel to browser
  */
-function handleModelEvents() {
+function handleModelEvents(modelServiceIPC) {
   // Attach event handler on model creation
   modelService.on('newListener', (modelId, listener) => {
     if (!activeModels.has(modelId)) {
@@ -93,7 +100,8 @@ function handleModelEvents() {
         try {
           if (command === 'data') {
             // Handle model data
-            receiveModelData(modelId, data);
+            let [index, modelData] = data;
+            receiveModelData(modelId, index, modelData, modelServiceIPC);
           }
         } catch (e) {
           log.error('Model Error', e, modelId, command, data);
@@ -179,12 +187,12 @@ app.on('ready', () => {
     initializeApplicationData();
   });
 
-  // Handle model service events
-  handleModelEvents();
-
   // Handle IPC communication for the ModelService
   modelServiceIPC = new ModelServiceIPC(modelService);
   modelServiceIPC.start(mainWindow.webContents);
+
+  // Handle model service events
+  handleModelEvents(modelServiceIPC);
 
   // Handle IPC communication for the ParamFinderService
   paramFinderServiceIPC = new ParamFinderServiceIPC(paramFinderService);

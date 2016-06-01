@@ -222,16 +222,20 @@ export class DatabaseService {
   /**
    * Get all/queried ModelData records.
    * @callback
-   * @param {string} metricId Metric ID
-   * @param {Function} callback Async callback: function (error, results)
-   *                            The results will be JSON.stringified
+   * @param {string} metricId - Metric ID
+   * @param {number} offset - If non-null, only fetch records after this index
+   * @param {Function} callback - Async callback: function (error, results)
+   *                              The results will be JSON.stringified
    */
-  getModelData(metricId, callback) {
+  getModelData(metricId, offset, callback) {
+    let start = generateMetricDataId(metricId, offset || 0);
+    let end = `${metricId}\xff`;
+
     let results = [];
     // Metric Data ID is based on metricId. See Util.generateMetricDataId
     this._modelData.createValueStream({
-      gte: `${metricId}`,
-      lt: `${metricId}\xff`
+      gte: start,
+      lt: end
     })
     .on('data', (metric) => {
       results.push([
@@ -393,7 +397,7 @@ export class DatabaseService {
    * @param {Function} callback - Async done callback: function(error, results)
    */
   putModelBatch(models, callback) {
-    if (typeof metrics === 'string') {
+    if (typeof models === 'string') {
       models = JSON.parse(models);
     }
 
@@ -416,33 +420,31 @@ export class DatabaseService {
     this._models.batch(ops, callback);
   }
 
-
   /**
    * Put a single ModelData record to DB.
-   * @param {Object} data - ModelData object to save
+   * @param {string} modelId - Unique model ID
+   * @param {number} recordIndex - Result index
+   * @param {Object} modelData - ModelData object to save
    * @param {Function} callback - Async done callback: function(error, results)
    */
-  putModelData(data, callback) {
-    if (typeof data === 'string') {
-      data = JSON.parse(data);
-    }
-
-    const validation = this.validator.validate(data, DBModelDataSchema);
+  putModelData(modelId, recordIndex, modelData, callback) {
+    const validation = this.validator.validate(modelData, DBModelDataSchema);
     if (validation.errors.length) {
       callback(validation.errors, null);
       return;
     }
-    let {metric_uid, naive_time} = data;
-    let key = generateMetricDataId(metric_uid, naive_time);
-    this._modelData.put(key, data, callback);
+    let key = generateMetricDataId(modelId, recordIndex);
+    this._modelData.put(key, modelData, callback);
   }
 
   /**
    * Put multiple ModelData records into DB.
+   * @param {string} modelId - Unique metric ID
+   * @param {number} firstRecordIndex - Starting index for this batch
    * @param {Array} data - List of ModelData objects to save
    * @param {Function} callback - Async done callback: function(error, results)
    */
-  putModelDataBatch(data, callback) {
+  putModelDataBatch(modelId, firstRecordIndex, data, callback) {
     if (typeof data === 'string') {
       data = JSON.parse(data);
     }
@@ -455,9 +457,9 @@ export class DatabaseService {
       }
     }
 
-    let ops = data.map((value) => {
-      let {metric_uid, naive_time} = value;
-      let key = generateMetricDataId(metric_uid, naive_time);
+    let ops = data.map((value, i) => {
+      let recordIndex = firstRecordIndex + i;
+      let key = generateMetricDataId(modelId, recordIndex);
       return {
         type: 'put', key, value
       };
@@ -468,10 +470,12 @@ export class DatabaseService {
 
   /**
    * Put a single MetricData record to DB.
+   * @param {string} metricId - Unique metric ID
+   * @param {number} recordIndex - Index for this row
    * @param {Object} metricData - Data object of MetricData info to save
    * @param {Function} callback - Async done callback: function(error, results)
    */
-  putMetricData(metricData, callback) {
+  putMetricData(metricId, recordIndex, metricData, callback) {
     if (typeof metricData === 'string') {
       metricData = JSON.parse(metricData);
     }
@@ -481,17 +485,19 @@ export class DatabaseService {
       callback(validation.errors, null);
       return;
     }
-    let {metric_uid, naive_time} = metricData;
-    let key = generateMetricDataId(metric_uid, naive_time);
+
+    let key = generateMetricDataId(metricId, recordIndex);
     this._metricData.put(key, metricData, callback);
   }
 
   /**
    * Put multiple MetricData records into DB.
+   * @param {string} metricId - Unique metric ID
+   * @param {number} firstRecordIndex - Starting index for this batch
    * @param {Array} data - List of Metric Data objects of MetricDatas to save
    * @param {Function} callback - Async done callback: function(error, results)
    */
-  putMetricDataBatch(data, callback) {
+  putMetricDataBatch(metricId, firstRecordIndex, data, callback) {
     if (typeof data === 'string') {
       data = JSON.parse(data);
     }
@@ -504,9 +510,9 @@ export class DatabaseService {
       }
     }
 
-    let ops = data.map((value) => {
-      let {metric_uid, naive_time} = value;
-      let key = generateMetricDataId(metric_uid, naive_time);
+    let ops = data.map((value, i) => {
+      let recordIndex = firstRecordIndex + i;
+      let key = generateMetricDataId(metricId, recordIndex);
       return {
         type: 'put', key, value
       };
@@ -910,6 +916,8 @@ export class DatabaseService {
           columns: false,
           offset : file.rowOffset
         };
+
+        let recordIndex = 0;
         fileService.getData(file.filename, options, ((error, data) => {
           if (error) {
             throw error;
@@ -922,7 +930,6 @@ export class DatabaseService {
                 let [m, hasTimeZone] = parseTimestampFallbackUtc(
                   data[timestampField.index], timestampField.format);
                 let metricData = {
-                  metric_uid: field.uid,
                   iso_timestamp: m.format(hasTimeZone
                                           ? 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ'
                                           : 'YYYY-MM-DDTHH:mm:ss.SSSSSS'),
@@ -930,11 +937,12 @@ export class DatabaseService {
                   metric_value: parseFloat(data[field.index])
                 };
                 // Save data
-                this.putMetricData(metricData, (error) => { // eslint-disable-line max-nested-callbacks
-                  if (error) {
-                    throw error;
-                  }
-                });
+                this.putMetricData(field.uid, recordIndex, metricData,
+                                   (error) => { // eslint-disable-line max-nested-callbacks
+                                     if (error) {
+                                       throw error;
+                                     }
+                                   });
               }
             });
           } else {
@@ -945,6 +953,8 @@ export class DatabaseService {
             });
             return;
           }
+
+          recordIndex++;
         }));
       })
       .catch(callback);
