@@ -287,6 +287,15 @@ export class FileService {
         headers = values;
         offset++;
       });
+
+    stream.on('end', () => {
+      // We reached the end of the csv and we read either 0 or 1 rows (each)
+      // of which were not valid data rows.
+      if (offset < 2) {
+        callback('The CSV file does not have any valid data');
+        return;
+      }
+    });
   }
 
   /**

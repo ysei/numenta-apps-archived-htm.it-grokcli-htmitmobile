@@ -29,6 +29,7 @@ import TableRow from 'material-ui/lib/table/table-row';
 import TableRowColumn from 'material-ui/lib/table/table-row-column';
 import TextField from 'material-ui/lib/text-field';
 import Colors from 'material-ui/lib/styles/colors';
+import {shell} from 'electron';
 
 import FileDetailsStore from '../stores/FileDetailsStore';
 import FileUploadAction from '../actions/FileUpload';
@@ -88,9 +89,17 @@ const STYLES = {
     fontStyle: 'italic',
     marginTop: '2.5rem',
     whiteSpace: 'nowrap'
+  },
+  supportedFormats: {
+    cursor: 'pointer',
+    textDecoration: 'underline'
   }
 };
 
+// The errors that will trigger a (see supported formats) in the error message
+const SUPPORTED_FORMAT_ERRORS = ['The CSV file does not have any valid data',
+                                 'The CSV file needs to have at least 400' +
+                                 ' rows with valid values']
 
 /**
  * Show file details page. The file must be available from the {@link FileStore}
@@ -160,6 +169,10 @@ export default class FileDetails extends React.Component {
     this.context.executeAction(HideFileDetailsAction);
   }
 
+  _onSupportedFormatsClick() {
+    shell.openExternal('http://numenta.com/htm-studio/#start');
+  }
+
   _onSave() {
     let file = this.props.file;
     if (file) {
@@ -216,22 +229,30 @@ export default class FileDetails extends React.Component {
 
   _renderBody() {
     let file = this.props.file;
-    let error, warning, numRecords, recordsDisplay;
+    let error, warning, numRecords, recordsDisplay, supportedFormats;
     // File Size in KB
     let fileSize = (this.state.fileSize / 1024).toFixed();
-
     if (file) {
-      numRecords = file.records;
+      numRecords = (file.records > 20) ? 20 : file.records;
       recordsDisplay = (<p style={STYLES.recordsDisplay}>
-                          Displaying 20 rows out of {numRecords}
+                          Displaying {numRecords} rows out of {file.records}
                         </p>);
     }
+
     if (this.props.error) {
-      error =  (<p style={STYLES.error}>{this.props.error}</p>);
+      if (SUPPORTED_FORMAT_ERRORS.indexOf(this.props.error) > -1) {
+        supportedFormats = (
+            <a style={STYLES.supportedFormats} onClick={this._onSupportedFormatsClick}>
+              supported formats
+            </a>
+        );
+        error = (<p style={STYLES.error}>{this.props.error} (see {supportedFormats})</p>);
+      } else {
+        error =  (<p style={STYLES.error}>{this.props.error}</p>);
+      }
     } else if (this.props.warning) {
       warning = (<p style={STYLES.error}>{this.props.warning}</p>);
     }
-
     return (
       <div style={STYLES.container}>
         {error} {warning}

@@ -15,6 +15,7 @@
   },
   "python": "app/node_modules/.bin/python",
   "scripts": {
+    "preinstall": "node scripts/download_python.js",
     "postinstall": "install-app-deps",
     "build:osx": "npm install && npm run prepare && npm run dist:osx",
     "build:win": "npm install && npm run prepare && npm run dist:win",
@@ -79,7 +80,7 @@
     "babel-register": "6.7.2",
     "css-loader": "0.23.1",
     "csv-streamify": "3.0.3",
-    "electron-builder": "3.2.0",
+    "electron-builder": "3.26.3",
     "electron-debug": "0.5.2",
     "electron-prebuilt": "0.37.3",
     "esdoc": "0.4.7",

@@ -15,23 +15,15 @@
 //
 // http://numenta.org/licenses/
 
-
 import {ACTIONS} from '../lib/Constants';
 
-
 /**
- * Receive model data
+ * Notify the stores that there are new model results available.
  *
- * @param {FluxibleContext} actionContext - Fluxible action context object
- * @param {Object} payload - The action payload
- * @param {String} payload.modelId - Required model id
- * @param {Object[]} payload.data - New data to be appended
- * @emits {RECEIVE_MODEL_DATA}
- * @TODO {@link ModelService} should save model results to database
+ * @param  {FluxibleContext} actionContext - The action context
+ * @param  {string} modelId - The model that changed.
+ * @emits {NOTIFY_NEW_MODEL_RESULTS}
  */
-export default function (actionContext, payload) {
-  let {modelId, data} = payload;
-  actionContext.dispatch(ACTIONS.RECEIVE_MODEL_DATA, {
-    modelId, data
-  });
+export default function NotifyNewModelResultsAction(actionContext, modelId) {
+  actionContext.dispatch(ACTIONS.NOTIFY_NEW_MODEL_RESULTS, modelId);
 }

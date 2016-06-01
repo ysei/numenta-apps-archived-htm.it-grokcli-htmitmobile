@@ -45,6 +45,7 @@ const GRIPPER_WIDTH2 = GRIPPER_WIDTH + 1; // includes stroke
 // Match Dygraphs width.
 const CHART_W_DIFFERENCE = -5;
 const RANGE_SELECTOR_W_DIFFERENCE = -5;
+const RANGE_SELECTOR_HEIGHT = 40;
 
 /**
  * Merge two sorted arrays to create a new sorted array.
@@ -136,8 +137,6 @@ export default class Chart extends React.Component {
     this._xScale = d3.scale.linear();
     this._xScaleMini = d3.scale.linear();
 
-    this._yScale = d3.scale.linear();
-
     this._showAll = false;
     this._guardResolution = false;
     this._jumpToNewResults = true;
@@ -169,11 +168,32 @@ export default class Chart extends React.Component {
         position: 'relative'
       }
     };
+
+    let rangeSelectorTop = this._styles.root.height - RANGE_SELECTOR_HEIGHT;
+    let chartHeight = rangeSelectorTop - 3;
+    this._yScale = d3.scale.linear()
+      .range([chartHeight, 0]);
   }
 
   _getMinTimespan() {
     let element = ReactDOM.findDOMNode(this.refs['chart']);
     return this._minDelta * element.offsetWidth / ANOMALY_BAR_WIDTH;
+  }
+
+  _getEndDateWindow() {
+    let timespan = this._guardResolution
+          ? this._xScale.domain()[1] - this._xScale.domain()[0]
+          : this._getMinTimespan();
+
+    let bottom = this._data[0][DATA_INDEX_TIME];
+    let top = this._data[this._data.length - 1][DATA_INDEX_TIME];
+    let extent = [Math.max(bottom, (top - timespan)), top];
+    let discrepancy = timespan - (extent[1] - extent[0]);
+    if (discrepancy > 0) {
+      extent[1] += discrepancy;
+    }
+
+    return extent;
   }
 
   _describeZoomLevel(zoomLevel) {
@@ -243,10 +263,24 @@ export default class Chart extends React.Component {
   }
 
   _yScaleUpdate() {
-    let yDomain = [this._valueExtent[0], this._valueExtent[1]];
-    // Add space for green anomaly bars.
-    yDomain[0] -= anomalyScale(0) * (yDomain[1] - yDomain[0]);
-    this._yScale.domain(yDomain);
+    let paddingPx = 2;
+    let height = this._styles.root.height - RANGE_SELECTOR_HEIGHT - 3;
+    let range = [height - paddingPx, paddingPx];
+    if (this.props.modelData.length > 0) {
+      // Add space for green anomaly bars.
+      range[0] -= anomalyScale(0) * height;
+    }
+
+    // Use d3's 'nice' so that small changes in the domain don't cause
+    // the scale to change.
+    let yScaleIntermediate = d3.scale.linear()
+          .domain([this._valueExtent[0], this._valueExtent[1]])
+          .range(range)
+          .nice();
+
+    this._yScale
+      .domain([yScaleIntermediate.invert(this._yScale.range()[0]),
+               yScaleIntermediate.invert(this._yScale.range()[1])]);
   }
 
   _rescaleChart() {
@@ -378,12 +412,11 @@ export default class Chart extends React.Component {
     // grabbing cursor on mousedown. To force Chrome to notice the cursor, put
     // an entire div below the cursor.
     let chartNode = ReactDOM.findDOMNode(this.refs['chart']);
-    let rangeSelectorHeight = this._dygraph.getOption('rangeSelectorHeight');
-    let rangeSelectorTop = chartNode.offsetHeight - rangeSelectorHeight;
+    let rangeSelectorTop = this._styles.root.height - RANGE_SELECTOR_HEIGHT;
     let cursorDiv = d3.select(chartNode).append('div')
           .attr('class', 'forceChromiumCursorChange')
           .style('width', `${chartNode.offsetWidth}px`)
-          .style('height', `${rangeSelectorHeight}px`)
+          .style('height', `${RANGE_SELECTOR_HEIGHT}px`)
           .style('position', 'absolute')
           .style('left', `${chartNode.offsetLeft}px`)
           .style('top', `${rangeSelectorTop}px`)
@@ -731,7 +764,9 @@ export default class Chart extends React.Component {
     }
 
     let dateWindow;
-    if (metric.dateWindow) {
+    if (this.props.model.active) {
+      dateWindow = this._getEndDateWindow();
+    } else if (metric.dateWindow) {
       dateWindow = metric.dateWindow;
 
       let minTimespan = this._getMinTimespan();
@@ -764,6 +799,7 @@ export default class Chart extends React.Component {
       showLabelsOnHighlight: false,
       labelsDiv: document.createElement('div'), // put its labels into the abyss
       plugins: [RangeSelectorBarChart],
+      rangeSelectorHeight: RANGE_SELECTOR_HEIGHT,
       rangeSelectorPlotFillColor: muiTheme.rawTheme.palette.primary1FadeColor,
       rangeSelectorPlotStrokeColor: muiTheme.rawTheme.palette.primary1Color,
       showRangeSelector: true,
@@ -833,11 +869,8 @@ export default class Chart extends React.Component {
 
     let chartNode = element.getElementsByTagName('canvas')[0];
 
-    let rangeSelectorHeight = this._dygraph.getOption('rangeSelectorHeight');
-    let rangeSelectorTop = chartNode.offsetHeight - rangeSelectorHeight;
+    let rangeSelectorTop = this._styles.root.height - RANGE_SELECTOR_HEIGHT;
     let chartHeight = rangeSelectorTop - 3;
-
-    this._yScale.range([chartHeight, 0]);
 
     let chartOverlay = d3.select(element).append('svg')
           .attr('class', 'chartOverlay')
@@ -872,7 +905,7 @@ export default class Chart extends React.Component {
     let rangeSelectorOverlay = d3.select(element).append('svg')
           .attr('class', 'rangeSelectorOverlay')
           .attr('width', chartNode.offsetWidth + GRIPPER_WIDTH2*2)
-          .attr('height', rangeSelectorHeight)
+          .attr('height', RANGE_SELECTOR_HEIGHT)
           .style('position', 'absolute')
           .style('left', `${chartNode.offsetLeft - GRIPPER_WIDTH2}px`)
           .style('top', `${rangeSelectorTop}px`)
@@ -884,7 +917,7 @@ export default class Chart extends React.Component {
       .attr('fill', 'transparent')
       .attr('stroke', 'none')
       .attr('width', chartNode.offsetWidth + RANGE_SELECTOR_W_DIFFERENCE)
-      .attr('height', rangeSelectorHeight);
+      .attr('height', RANGE_SELECTOR_HEIGHT);
 
     this._xScaleMini
       .domain([this._data[0][DATA_INDEX_TIME],
@@ -897,14 +930,14 @@ export default class Chart extends React.Component {
 
     brushNode.append('rect')
       .attr('class', 'left shade')
-      .attr('height', rangeSelectorHeight)
+      .attr('height', RANGE_SELECTOR_HEIGHT)
       .attr('stroke', 'none')
       .attr('fill', 'black')
       .attr('fill-opacity', 0.125);
 
     brushNode.append('rect')
       .attr('class', 'right shade')
-      .attr('height', rangeSelectorHeight)
+      .attr('height', RANGE_SELECTOR_HEIGHT)
       .attr('stroke', 'none')
       .attr('fill', 'black')
       .attr('fill-opacity', 0.125);
@@ -915,18 +948,18 @@ export default class Chart extends React.Component {
     brushNode
       .select('.extent')
       .attr('y', 0.5)
-      .attr('height', rangeSelectorHeight - 1)
+      .attr('height', RANGE_SELECTOR_HEIGHT - 1)
       .attr('stroke', 'black')
       .attr('fill', 'transparent')
       .style('cursor', null); // use css
 
     brushNode
       .select('.background')
-      .attr('height', rangeSelectorHeight)
+      .attr('height', RANGE_SELECTOR_HEIGHT)
       .style('cursor', null); // use css
 
     let gripperHeight = 16;
-    let rangeSelectorY = rangeSelectorHeight/2 - gripperHeight/2;
+    let rangeSelectorY = RANGE_SELECTOR_HEIGHT/2 - gripperHeight/2;
     brushNode
       .selectAll('.resize')
       .style('cursor', null) // use css
@@ -988,18 +1021,8 @@ export default class Chart extends React.Component {
       if (this._showAll) {
         this._xScale.domain([bottom, top]);
       } else if (this._jumpToNewResults && this.props.modelData.length > 0) {
-        let timespan = this._guardResolution
-              ? this._xScale.domain()[1] - this._xScale.domain()[0]
-              : this._getMinTimespan();
-
-        let extent = [Math.max(bottom, (top - timespan)),
-                      top];
-        let discrepancy = timespan - (extent[1] - extent[0]);
-        if (discrepancy > 0) {
-          extent[1] += discrepancy;
-        }
-
-        this._xScale.domain(extent);
+        let dateWindow = this._getEndDateWindow();
+        this._xScale.domain(dateWindow);
       }
 
       let options = {
