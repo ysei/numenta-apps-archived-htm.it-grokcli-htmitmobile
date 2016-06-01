@@ -398,8 +398,10 @@ describe('DatabaseService:', () => {
             service.getMetricData(EXPECTED_METRIC_ID, (error, actual) => {
               assert.ifError(error);
               let data =  JSON.parse(actual);
-              assert.equal(data.length, EXPECTED_METRIC_DATA.length);
-              assert.deepStrictEqual(data, EXPECTED_METRIC_DATA_RESULT);
+              assert.equal(data.length, 399);
+              let testDataLength = EXPECTED_METRIC_DATA_RESULT.length;
+              assert.deepStrictEqual(data.slice(0,testDataLength),
+               EXPECTED_METRIC_DATA_RESULT);
               done();
             })
           });
@@ -471,8 +473,6 @@ describe('DatabaseService:', () => {
                 assert.equal(JSON.parse(actual).length, 0);
                 service.getMetricData(EXPECTED_METRIC_ID, (error, actual) => {
                   assert.ifError(error);
-                  // likely a bug in the async code for the db. There is a race condition
-                  // here.
                   assert.equal(JSON.parse(actual).length, 0);
                   done();
                 });

@@ -66,8 +66,7 @@ import {NA_STRINGS} from '../config/na';
  *                    in the array, and false otherwise.
  */
 function containsNA(row) {
-  return row.some((entry) =>
-    entry === '' || NA_STRINGS.indexOf(entry.toString().toLowerCase()) > -1);
+  return row.some((entry) => NA_STRINGS.indexOf(entry.toString().toLowerCase()) > -1);
 }
 
 /**
@@ -280,6 +279,13 @@ export class FileService {
       .on('data', (line) => {
         let values = Object.values(line);
         let isHeader = validRowCounter === 0 && !isValidRow(line);
+        // could either be a header or a data row. If it is a data row, we only
+        // want to use it to determine fields if it has no missing values.
+        if (!isHeader && containsNA(line)) {
+          validRowCounter++;
+          return;
+        }
+
         // Make sure it is a valid CSV file
         if (values.length <= 1) {
           // Could not parse any columns out of this file
@@ -288,13 +294,6 @@ export class FileService {
           callback('Invalid CSV file');
           return;
         }
-        // could either be a header or a data row. If it is a data row, we only
-        // want to use it to determine fields if it has no missing values.
-        if (!isHeader && containsNA(line)) {
-          validRowCounter++;
-          return;
-        }
-
         let fields = guessFields(filename, values, headers);
         if (fields.length !== 0) {
           let error = null;

@@ -20,7 +20,7 @@
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
 
-NA_STRINGS = ['nan','none', 'null', 'n/a', 'na']
+NA_STRINGS = ['nan','none', 'null', 'n/a', 'na', '']
 
 '''
   determine if a value is NA.

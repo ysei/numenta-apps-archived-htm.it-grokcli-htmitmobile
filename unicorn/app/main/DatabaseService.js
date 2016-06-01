@@ -700,15 +700,18 @@ export class DatabaseService {
     })
     .on('error', callback)
     .on('end', () => {
+      let metricsDeleted = 0;
       for (let i = 0; i < metrics.length; i++) {
         this.deleteMetric(metrics[i], (error) => {
           if (error) {
             callback(error);
             return;
           }
+          if (++metricsDeleted === metrics.length) {
+            callback();
+          }
         });
       }
-      callback();
     });
   }
 

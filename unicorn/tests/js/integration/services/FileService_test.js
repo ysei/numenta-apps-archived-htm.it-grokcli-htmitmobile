@@ -88,6 +88,7 @@ const EXPECTED_FIELDS = [
 
 const INVALID_CSV_FILE = path.join(FIXTURES, 'invalid.csv');
 const EMPTY_CSV_FILE = path.join(FIXTURES, 'empty.csv');
+const NA_CSV_FILE = path.join(FIXTURES, 'na.csv');
 const SMALL_NO_DATA_FILE = path.join(FIXTURES, 'small-no-data.csv')
 const TWO_DATES_FILE = path.join(FIXTURES, 'two-dates.csv');
 const NO_DATES_FILE = path.join(FIXTURES, 'no-dates.csv');
@@ -342,8 +343,8 @@ describe('FileService', () => {
       });
     });
     it('should reject file with less than 400 rows', (done) => {
-      service.validate(NO_HEADER_CSV_FILE, (error, results) => {
-        assert.equal(error, 'File does not have at least 400 rows');
+      service.validate(NO_HEADER_CSV_FILE, (error, warning, results) => {
+        assert.equal(error, 'The CSV file needs to have at least 400 rows with valid values');
         assert.deepEqual(results.file,
           createFileInstance(NO_HEADER_CSV_FILE, {
             rowOffset: 0,
@@ -376,6 +377,17 @@ describe('FileService', () => {
           createFileInstance(INVALID_ROWS_FILE, {
             rowOffset: 1,
             records: 20004
+          }));
+        done();
+      });
+    });
+    it('should not fail on files with missing values', (done) => {
+      service.validate(NA_CSV_FILE, (error, warning, results) => {
+        assert.ifError(error);
+        assert.deepEqual(results.file,
+          createFileInstance(NA_CSV_FILE, {
+            rowOffset: 1,
+            records: 430
           }));
         done();
       });

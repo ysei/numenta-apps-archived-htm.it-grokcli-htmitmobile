@@ -19,4 +19,4 @@
  * Setings for NA's in files
  */
 
-export const NA_STRINGS = ['nan','none', 'null', 'n/a', 'na'];
+export const NA_STRINGS = ['nan','none', 'null', 'n/a', 'na', ''];
