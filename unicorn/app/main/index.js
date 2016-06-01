@@ -41,6 +41,7 @@ let activeModels = new Map();  // Active models and their event handlers
 let mainWindow = null;  // global ref to keep window object from JS GC
 let modelServiceIPC = null;
 let paramFinderServiceIPC = null;
+let updater = null;
 
 
 /**
@@ -133,8 +134,6 @@ app.on('window-all-closed', () => {
 
 // Electron finished init and ready to create browser window
 app.on('ready', () => {
-  // Initialize application data
-  initializeApplicationData();
 
   // set main menu
   Menu.setApplicationMenu(Menu.buildFromTemplate(MainMenu));
@@ -167,17 +166,18 @@ app.on('ready', () => {
 
   // Handle Auto Update events
   // Updater is only avaialbe is release mode, when the app is properly signed
-  let updater = null;
   let environment = config.get('env');
   if (environment === 'prod') {
     updater = new AutoUpdate(mainWindow);
-    // Check for updates
-    mainWindow.webContents.once('did-frame-finish-load', (event) => {
-      if (updater) {
-        updater.checkForUpdates();
-      }
-    });
   }
+  mainWindow.webContents.once('did-frame-finish-load', (event) => {
+    // Check for updates
+    if (updater) {
+      updater.checkForUpdates();
+    }
+    // Initialize application data
+    initializeApplicationData();
+  });
 
   // Handle model service events
   handleModelEvents();
