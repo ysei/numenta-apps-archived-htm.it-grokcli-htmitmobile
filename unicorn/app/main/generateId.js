@@ -55,12 +55,10 @@ export function generateMetricId(filename, metric) {
 /**
  * Genereate unique metric data id based on the metric id and timestamp
  * @param  {string} metricId - Metric ID
- * @param  {Date} timestamp  - timestamp for the data record
+ * @param  {number} index  - Row number of the data record
  * @return {string} Unique id
  */
-export function generateMetricDataId(metricId, timestamp) {
-  if (!(timestamp instanceof Date)) {
-    timestamp = new Date(timestamp);
-  }
-  return `${metricId}!${timestamp.valueOf()}`;
+export function generateMetricDataId(metricId, index) {
+  let indexString = `000000000000${index}`.substr(-13);
+  return `${metricId}!${indexString}`;
 }
