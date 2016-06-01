@@ -129,6 +129,7 @@ if (process.platform === 'darwin') {
     }
   );
 
+  // FIXME: UNI-520 - Bring back Edit menu on windows
   const editMenu = {
     label: 'Edit',
     submenu: [
