@@ -32,6 +32,8 @@
     "clean:docs": "rimraf docs/",
     "clean:coverage": "rimraf coverage/",
     "clean:npm": "rimraf app/node_modules/ && rimraf node_modules/ && npm cache clean",
+    "clean:portable_python:osx": "rimraf scripts/OSX/portable_python.tar.gz",
+    "clean:portable_python:win": "rimraf scripts/Windows64/portable_python.tar.gz",
     "clean:python": "rimraf py/build && rimraf py/dist && rimraf py/*.egg-info",
     "clean:webpack": "rimraf app/browser/assets/bundle",
     "electron": "NODE_ENV=development electron app",
