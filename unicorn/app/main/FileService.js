@@ -54,7 +54,7 @@ SCHEMAS.forEach((schema) => {
   VALIDATOR.addSchema(schema);
 });
 
-const NA_STRINGS = ['nan','none', 'null', 'n/a', 'na']
+import {NA_STRINGS} from '../config/na';
 
 
 /**

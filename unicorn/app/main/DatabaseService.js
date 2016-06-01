@@ -53,15 +53,14 @@ const SCHEMAS = [
   PFInputSchema, PFOutputSchema
 ];
 
-
+import {NA_STRINGS} from '../config/na';
 /**
  * determine if a value is NA.
  * @param  {string} the field to test for NA.
  * @return {boolean} true if it is NA, false otherwise
  */
 function isNA(field) {
-  let naStrings = ['nan','none', 'null', 'n/a', 'na'];
-  return (naStrings.indexOf(field.toLowerCase()) > -1);
+  return (NA_STRINGS.indexOf(field.toLowerCase()) > -1);
 }
 
 

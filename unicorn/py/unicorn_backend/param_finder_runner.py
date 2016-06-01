@@ -39,6 +39,7 @@ from unicorn_backend.param_finder import findParameters
 from unicorn_backend.param_finder import MAX_NUM_ROWS
 
 from unicorn_backend.utils import date_time_utils
+from unicorn_backend.utils import na
 
 g_log = logging.getLogger(__name__)
 
@@ -175,19 +176,19 @@ def _readCSVFile(fileName,
     samples = []
     numRows = 0
     for row in fileReader:
-      timestamp = date_time_utils.parseDatetime(row[timestampIndex],
-                                                datetimeFormat)
+      if not na.isNA(str(row[valueIndex])):
+        timestamp = date_time_utils.parseDatetime(row[timestampIndex],
+                                                  datetimeFormat)
 
-      # use utc timezone if timezone information is not provided
-      if timestamp.tzinfo is None:
-        timestamp = timestamp.replace(tzinfo=tz.tzutc())
+        # use utc timezone if timezone information is not provided
+        if timestamp.tzinfo is None:
+          timestamp = timestamp.replace(tzinfo=tz.tzutc())
 
-      samples.append((timestamp, float(row[valueIndex])))
+        samples.append((timestamp, float(row[valueIndex])))
 
-      numRows += 1
-      if numRows >= MAX_NUM_ROWS:
-        break
-
+        numRows += 1
+        if numRows >= MAX_NUM_ROWS:
+          break
     return samples
 
 

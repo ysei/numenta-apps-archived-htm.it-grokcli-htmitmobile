@@ -51,7 +51,7 @@ from nupic.data import record_stream
 from nupic.frameworks.opf.modelfactory import ModelFactory
 
 from unicorn_backend.utils import date_time_utils
-
+from unicorn_backend.utils import na
 
 
 g_log = logging.getLogger(__name__)
@@ -78,7 +78,6 @@ class _Options(object):
     self.inputSpec = inputSpec
     self.aggSpec = aggSpec
     self.modelSpec = modelSpec
-
 
 
 def _parseArgs():
@@ -321,23 +320,25 @@ class _ModelRunner(object):
         g_log.debug("Skipping header row %s; %s rows left to skip",
                     inputRow, numRowsToSkip)
         continue
+      
+      if not na.isNA(str(inputRow[inputRowValueIndex])):
+        # Extract timestamp and value
+        # NOTE: the order must match the `inputFields` that we passed to the
+        # Aggregator constructor
 
-      # Extract timestamp and value
-      # NOTE: the order must match the `inputFields` that we passed to the
-      # Aggregator constructor
-      fields = [
-        date_time_utils.parseDatetime(inputRow[inputRowTimestampIndex],
-                                      datetimeFormat),
-        float(inputRow[inputRowValueIndex])
-      ]
+        fields = [
+          date_time_utils.parseDatetime(inputRow[inputRowTimestampIndex],
+                                        datetimeFormat),
+          float(inputRow[inputRowValueIndex])
+        ]
 
-      # Aggregate
-      aggRow, _ = self._aggregator.next(fields, None)
-      g_log.debug("Aggregator returned %s for %s", aggRow, fields)
-      if aggRow is not None:
-        self._emitOutputMessage(
-          dataRow=aggRow,
-          anomalyProbability=self._computeAnomalyProbability(aggRow))
+        # Aggregate
+        aggRow, _ = self._aggregator.next(fields, None)
+        g_log.debug("Aggregator returned %s for %s", aggRow, fields)
+        if aggRow is not None:
+          self._emitOutputMessage(
+            dataRow=aggRow,
+            anomalyProbability=self._computeAnomalyProbability(aggRow))
 
 
     # Reap remaining data from aggregator
@@ -394,7 +395,6 @@ def main():
   # StreamHandler implictly added by python logging when something logs via
   # `logging.debug`, `logging.info`, etc.
   g_log.root.addHandler(logging.NullHandler())
-
   inputFileObj = None
   try:
     options = _parseArgs()
