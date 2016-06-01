@@ -21,7 +21,7 @@
 
 const electron = require('electron');
 const name = electron.app.getName();
-const VERSION = require('../package.json').version;
+const VERSION = electron.app.getVersion();
 
 let crossPlatformMenu = [
   {
@@ -78,10 +78,7 @@ let crossPlatformMenu = [
       {
         label: 'Report Bug',
         click() {
-          let url = `mailto:htm-studio@numenta.com?
-          subject=HTM Studio ${VERSION} bug
-          &body=DO NOT REMOVE THIS INFORMATION: HTM Studio version ${VERSION}.
-          Please describe the steps to reproduce the bug below: `;
+          let url = `mailto:htm-studio@numenta.com?subject=HTM Studio ${VERSION} bug&body=DO NOT REMOVE THIS INFORMATION: HTM Studio version ${VERSION}. Please describe the steps to reproduce the bug below. `; // eslint-disable-line
           electron.shell.openExternal(url);
         }
       }
