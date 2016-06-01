@@ -252,14 +252,20 @@ describe('FileService', () => {
       });
     });
     it('should throw an error on an empty csv file', (done) => {
-      service.getFields(EMPTY_CSV_FILE, (error, fields) => {
+      service.getFields(EMPTY_CSV_FILE, (error, results) => {
         assert.equal(error, 'The CSV file does not have any valid data');
         done();
       });
     });
     it('should throw an error on a file with less than 2 rows and no data rows', (done) => {
-      service.getFields(SMALL_NO_DATA_FILE, (error, fields) => {
+      service.getFields(SMALL_NO_DATA_FILE, (error, results) => {
         assert.equal(error, 'The CSV file does not have any valid data');
+        done();
+      });
+    });
+    it('should find fields using a row with no NA values', (done) => {
+      service.getFields(NA_CSV_FILE, (error, results) => {
+        assert.equal(results.fields.length, 5);
         done();
       });
     });
