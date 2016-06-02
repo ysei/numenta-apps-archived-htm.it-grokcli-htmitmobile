@@ -23,6 +23,10 @@ const electron = require('electron');
 const name = electron.app.getName();
 const VERSION = electron.app.getVersion();
 
+/* eslint-disable no-process-env */
+const DEBUG = process.env.NODE_ENV === 'development';
+/* eslint-enable no-process-env */
+
 let crossPlatformMenu = [
   {
     label: name,
@@ -185,6 +189,19 @@ if (process.platform === 'darwin') {
       }
     ]
   };
+
+  // Add developer tools to window menu in development mode
+  if (DEBUG) {
+    windowMenu.submenu.push({
+      label: 'Toggle Developer Tools',
+      accelerator: process.platform === 'darwin' ? 'Alt+Command+I'
+                                                 : 'Ctrl+Shift+I',
+      click(item, focusedWindow) {
+        if (focusedWindow)
+          focusedWindow.toggleDevTools();
+      }
+    });
+  }
 
   crossPlatformMenu.splice(1, 0, editMenu, windowMenu);
 }
