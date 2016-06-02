@@ -24,6 +24,7 @@ Object.assign(module.exports, CommonConstants);
  *
  * - Application
  *  - START_APPLICATION: {@StartApplication}
+ *  - STOP_APPLICATION
  *
  * - File
  *  - DELETE_FILE: {@link DeleteFile}
@@ -101,6 +102,7 @@ Object.assign(module.exports, CommonConstants);
 export const ACTIONS = Object.freeze({
   // Application
   START_APPLICATION: 'START_APPLICATION',
+  STOP_APPLICATION: 'STOP_APPLICATION',
 
   // File
   DELETE_FILE: 'DELETE_FILE',

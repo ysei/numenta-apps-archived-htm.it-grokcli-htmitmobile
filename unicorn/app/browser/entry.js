@@ -50,6 +50,7 @@ import ModelDataStore from './stores/ModelDataStore';
 import ModelStore from './stores/ModelStore';
 import ParamFinderClient from './lib/HTMStudio/ParamFinderClient';
 import StartApplicationAction from './actions/StartApplication';
+import StopApplicationAction from './actions/StopApplication';
 import {trims} from '../common/common-utils';
 
 const dialog = remote.require('dialog');
@@ -163,6 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'question'
       });
       if (!cancel) {
+        context.executeAction(StopApplicationAction);
+
         // stop all active models before quitting
         active.forEach((model) => {
           modelClient.removeModel(model.modelId);
