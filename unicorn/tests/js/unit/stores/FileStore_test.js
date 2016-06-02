@@ -55,7 +55,7 @@ describe('FileStore', () => {
 
   it('#_handleListFiles', (done) => {
     store._handleListFiles(EXPECTED_MULTIPLE_FILES);
-    assert.deepEqual(store.getFiles(), EXPECTED_MULTIPLE_FILES);
+    assert.deepEqual(store.getFiles(), EXPECTED_MULTIPLE_FILES.reverse());
     done();
   });
 });

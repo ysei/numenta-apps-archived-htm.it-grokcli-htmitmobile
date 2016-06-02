@@ -61,7 +61,7 @@ export default class FileStore extends BaseStore {
   }
 
   getFiles() {
-    return Array.from(this._files.values());
+    return Array.from(this._files.values()).reverse();
   }
 
   /**
