@@ -176,7 +176,8 @@ def _readCSVFile(fileName,
     samples = []
     numRows = 0
     for row in fileReader:
-      if not na.isNA(str(row[valueIndex])):
+      if not (na.isNA(str(row[valueIndex])) or
+       na.isNA(str(row[timestampIndex]))):
         timestamp = date_time_utils.parseDatetime(row[timestampIndex],
                                                   datetimeFormat)
 

@@ -58,15 +58,24 @@ import {NA_STRINGS} from '../config/na';
 
 
 /**
+ * Check if a value is a NA value
+ * @param {Object} entry : of the csv row to be checked against NA strings.
+ * @return {boolean}  returns true if it is an NA string value
+ *                    , and false otherwise.
+ */
+function isNA(entry) {
+  return NA_STRINGS.indexOf(entry.toString().toLowerCase()) > -1
+}
+
+/**
  * Check if a row in the csv file has an empty or NA string in one of its
  * columns.
- * @param  {array}  row: entries of the csv row to be checked for empty or
- *                       an NA string
+ * @param  {array}  row: entries of the csv row to be checked agaian NA string
  * @return {boolean}  returns true if there contains an empty or NA string value
  *                    in the array, and false otherwise.
  */
 function containsNA(row) {
-  return row.some((entry) => NA_STRINGS.indexOf(entry.toString().toLowerCase()) > -1);
+  return row.some((entry) => isNA(entry));
 }
 
 /**
@@ -315,27 +324,20 @@ export class FileService {
           stream.destroy();
           callback(error, {fields, offset});
           return;
-        } else if (offset === 1) {
-          // Unable to guess fields from first 2 lines.
-          parser.removeAllListeners();
-          stream.destroy();
-          callback('Unable to extract valid data from first 2 lines');
-          return;
         }
         // Use first line as headers and wait for the second line
         headers = values;
         offset++;
         validRowCounter++;
       });
-
-    stream.on('end', () => {
-      // We reached the end of the csv and we read either 0 or 1 rows (each)
-      // of which were not valid data rows.
-      if (offset < 2) {
-        callback('The CSV file does not have any valid data');
+    stream.pipe(newliner)
+      .on('end', () => {
+      // We reached the end of the csv and we did not find a row
+      // without missing values
+        callback(`The CSV file must have at least one ` +
+                `row without missing values`);
         return;
-      }
-    });
+      });
   }
 
   /**
@@ -570,7 +572,12 @@ export class FileService {
 
     // Validate fields
     this.getFields(filename, (error, validFields) => {
-      let dataError = error;
+      if (error) {
+        callback (error, null, null);
+        return;
+      }
+
+      let dataError = null;
       let dataWarning = null;
 
       // Update file and fields
@@ -588,15 +595,16 @@ export class FileService {
       let csvParser = csv({columns: false, objectMode: true});
       let newliner = convertNewline('lf').stream();
       let row = 0;
-
+      let timestampField = fields.find((field) => field.type === 'date');
       csvParser.on('data', (data) => {
-        if (containsNA(data)) {
-          return;
-        }
-        row++;
         // Skip header row offset
         if (row <= offset) {
+          row++;
           return;
+        }
+        // only count rows that have a valid timestamp
+        if (!isNA(data[timestampField.index])) {
+          row++;
         }
         // Stop validating of first error but keep loading file
         // to get total records
@@ -606,21 +614,25 @@ export class FileService {
         let message;
         let valid = fields.every((field, index) => {
           let value = data[field.index];
-          switch (field.type) {
-          case 'number':
-            message = `Invalid number at row ${row}: ` +
-                      `Found '${field.name}' = '${value}'`;
-            return Number.isFinite(Number(value));
-          case 'date':
-            message = `Invalid date/time at row ${row}: ` +
-                      `The date/time value is '${value}'`;
-            if (field.format) {
-              let current = moment().format(field.format);
-              message += ' instead of having a format matching ' +
-                         `'${field.format}'. For example: '${current}'`;
+          if (!isNA(value)) {
+            switch (field.type) {
+            case 'number':
+              message = `Invalid number at row ${row}: ` +
+                        `Found '${field.name}' = '${value}'`;
+              return Number.isFinite(Number(value));
+            case 'date':
+              message = `Invalid date/time at row ${row}: ` +
+                        `The date/time value is '${value}'`;
+              if (field.format) {
+                let current = moment().format(field.format);
+                message += ' instead of having a format matching ' +
+                           `'${field.format}'. For example: '${current}'`;
+              }
+              return moment.utc(value, field.format).isValid();
+            default:
+              return true;
             }
-            return moment.utc(value, field.format).isValid();
-          default:
+          } else {
             return true;
           }
         });
@@ -640,7 +652,7 @@ export class FileService {
         file.rowOffset = offset;
         if (file.records < 400) {
           dataError = 'The CSV file needs to have at least 400 rows with' +
-                      ' valid values';
+                      ' a valid timestamp';
         }
         callback(dataError, dataWarning, {file, fields});
       });

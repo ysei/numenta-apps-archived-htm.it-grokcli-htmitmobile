@@ -56,7 +56,7 @@ const SCHEMAS = [
 import {NA_STRINGS} from '../config/na';
 /**
  * determine if a value is NA.
- * @param  {string} the field to test for NA.
+ * @param  {string} field : the field to test for NA.
  * @return {boolean} true if it is NA, false otherwise
  */
 function isNA(field) {
@@ -709,6 +709,7 @@ export class DatabaseService {
           }
           if (++metricsDeleted === metrics.length) {
             callback();
+            return;
           }
         });
       }
@@ -936,28 +937,33 @@ export class DatabaseService {
             throw error;
           }
           if (data) {
-            records++;
-            metrics.forEach((field) => {
-              // Collect data for each numeric field
-              if (field.type === 'number' && !isNA(data[field.index].toString())) {
-                let [m, hasTimeZone] = parseTimestampFallbackUtc(
-                  data[timestampField.index], timestampField.format);
-                let metricData = {
-                  iso_timestamp: m.format(hasTimeZone
-                                          ? 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ'
-                                          : 'YYYY-MM-DDTHH:mm:ss.SSSSSS'),
-                  naive_time: getNaiveTime(m),
-                  metric_value: parseFloat(data[field.index])
-                };
-                // Save data
-                this.putMetricData(field.uid, recordIndex, metricData,
-                                   (error) => { // eslint-disable-line max-nested-callbacks
-                                     if (error) {
-                                       throw error;
-                                     }
-                                   });
-              }
-            });
+            let validTimestamp = !isNA(data[timestampField.index].toString());
+            // dont store data with invalid timestamps and don't increment records.
+            if (validTimestamp) {
+              records++;
+              metrics.forEach((field) => {
+                // Collect data for each numeric field
+                let validField = !isNA(data[field.index].toString());
+                if (field.type === 'number' && validField) {
+                  let [m, hasTimeZone] = parseTimestampFallbackUtc(
+                    data[timestampField.index], timestampField.format);
+                  let metricData = {
+                    iso_timestamp: m.format(hasTimeZone
+                                            ? 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ'
+                                            : 'YYYY-MM-DDTHH:mm:ss.SSSSSS'),
+                    naive_time: getNaiveTime(m),
+                    metric_value: parseFloat(data[field.index])
+                  };
+                  // Save data
+                  this.putMetricData(field.uid, recordIndex, metricData,
+                                     (error) => { // eslint-disable-line max-nested-callbacks
+                                       if (error) {
+                                         throw error;
+                                       }
+                                     });
+                }
+              });
+            }
           } else {
             // No more data
             file.records = records;

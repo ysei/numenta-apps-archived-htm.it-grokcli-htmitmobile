@@ -253,13 +253,15 @@ describe('FileService', () => {
     });
     it('should throw an error on an empty csv file', (done) => {
       service.getFields(EMPTY_CSV_FILE, (error, results) => {
-        assert.equal(error, 'The CSV file does not have any valid data');
+        assert.equal(error,
+          'The CSV file must have at least one row without missing values');
         done();
       });
     });
-    it('should throw an error on a file with less than 2 rows and no data rows', (done) => {
+    it('should throw an error on a file with less than 2 rows and no data rows', (done) => { // eslint-disable-line
       service.getFields(SMALL_NO_DATA_FILE, (error, results) => {
-        assert.equal(error, 'The CSV file does not have any valid data');
+        assert.equal(error,
+          'The CSV file must have at least one row without missing values');
         done();
       });
     });
@@ -350,7 +352,8 @@ describe('FileService', () => {
     });
     it('should reject file with less than 400 rows', (done) => {
       service.validate(NO_HEADER_CSV_FILE, (error, warning, results) => {
-        assert.equal(error, 'The CSV file needs to have at least 400 rows with valid values');
+        assert.equal(error,
+          'The CSV file needs to have at least 400 rows with a valid timestamp'); // eslint-disable-line
         assert.deepEqual(results.file,
           createFileInstance(NO_HEADER_CSV_FILE, {
             rowOffset: 0,
@@ -359,12 +362,12 @@ describe('FileService', () => {
         done();
       });
     });
-    it('should give a warning when the number of rows exceeds 20,000', (done) => {
+    it('should give a warning when the number of rows exceeds 20,000', (done) => { // eslint-disable-line
       service.validate(INVALID_ROWS_FILE, (error, warning, results) => {
         assert.ifError(error);
-        assert.equal(warning, 'The number of rows exceeds 20,000. While you can' +
-           ' proceed with this file, note that HTM Studio will be unresponsive' +
-           ' during the loading of very large files.');
+        assert.equal(warning, 'The number of rows exceeds 20,000. While you' +
+           ' can proceed with this file, note that HTM Studio will be' +
+           ' unresponsive during the loading of very large files.');
         assert.deepEqual(results.file,
           createFileInstance(INVALID_ROWS_FILE, {
             rowOffset: 1,
@@ -373,12 +376,12 @@ describe('FileService', () => {
         done();
       });
     });
-    it('should give a warning when the number of rows exceeds 20,000', (done) => {
+    it('should give a warning when the number of rows exceeds 20,000', (done) => { // eslint-disable-line
       service.validate(INVALID_ROWS_FILE, (error, warning, results) => {
         assert.ifError(error);
-        assert.equal(warning, 'The number of rows exceeds 20,000. While you can' +
-           ' proceed with this file, note that HTM Studio will be unresponsive' +
-           ' during the loading of very large files.');
+        assert.equal(warning, 'The number of rows exceeds 20,000. While you' +
+           ' can proceed with this file, note that HTM Studio will be' +
+           ' unresponsive during the loading of very large files.');
         assert.deepEqual(results.file,
           createFileInstance(INVALID_ROWS_FILE, {
             rowOffset: 1,
@@ -393,7 +396,7 @@ describe('FileService', () => {
         assert.deepEqual(results.file,
           createFileInstance(NA_CSV_FILE, {
             rowOffset: 1,
-            records: 430
+            records: 551
           }));
         done();
       });

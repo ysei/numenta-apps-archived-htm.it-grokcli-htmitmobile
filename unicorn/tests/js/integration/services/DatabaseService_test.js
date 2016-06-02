@@ -54,6 +54,11 @@ const EXPECTED_FILENAME_ID = generateFileId(EXPECTED_FILENAME);
 const EXPECTED_METRIC_ID = generateMetricId(EXPECTED_FILENAME, 'metric');
 const EXPECTED_TIMESTAMP_ID = generateMetricId(EXPECTED_FILENAME, 'timestamp');
 
+const NA_CSV_FILE = path.join(FIXTURES, 'na.csv');
+const NA_CSV_FILE_ID = generateFileId(NA_CSV_FILE);
+// const NA_CSV_METRIC_ID = generateMetricId(NA_CSV_FILE , 'metric');
+// const NA_CSV_FILE_TIMESTAMP_ID = generateMetricId(NA_CSV_FILE , 'timestamp');
+
 const EXPECTED_FILE = Object.assign({}, INSTANCES.File, {
   filename: EXPECTED_FILENAME,
   name: path.basename(EXPECTED_FILENAME),
@@ -434,6 +439,24 @@ describe('DatabaseService:', () => {
             assert.ifError(error);
             assert.deepStrictEqual(JSON.parse(actual), EXPECTED_FIELDS_IGNORE_FIELDS_FILE);
             done();
+          });
+        });
+      });
+    });
+    it('should upload file with missing values to the database', (done) => {
+      service.uploadFile(NA_CSV_FILE, (error, file) => {
+        assert.ifError(error);
+        service.getFile(NA_CSV_FILE_ID, (error, actual) => {
+          assert.ifError(error);
+          service.getMetricsByFile(NA_CSV_FILE_ID, (error, actual) => {
+            assert.ifError(error);
+            let metricinfo = JSON.parse(actual).find((column) => column.index === 1);
+            assert.equal(typeof metricinfo === undefined, false); // eslint-disable-line
+            service.getMetricData(metricinfo.uid, (error, data) => {
+              assert.ifError(error);
+              assert.equal(JSON.parse(data).length, 530)
+              done();
+            });
           });
         });
       });

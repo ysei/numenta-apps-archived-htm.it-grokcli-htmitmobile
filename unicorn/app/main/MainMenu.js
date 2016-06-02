@@ -70,7 +70,6 @@ if (helpMenu) {
       electron.shell.openExternal(url);
     }
   });
-
 } else {
   throw new Error('Could not find Help menu.');
 }

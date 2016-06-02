@@ -321,7 +321,8 @@ class _ModelRunner(object):
                     inputRow, numRowsToSkip)
         continue
       
-      if not na.isNA(str(inputRow[inputRowValueIndex])):
+      if not (na.isNA(str(inputRow[inputRowValueIndex])) or
+       na.isNA(str(inputRow[inputRowTimestampIndex]))):
         # Extract timestamp and value
         # NOTE: the order must match the `inputFields` that we passed to the
         # Aggregator constructor

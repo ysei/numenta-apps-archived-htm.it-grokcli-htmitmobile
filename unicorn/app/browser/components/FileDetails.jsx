@@ -93,7 +93,7 @@ const STYLES = {
   supportedFormats: {
     cursor: 'pointer',
     textDecoration: 'underline',
-    color: 'black'
+    color: 'grey'
   }
 };
 
@@ -225,10 +225,11 @@ export default class FileDetails extends React.Component {
 
   _renderBody() {
     let file = this.props.file;
-    let error, warning, numRecords, recordsDisplay, supportedFormats;
+    let error, numRecords, recordsDisplay, supportedFormats, warning;
     // File Size in KB
     let fileSize = (this.state.fileSize / 1024).toFixed();
-    if (file) {
+    let table = this._renderDataTable();
+    if (file && table) {
       numRecords = (file.records > 20) ? 20 : file.records;
       recordsDisplay = (<p style={STYLES.recordsDisplay}>
                           Displaying {numRecords} rows out of {file.records}
@@ -237,11 +238,14 @@ export default class FileDetails extends React.Component {
 
     if (this.props.error) {
       supportedFormats = (
-          <a style={STYLES.supportedFormats} onClick={this._onSupportedFormatsClick}>
+          <a style={STYLES.supportedFormats}
+           onClick={this._onSupportedFormatsClick}>
             supported formats
           </a>
       );
-      error = (<p style={STYLES.error}>{this.props.error} (see {supportedFormats})</p>);
+      error = (<p style={STYLES.error}>
+                 {this.props.error} (see {supportedFormats})
+               </p>);
     } else if (this.props.warning) {
       warning = (<p style={STYLES.error}>{this.props.warning}</p>);
     }
@@ -259,7 +263,7 @@ export default class FileDetails extends React.Component {
             ref="fileSize"
             value={`${fileSize} KB`}/>
           <TextField
-            floatingLabelText="Number of valid rows"
+            floatingLabelText="Number of rows"
             name="numOfRows"
             readOnly={true}
             ref="numOfRows"
@@ -269,7 +273,7 @@ export default class FileDetails extends React.Component {
             value={file.records.toString()}/>
             {recordsDisplay}
         </div>
-        {this._renderDataTable()}
+        {table}
       </div>
     );
   }
