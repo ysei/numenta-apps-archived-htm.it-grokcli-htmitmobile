@@ -572,12 +572,7 @@ export class FileService {
 
     // Validate fields
     this.getFields(filename, (error, validFields) => {
-      if (error) {
-        callback (error, null, null);
-        return;
-      }
-
-      let dataError = null;
+      let dataError = error;
       let dataWarning = null;
 
       // Update file and fields
@@ -586,6 +581,11 @@ export class FileService {
       if (validFields) {
         fields = validFields.fields;
         offset = validFields.offset;
+      }
+
+      if (error) {
+        callback (error, null, {file, fields});
+        return;
       }
 
       // Load data
