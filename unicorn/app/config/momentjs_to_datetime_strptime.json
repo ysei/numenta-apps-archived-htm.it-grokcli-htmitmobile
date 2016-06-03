@@ -113,7 +113,10 @@
     "mappings": {
       "MM/DD/YY H:mm": "%m/%d/%Y %H:%M",
       "MM/D/YY H:mm": "%m/%d/%Y %H:%M",
-      "M/DD/YY H:mm": "%m/%d/%Y %H:%M"
+      "M/DD/YY H:mm": "%m/%d/%Y %H:%M",
+      "MM/DD/YY HH:mm": "%m/%d/%Y %H:%M",
+      "MM/D/YY HH:mm": "%m/%d/%Y %H:%M",
+      "M/DD/YY HH:mm": "%m/%d/%Y %H:%M"
     }
   }
 ]
