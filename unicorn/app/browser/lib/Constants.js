@@ -24,10 +24,12 @@ Object.assign(module.exports, CommonConstants);
  *
  * - Application
  *  - START_APPLICATION: {@StartApplication}
+ *  - STOP_APPLICATION
  *
  * - File
  *  - DELETE_FILE: {@link DeleteFile}
  *  - LIST_FILES: {@link ListFiles}
+ *  - SET_FILE_EXPANDED_STATE: {@link SetFileExpandedState}
  *  - UPLOADED_FILE: {@link FileUpload}
  *  - UPDATE_FILE: {@link FileUpdate}
  *  - VALIDATE_FILE: {@link FileValidate}
@@ -68,6 +70,8 @@ Object.assign(module.exports, CommonConstants);
  *  - UNKNOWN_MODEL_FAILURE
  *
  * - Model Data
+ *  - PREPARE_FOR_MODEL_RESULTS
+ *  - NOTIFY_NEW_MODEL_RESULTS
  *  - RECEIVE_MODEL_DATA: {@link ReceiveModelData}
  *
  * - Param Finder
@@ -98,10 +102,12 @@ Object.assign(module.exports, CommonConstants);
 export const ACTIONS = Object.freeze({
   // Application
   START_APPLICATION: 'START_APPLICATION',
+  STOP_APPLICATION: 'STOP_APPLICATION',
 
   // File
   DELETE_FILE: 'DELETE_FILE',
   LIST_FILES: 'LIST_FILES',
+  SET_FILE_EXPANDED_STATE: 'SET_FILE_EXPANDED_STATE',
   UPLOADED_FILE: 'UPLOADED_FILE',
   UPDATE_FILE: 'UPDATE_FILE',
   VALIDATE_FILE: 'VALIDATE_FILE',
@@ -140,6 +146,8 @@ export const ACTIONS = Object.freeze({
   UNKNOWN_MODEL_FAILURE: 'UNKNOWN_MODEL_FAILURE',
 
   // Model Data
+  PREPARE_FOR_MODEL_RESULTS: 'PREPARE_FOR_MODEL_RESULTS',
+  NOTIFY_NEW_MODEL_RESULTS: 'NOTIFY_NEW_MODEL_RESULTS',
   RECEIVE_MODEL_DATA: 'RECEIVE_MODEL_DATA',
   LOAD_MODEL_DATA: 'LOAD_MODEL_DATA',
   LOAD_MODEL_DATA_FAILED: 'LOAD_MODEL_DATA_FAILED',

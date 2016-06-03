@@ -16,29 +16,14 @@
 // http://numenta.org/licenses/
 
 import {ACTIONS} from '../lib/Constants';
-import LoadModelDataAction from './LoadModelData';
-import LoadMetricDataAction from './LoadMetricData';
-
 
 /**
- * Show model making sure its data is loaded
+ * Notify the stores that there are new model results available.
+ *
  * @param  {FluxibleContext} actionContext - The action context
- * @param  {string} modelId - The model to show.
- *                            Must be in the {@link ModelStore}
- * @emits {SHOW_MODEL}
- * @emits {PREPARE_FOR_MODEL_RESULTS}
- * @emits {LoadMetricDataAction}
- * @returns {Promise} - A Promise to be resolved with return value
+ * @param  {string} modelId - The model that changed.
+ * @emits {NOTIFY_NEW_MODEL_RESULTS}
  */
-export default function (actionContext, modelId) {
-  actionContext.getGATracker().event('ACTION', ACTIONS.SHOW_MODEL);
-
-  actionContext.dispatch(ACTIONS.PREPARE_FOR_MODEL_RESULTS, modelId);
-
-  return Promise.all([
-    actionContext.executeAction(LoadModelDataAction, modelId),
-    actionContext.executeAction(LoadMetricDataAction, modelId)
-  ]).then(() => {
-    actionContext.dispatch(ACTIONS.SHOW_MODEL, modelId);
-  });
+export default function NotifyNewModelResultsAction(actionContext, modelId) {
+  actionContext.dispatch(ACTIONS.NOTIFY_NEW_MODEL_RESULTS, modelId);
 }

@@ -50,6 +50,7 @@ import ModelDataStore from './stores/ModelDataStore';
 import ModelStore from './stores/ModelStore';
 import ParamFinderClient from './lib/HTMStudio/ParamFinderClient';
 import StartApplicationAction from './actions/StartApplication';
+import StopApplicationAction from './actions/StopApplication';
 import {trims} from '../common/common-utils';
 
 const dialog = remote.require('dialog');
@@ -64,6 +65,30 @@ const gaTracker = new GoogleAnalytics(process.env.GA_TRACKING_ID,
                                       process.env.NODE_ENV === 'development');
 /* eslint-enable no-process-env */
 
+/**
+ * Start' application Main Compenent once the application is initialized
+ * @param  {FluxibleContext} context application Context
+ */
+function startApplication(context) {
+  let initialized = config.get('initialized');
+  if (!initialized) {
+     // Wait until initialization is done
+    setTimeout(startApplication, 100, context);
+    return;
+  }
+  // fire initial app action to load all files
+  context.executeAction(StartApplicationAction)
+    .then(() => {
+      let contextEl = FluxibleReact.createElementWithContext(context);
+      let container = document.getElementById('main');
+      ReactDOM.render(contextEl, container);
+    })
+    .catch((error) => {
+      gaTracker.exception('Startup Error');
+      console.log(error); // eslint-disable-line
+      dialog.showErrorBox('Startup Error', `Startup Error: ${error}`);
+    });
+}
 /**
  * HTM Studio: Cross-platform Desktop Application to showcase basic HTM features
  *  to a user using their own data stream or files. Main browser web code
@@ -139,6 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'question'
       });
       if (!cancel) {
+        context.executeAction(StopApplicationAction);
+
         // stop all active models before quitting
         active.forEach((model) => {
           modelClient.removeModel(model.modelId);
@@ -148,16 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // fire initial app action to load all files
-  context.executeAction(StartApplicationAction)
-    .then(() => {
-      let contextEl = FluxibleReact.createElementWithContext(context);
-      let container = document.getElementById('main');
-      ReactDOM.render(contextEl, container);
-    })
-    .catch((error) => {
-      gaTracker.exception('Startup Error');
-      console.log(error); // eslint-disable-line
-      dialog.showErrorBox('Startup Error', `Startup Error: ${error}`);
-    });
+  // Start Main componet
+  startApplication(context);
 }); // DOMContentLoaded

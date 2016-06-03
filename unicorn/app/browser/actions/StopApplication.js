@@ -15,23 +15,15 @@
 //
 // http://numenta.org/licenses/
 
-
 import {ACTIONS} from '../lib/Constants';
 
 
 /**
- * Receive model data
- *
+ * Close application
  * @param {FluxibleContext} actionContext - Fluxible action context object
- * @param {Object} payload - The action payload
- * @param {String} payload.modelId - Required model id
- * @param {Object[]} payload.data - New data to be appended
- * @emits {RECEIVE_MODEL_DATA}
- * @TODO {@link ModelService} should save model results to database
+ * @emits {STOP_APPLICATION}
  */
-export default function (actionContext, payload) {
-  let {modelId, data} = payload;
-  actionContext.dispatch(ACTIONS.RECEIVE_MODEL_DATA, {
-    modelId, data
-  });
+export default function (actionContext) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.STOP_APPLICATION);
+  actionContext.dispatch(ACTIONS.STOP_APPLICATION);
 }

@@ -262,6 +262,8 @@ Here are the `npm` scripts available via `npm run <script-name>`. Please see
   * `clean:db:osx`: Delete database files (OSX)
   * `clean:docs`: Delete documentation
   * `clean:npm`: Delete `npm` installed packages
+  * `clean:portable_python:osx`: Delete cached `portable_python` package (OSX)
+  * `clean:portable_python:win`: Delete cached `portable_python` package (Windows)
   * `clean:python`: Delete `python` build artifacts
   * `clean:webpack`: Clean compiled/packaged JS code
 * `dev`: Launch Desktop application

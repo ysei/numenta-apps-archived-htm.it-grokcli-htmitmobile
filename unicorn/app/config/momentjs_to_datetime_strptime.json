@@ -47,7 +47,8 @@
       "YYYY-MM-DD HH:mmZ": "%Y-%m-%d %H:%M%z",
       "YYYY-MM-DD HH:mm": "%Y-%m-%d %H:%M",
       "YYYY-MM-DD HHZ": "%Y-%m-%d %H%z",
-      "YYYY-MM-DD HH": "%Y-%m-%d %H"
+      "YYYY-MM-DD HH": "%Y-%m-%d %H",
+      "YYYY-MM-DD": "%Y-%m-%d"
     }
   },
   {
@@ -64,9 +65,10 @@
       "YYYY/MM/DD HH:mmZ": "%Y/%m/%d %H:%M%z",
       "YYYY/MM/DD HH:mm": "%Y/%m/%d %H:%M",
       "YYYY/MM/DD HHZ": "%Y/%m/%d %H%z",
-      "YYYY/MM/DD HH": "%Y/%m/%d %H"
+      "YYYY/MM/DD HH": "%Y/%m/%d %H",
+      "YYYY/MM/DD": "%Y/%m/%d"
     }
-  },  
+  },
   {
     "category": "US Date, 12h AM/PM time",
     "mappings": {
