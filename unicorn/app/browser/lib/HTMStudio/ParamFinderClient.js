@@ -63,7 +63,7 @@ export default class ParamFinderClient {
         setTimeout(() => this._handleParamFinderData(metricId, payload));
       } else if (command === 'error') {
         let {error, ipcevent} = payload;
-        setTimeout(() => this._handleIPCError(metricId, error, ipcevent));
+        setTimeout(() => this._handleIPCError(error, ipcevent));
       } else if (command === 'close') {
         setTimeout(() => this._handleCloseParamFinder(metricId ,payload));
       } else {
@@ -91,8 +91,8 @@ export default class ParamFinderClient {
   _handleCloseParamFinder(metricId, error) {
     if (error !== 0) {
       this._context.executeAction(ParamFinderErrorAction, {
-        metricId,
         command: 'close',
+        metricId,
         error: `Error closing param finder ${error}`
       });
     } else {
