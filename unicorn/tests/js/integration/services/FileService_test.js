@@ -384,20 +384,6 @@ describe('FileService', () => {
         done();
       });
     });
-    it('should give a warning when the number of rows exceeds 20,000', (done) => { // eslint-disable-line
-      service.validate(INVALID_ROWS_FILE, (error, warning, results) => {
-        assert.ifError(error);
-        assert.equal(warning, 'The number of rows exceeds 20,000. While you' +
-           ' can proceed with this file, note that HTM Studio will be' +
-           ' unresponsive during the loading of very large files.');
-        assert.deepEqual(results.file,
-          createFileInstance(INVALID_ROWS_FILE, {
-            rowOffset: 1,
-            records: 20004
-          }));
-        done();
-      });
-    });
     it('should not fail on files with missing values', (done) => {
       service.validate(NA_CSV_FILE, (error, warning, results) => {
         assert.ifError(error);
