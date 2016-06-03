@@ -103,11 +103,13 @@ export default class Model extends React.Component {
     this._styles = {
       root: {
         marginBottom: '1rem',
-        width: '100%'
+        width: '100%',
+        minWidth: '900px'
       },
       cardHeader: {
         paddingBottom: 0,
-        height: '3rem'
+        height: '3rem',
+        display: 'flex'
       },
       cardText: {
         paddingTop: 0
@@ -131,11 +133,15 @@ export default class Model extends React.Component {
         fontWeight: muiTheme.rawTheme.font.weight.light
       },
       actions: {
-        marginRight: 0,
-        textAlign: 'right',
-        float: 'right',
-        display: 'inline-flex',
-        padding: 0
+        marginRight: '1rem',
+        position: 'absolute',
+        top: '1rem',
+        right: 0,
+        display: 'flex',
+        flexDirection: 'row-reverse',
+        padding: 0,
+        width: '475px',
+        background: 'white'
       },
       actionButton: {
         height: '1.5rem'
@@ -165,15 +171,15 @@ export default class Model extends React.Component {
         }
       },
       progress: {
-        marginTop: '6px',
-        float: 'right'
+        marginTop: '6px'
       },
       showNonAgg: {
         root: {
           width: '11rem',
           textAlign: 'left',
           whiteSpace: 'nowrap',
-          marginRight: '0.5rem'
+          marginRight: '0.5rem',
+          order: 1
         },
         checkbox: {
           marginRight: 0,
@@ -439,7 +445,7 @@ export default class Model extends React.Component {
       this.state.showNonAgg === true;
     let openDialog = this.state.modalDialog !== null;
     let modalDialog = this.state.modalDialog || {};
-    let actions, progress, titleColor;
+    let actions, titleColor;
 
     if (model.ran) {
       let showNonAggAction = (<noscript/>);
@@ -465,13 +471,11 @@ export default class Model extends React.Component {
 
       if (model.active) {
         // Model is running, show progress bar
-        progress = (
-          <ModelProgress modelId={model.modelId} style={this._styles.progress}/>
-        );
-
         actions = (
           <CardActions style={this._styles.actions} title="">
             {showNonAggAction}
+            <ModelProgress modelId={model.modelId}
+                           style={this._styles.progress}/>
           </CardActions>
         );
       } else {
@@ -479,11 +483,11 @@ export default class Model extends React.Component {
         <CardActions style={this._styles.actions} title="">
           {showNonAggAction}
           <RaisedButton
-            label={this._config.get('button:model:summary')}
+            label={this._config.get('button:model:delete')}
             labelPosition="after"
             labelStyle={this._styles.actionButtonLabel}
             style={this._styles.actionButton}
-            onTouchTap={this._showModelSummaryDialog.bind(this)}
+            onTouchTap={this._deleteModel.bind(this, model.modelId)}
           />
           <RaisedButton
             label={this._config.get('button:model:export')}
@@ -494,13 +498,13 @@ export default class Model extends React.Component {
                                                       timestampField.format)}
           />
           <RaisedButton
-            label={this._config.get('button:model:delete')}
+            label={this._config.get('button:model:summary')}
             labelPosition="after"
             labelStyle={this._styles.actionButtonLabel}
             style={this._styles.actionButton}
-            onTouchTap={this._deleteModel.bind(this, model.modelId)}
+            onTouchTap={this._showModelSummaryDialog.bind(this)}
           />
-        </CardActions>
+      </CardActions>
         );
       }
     } else {
@@ -540,7 +544,6 @@ export default class Model extends React.Component {
           subtitle={file.name}
           title={title}
           titleColor={titleColor}>
-          {progress}
           {actions}
         </CardHeader>
         <CardText expandable={false} style={this._styles.cardText}>

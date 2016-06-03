@@ -64,7 +64,7 @@ export default class ModelClient {
         this._context.executeAction(NotifyNewModelResultsAction, modelId);
       } else if (command === 'error') {
         let {error, ipcevent} = payload;
-        this._handleIPCError(modelId, error, ipcevent);
+        this._handleIPCError(error, ipcevent);
       } else if (command === 'close') {
         this._handleCloseModel(modelId, payload);
       } else {
@@ -91,8 +91,8 @@ export default class ModelClient {
   _handleCloseModel(modelId, error) {
     if (error !== 0) {
       this._context.executeAction(ModelErrorAction, {
-        modelId,
         command: 'close',
+        modelId,
         error: `Error closing model ${error}`
       });
     } else {

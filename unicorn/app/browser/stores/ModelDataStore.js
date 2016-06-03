@@ -37,7 +37,7 @@ export default class ModelDataStore extends BaseStore {
       NOTIFY_NEW_MODEL_RESULTS: '_handleNewModelResults',
       LOAD_MODEL_DATA: '_handleLoadModelData',
       HIDE_MODEL: '_handleHideModel',
-      STOP_MODEL: '_handleStopModel',
+      STOP_APPLICATION: '_handleStopApplication',
       DELETE_MODEL: '_handleDeleteModel'
     };
   }
@@ -135,14 +135,14 @@ export default class ModelDataStore extends BaseStore {
   }
 
   /**
-   * Stop model.
-   * @param {string} modelId - Model to stop
+   * Close application
    */
-  _handleStopModel(modelId) {
-    let model = this._models.get(modelId);
-    if (model && model.fetchTimeoutId !== null) {
-      clearTimeout(model.fetchTimeoutId);
-      model.fetchTimeoutId = null;
+  _handleStopApplication() {
+    for (let model of this._models.values()) {
+      if (model.fetchTimeoutId !== null) {
+        clearTimeout(model.fetchTimeoutId);
+        model.fetchTimeoutId = null;
+      }
     }
   }
 

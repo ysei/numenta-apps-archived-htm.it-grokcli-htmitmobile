@@ -22,8 +22,8 @@ import {ACTIONS} from '../lib/Constants';
  * Dispatches `param_finder` errors
  * @param {FluxibleContext} actionContext  FluxibleContext
  * @param {object} payload       Error payload
- * @param {string} payload.metricId The metric that generate the error
  * @param {string} payload.command The command that generate the error
+ * @param {string} payload.metricId The metric that generate the error
  * @param {string} payload.error The error description
  * @emits {START_PARAM_FINDER_FAILED}
  * @emits {STOP_PARAM_FINDER_FAILED}
