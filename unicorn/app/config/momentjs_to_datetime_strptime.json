@@ -107,5 +107,13 @@
       "MM/DD/YYYY": "%m/%d/%Y",
       "MM/DD/YY": "%m/%d/%y"
     }
+  },
+  {
+    "cateogry": "US Date, time (excel default)",
+    "mappings": {
+      "MM/DD/YY H:mm": "%m/%d/%Y %H:%M",
+      "MM/D/YY H:mm": "%m/%d/%Y %H:%M",
+      "M/DD/YY H:mm": "%m/%d/%Y %H:%M"
+    }
   }
 ]
