@@ -89,6 +89,7 @@ const EXPECTED_FIELDS = [
 const INVALID_CSV_FILE = path.join(FIXTURES, 'invalid.csv');
 const EMPTY_CSV_FILE = path.join(FIXTURES, 'empty.csv');
 const NA_CSV_FILE = path.join(FIXTURES, 'na.csv');
+const ALL_NA_CSV_FILE = path.join(FIXTURES, 'all-na.csv');
 const SMALL_NO_DATA_FILE = path.join(FIXTURES, 'small-no-data.csv')
 const TWO_DATES_FILE = path.join(FIXTURES, 'two-dates.csv');
 const NO_DATES_FILE = path.join(FIXTURES, 'no-dates.csv');
@@ -254,20 +255,27 @@ describe('FileService', () => {
     it('should throw an error on an empty csv file', (done) => {
       service.getFields(EMPTY_CSV_FILE, (error, results) => {
         assert.equal(error,
-          'The CSV file needs to have at least 400 rows with a valid timestamp');
+        'The CSV file needs to have at least 400 rows with a valid timestamp');
         done();
       });
     });
     it('should throw an error on a file with less than 2 rows and no data rows', (done) => { // eslint-disable-line
       service.getFields(SMALL_NO_DATA_FILE, (error, results) => {
         assert.equal(error,
-          'The CSV file needs to have at least 400 rows with a valid timestamp');
+        'The CSV file needs to have at least 400 rows with a valid timestamp');
         done();
       });
     });
     it('should find fields using a row with no NA values', (done) => {
       service.getFields(NA_CSV_FILE, (error, results) => {
         assert.equal(results.fields.length, 5);
+        done();
+      });
+    });
+    it('should throw an error if all rows have a missing value', (done) => {
+      service.getFields(ALL_NA_CSV_FILE, (error, results) => {
+        assert.equal(error, 'The CSV file must have at least one' +
+                 ' row without missing values');
         done();
       });
     });
