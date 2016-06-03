@@ -254,14 +254,14 @@ describe('FileService', () => {
     it('should throw an error on an empty csv file', (done) => {
       service.getFields(EMPTY_CSV_FILE, (error, results) => {
         assert.equal(error,
-          'The CSV file must have at least one row without missing values');
+          'The CSV file needs to have at least 400 rows with a valid timestamp');
         done();
       });
     });
     it('should throw an error on a file with less than 2 rows and no data rows', (done) => { // eslint-disable-line
       service.getFields(SMALL_NO_DATA_FILE, (error, results) => {
         assert.equal(error,
-          'The CSV file must have at least one row without missing values');
+          'The CSV file needs to have at least 400 rows with a valid timestamp');
         done();
       });
     });

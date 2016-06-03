@@ -276,7 +276,8 @@ export class FileService {
   getFields(filename, callback) {
     let stream = fs.createReadStream(filename , {encoding: 'utf8'});
     let offset = 0;
-    let validRowCounter = 0;
+    let validRowCounter = 0; // a counter to keep track of how many rows we have
+                             // attempted to determine fields from.
     let headers = null;
     let parser = csv({
       objectMode: true,
@@ -329,13 +330,17 @@ export class FileService {
         headers = values;
         offset++;
         validRowCounter++;
-      });
-    stream.pipe(newliner)
-      .on('end', () => {
-      // We reached the end of the csv and we did not find a row
-      // without missing values
-        callback(`The CSV file must have at least one ` +
-                `row without missing values`);
+      })
+      .once('end', () => {
+        // We reached the end of the csv and we did not find a row
+        // without missing values
+        if (validRowCounter < 400) {
+          callback('The CSV file needs to have at least 400 rows with' +
+                   ' a valid timestamp');
+          return;
+        }
+        callback('The CSV file must have at least one' +
+                 ' row without missing values');
         return;
       });
   }
