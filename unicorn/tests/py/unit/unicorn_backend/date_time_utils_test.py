@@ -696,6 +696,68 @@ class DateTimeUtilsTestCase(unittest.TestCase):
       "%m/%d/%y",
       "01/29/16",
       "2016-01-29T00:00:00",
+    ),
+
+    #
+    # "US Date, time (excel default)"
+    #  These all use the same format but these tests ensure the format
+    #  matches all of the possible datetime formats that the default
+    #  excel format can take on.
+
+    # Format "%m/%d/%y %H:%M"
+    (
+      "%m/%d/%y %H:%M",
+      "01/29/16 2:30",
+      "2016-01-29T02:30:00"
+    ),
+
+    # Format "%m/%d/%y %H:%M"
+    (
+      "%m/%d/%y %H:%M",
+      "01/29/16 12:30",
+      "2016-01-29T12:30:00"
+    ),
+
+    # Format "%m/%d/%y %H:%M"
+    (
+      "%m/%d/%y %H:%M",
+      "1/29/16 2:30",
+      "2016-01-29T02:30:00"
+    ),
+
+    # Format "%m/%d/%y %H:%M"
+    (
+      "%m/%d/%y %H:%M",
+      "1/29/16 12:30",
+      "2016-01-29T12:30:00"
+    ),
+
+    # Format "%m/%d/%y %H:%M"
+    (
+      "%m/%d/%y %H:%M",
+      "01/2/16 2:30",
+      "2016-01-02T02:30:00"
+    ),
+
+    # Format "%m/%d/%y %H:%M"
+    (
+      "%m/%d/%y %H:%M",
+      "01/2/16 12:30",
+      "2016-01-02T12:30:00"
+    ),
+
+     # Format "%m/%d/%y %H:%M"
+    (
+      "%m/%d/%y %H:%M",
+      "1/2/16 2:30",
+      "2016-01-02T02:30:00"
+    ),
+
+    # Format "%m/%d/%y %H:%M"
+    (
+      "%m/%d/%y %H:%M",
+      "1/2/16 12:30",
+      "2016-01-02T12:30:00"
     )
   ]
 

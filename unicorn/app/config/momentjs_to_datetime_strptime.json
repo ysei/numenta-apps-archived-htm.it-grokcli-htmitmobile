@@ -109,14 +109,16 @@
     }
   },
   {
-    "cateogry": "US Date, time (excel default)",
+    "category": "US Date, time (excel default)",
     "mappings": {
-      "MM/DD/YY H:mm": "%m/%d/%Y %H:%M",
-      "MM/D/YY H:mm": "%m/%d/%Y %H:%M",
-      "M/DD/YY H:mm": "%m/%d/%Y %H:%M",
-      "MM/DD/YY HH:mm": "%m/%d/%Y %H:%M",
-      "MM/D/YY HH:mm": "%m/%d/%Y %H:%M",
-      "M/DD/YY HH:mm": "%m/%d/%Y %H:%M"
+      "MM/DD/YY H:mm": "%m/%d/%y %H:%M",
+      "MM/D/YY H:mm": "%m/%d/%y %H:%M",
+      "M/DD/YY H:mm": "%m/%d/%y %H:%M",
+      "MM/DD/YY HH:mm": "%m/%d/%y %H:%M",
+      "MM/D/YY HH:mm": "%m/%d/%y %H:%M",
+      "M/DD/YY HH:mm": "%m/%d/%y %H:%M",
+      "M/D/YY  H:mm": "%m/%d/%y %H:%M",
+      "M/D/YY  HH:mm": "%m/%d/%y %H:%M"
     }
   }
 ]
