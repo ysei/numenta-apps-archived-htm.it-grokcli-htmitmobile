@@ -257,13 +257,6 @@ class _CustomDatasourceAdapter(DatasourceAdapterIface):
     :raises htmengine.exceptions.MetricAlreadyMonitored: if the metric is
       already being monitored
     """
-    # Attempt to build swarm params from complete model params if present
-    swarmParams = None
-    if "completeModelParams" in modelSpec:
-      swarmParams = (
-        scalar_metric_utils.generateSwarmParamsFromCompleteModelParams(
-          modelSpec))
-
     metricSpec = modelSpec["metricSpec"]
     with self.connectionFactory() as conn:
       if "uid" in metricSpec:
@@ -289,7 +282,12 @@ class _CustomDatasourceAdapter(DatasourceAdapterIface):
           "Neither uid nor metric name present in metricSpec; modelSpec=%r"
           % (modelSpec,))
 
-    if not swarmParams:
+    if "completeModelParams" in modelSpec:
+      # Attempt to build swarm params from complete model params if present
+      swarmParams = (
+        scalar_metric_utils.generateSwarmParamsFromCompleteModelParams(
+          modelSpec))
+    else:
       # Generate swarm params from specified metric min and max or estimate them
       modelParams = modelSpec.get("modelParams", dict())
       minVal = modelParams.get("min")
