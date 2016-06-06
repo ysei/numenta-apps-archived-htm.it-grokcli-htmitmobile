@@ -16,6 +16,7 @@
 // http://numenta.org/licenses/
 
 import crypto from 'crypto';
+import path from 'path';
 
 
 /**
@@ -34,8 +35,10 @@ export function generateId(seed) {
  * @return {string} Unique id
  */
 export function generateFileId(filename) {
+  // Use only basename when generating File ID. See UNI-527
+  let basename = path.basename(filename);
   // Use 64 bit hash
-  return generateId(filename).substr(0,16);
+  return generateId(basename).substr(0,16);
 }
 
 /**
