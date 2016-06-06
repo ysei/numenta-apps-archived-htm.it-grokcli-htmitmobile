@@ -86,6 +86,13 @@ const EXPECTED_FIELDS = [
   })
 ];
 
+const ERROR_PRIORITIES_1 = path.join(FIXTURES, 'error-priorities1.csv');
+const ERROR_PRIORITIES_2 = path.join(FIXTURES, 'error-priorities2.csv');
+const ERROR_PRIORITIES_3 = path.join(FIXTURES, 'error-priorities3.csv');
+const ERROR_PRIORITIES_4 = path.join(FIXTURES, 'error-priorities4.csv');
+const ERROR_PRIORITIES_5 = path.join(FIXTURES, 'error-priorities5.csv');
+const ERROR_PRIORITIES_6 = path.join(FIXTURES, 'error-priorities6.csv');
+
 const INVALID_CSV_FILE = path.join(FIXTURES, 'invalid.csv');
 const EMPTY_CSV_FILE = path.join(FIXTURES, 'empty.csv');
 const NA_CSV_FILE = path.join(FIXTURES, 'na.csv');
@@ -165,6 +172,8 @@ const EXPECTED_SAMPLE_FILES = ['home_data.csv', 'machine_data.csv',
 
 // Use this date to Mock moment now
 const EXPECTED_DATE = '2016-03-15T15:09:05-07:00';
+const EXPECTED_DATE_2 = '03/15/2016 15:09:05';
+
 
 /* eslint-disable max-nested-callbacks */
 describe('FileService', () => {
@@ -206,7 +215,8 @@ describe('FileService', () => {
     });
     it('should not get fields from non-csv files', (done) => {
       service.getFields(INVALID_CSV_FILE, (error, fields) => {
-        assert.equal(error, 'Invalid CSV file');
+        assert.equal(error, 'The file should have one and' +
+          ' only one date/time column');
         done();
       });
     });
@@ -255,14 +265,14 @@ describe('FileService', () => {
     it('should throw an error on an empty csv file', (done) => {
       service.getFields(EMPTY_CSV_FILE, (error, results) => {
         assert.equal(error,
-        'The CSV file needs to have at least 400 rows with a valid timestamp');
+        'The CSV file must have at least one row without missing values');
         done();
       });
     });
     it('should throw an error on a file with less than 2 rows and no data rows', (done) => { // eslint-disable-line
       service.getFields(SMALL_NO_DATA_FILE, (error, results) => {
         assert.equal(error,
-        'The CSV file needs to have at least 400 rows with a valid timestamp');
+        'The CSV file must have at least one row without missing values');
         done();
       });
     });
@@ -311,7 +321,8 @@ describe('FileService', () => {
     });
     it('should reject invalid CSV file', (done) => {
       service.validate(INVALID_CSV_FILE, (error, warning, results) => {
-        assert.equal(error, 'Invalid CSV file');
+        assert.equal(error, 'The file should have one and only one' +
+          ' date/time column');
         done();
       });
     });
@@ -391,6 +402,78 @@ describe('FileService', () => {
           createFileInstance(NA_CSV_FILE, {
             rowOffset: 1,
             records: 551
+          }));
+        done();
+      });
+    });
+    it('should give precedence to missing values error', (done) => {
+      service.validate(ERROR_PRIORITIES_1, (error, warning, results) => {
+        assert.equal(error, 'The CSV file must have at least one' +
+                 ' row without missing values');
+        assert.deepEqual(results.file,
+          createFileInstance(ERROR_PRIORITIES_1, {
+            rowOffset: 1,
+            records: 0
+          }));
+        done();
+      });
+    });
+    it('should give next precedence to exactly 1 timestamp', (done) => {
+      service.validate(ERROR_PRIORITIES_2, (error, warning, results) => {
+        assert.equal(error, 'The file should have one and only one' +
+          ' date/time column');
+        assert.deepEqual(results.file,
+          createFileInstance(ERROR_PRIORITIES_2, {
+            rowOffset: 1,
+            records: 1
+          }));
+        done();
+      });
+    });
+    it('should give next precedence to at least 1 numeric', (done) => {
+      service.validate(ERROR_PRIORITIES_3, (error, warning, results) => {
+        assert.equal(error, 'The file should have at least one numeric value');
+        assert.deepEqual(results.file,
+          createFileInstance(ERROR_PRIORITIES_3, {
+            rowOffset: 1,
+            records: 4
+          }));
+        done();
+      });
+    });
+    it('should give next precedence to wrong timestamp', (done) => {
+      service.validate(ERROR_PRIORITIES_4, (error, warning, results) => {
+        assert.equal(error,
+          'Invalid date/time at row 3: The date/time value is ' +
+          "'not valid' instead of having a format matching " +
+          `'MM/DD/YYYY HH:mm:ss'. For example: '${EXPECTED_DATE_2}'`);
+        assert.deepEqual(results.file,
+          createFileInstance(ERROR_PRIORITIES_4, {
+            rowOffset: 1,
+            records: 4
+          }));
+        done();
+      });
+    });
+    it('should give next precedence to wrong numeric', (done) => {
+      service.validate(ERROR_PRIORITIES_5, (error, warning, results) => {
+        assert.equal(error, `Invalid number at row 3: Found 'a' = ' not a number '`); //eslint-disable-line
+        assert.deepEqual(results.file,
+          createFileInstance(ERROR_PRIORITIES_5, {
+            rowOffset: 1,
+            records: 4
+          }));
+        done();
+      });
+    });
+    it('should give next precedence to 400 rows needed', (done) => {
+      service.validate(ERROR_PRIORITIES_6, (error, warning, results) => {
+        assert.equal(error,
+          'The CSV file needs to have at least 400 rows with a valid timestamp'); // eslint-disable-line
+        assert.deepEqual(results.file,
+          createFileInstance(ERROR_PRIORITIES_6, {
+            rowOffset: 1,
+            records: 4
           }));
         done();
       });

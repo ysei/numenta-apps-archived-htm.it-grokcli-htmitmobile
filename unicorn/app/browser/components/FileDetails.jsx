@@ -263,7 +263,7 @@ export default class FileDetails extends React.Component {
             ref="fileSize"
             value={`${fileSize} KB`}/>
           <TextField
-            floatingLabelText="Number of rows"
+            floatingLabelText="Number of valid rows"
             name="numOfRows"
             readOnly={true}
             ref="numOfRows"

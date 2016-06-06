@@ -58,18 +58,19 @@ import {NA_STRINGS} from '../config/na';
 
 
 /**
- * Check if a value is a NA value
+ * Check if a value is a NA value (lowercase and removes whitespace)
  * @param {Object} entry : of the csv row to be checked against NA strings.
  * @return {boolean}  returns true if it is an NA string value
  *                    , and false otherwise.
  */
 function isNA(entry) {
-  return NA_STRINGS.indexOf(entry.toString().toLowerCase()) > -1
+  return NA_STRINGS.indexOf(entry.toString()
+    .toLowerCase().replace(/\s+/g, '')) > -1
 }
 
 /**
  * Check if a row in the csv file has an empty or NA string in one of its
- * columns.
+ * columns. (gets rid of all whitespace in the entry before checking for empty)
  * @param  {array}  row: entries of the csv row to be checked agaian NA string
  * @return {boolean}  returns true if there contains an empty or NA string value
  *                    in the array, and false otherwise.
@@ -296,16 +297,9 @@ export class FileService {
           return;
         }
 
-        // Make sure it is a valid CSV file
-        if (values.length <= 1) {
-          // Could not parse any columns out of this file
-          parser.removeAllListeners();
-          stream.destroy();
-          callback('Invalid CSV file');
-          return;
-        }
         let fields = guessFields(filename, values, headers);
-        if (fields.length !== 0) {
+        // skip this code if it is a header, but don't if it isn't.
+        if (fields.length !== 0 || offset !== 0) {
           let error = null;
 
           // Check if file has only one date field and at least one number
@@ -323,6 +317,10 @@ export class FileService {
 
           parser.removeAllListeners();
           stream.destroy();
+          if (error) {
+            callback(error, {fields, offset});
+            return;
+          }
           callback(error, {fields, offset});
           return;
         }
@@ -334,11 +332,6 @@ export class FileService {
       .once('end', () => {
         // We reached the end of the csv and we did not find a row
         // without missing values
-        if (validRowCounter < 400) {
-          callback('The CSV file needs to have at least 400 rows with' +
-                   ' a valid timestamp');
-          return;
-        }
         callback('The CSV file must have at least one' +
                  ' row without missing values');
         return;
@@ -586,9 +579,7 @@ export class FileService {
       if (validFields) {
         fields = validFields.fields;
         offset = validFields.offset;
-      }
-
-      if (error) {
+      } else {
         callback (error, null, {file, fields});
         return;
       }
@@ -599,23 +590,21 @@ export class FileService {
       });
       let csvParser = csv({columns: false, objectMode: true});
       let newliner = convertNewline('lf').stream();
-      let row = 0;
+      let row = 0; // number of valid rows
       let timestampField = fields.find((field) => field.type === 'date');
       csvParser.on('data', (data) => {
-        // Skip header row offset
-        if (row <= offset) {
+        let validTimestamp = typeof timestampField !== 'undefined' &&
+                             !isNA(data[timestampField.index]);
+        // Skip header row offset and increment when dataerror and timestamp isnt na.
+        if (row < offset || (dataError && validTimestamp)) {
           row++;
           return;
-        }
-        // only count rows that have a valid timestamp
-        if (!isNA(data[timestampField.index])) {
+        } else if (dataError) { // don't increment row if the timestamp is not valid
+          return;
+        } else if (validTimestamp) { // increment and validate.
           row++;
         }
-        // Stop validating of first error but keep loading file
-        // to get total records
-        if (dataError) {
-          return;
-        }
+
         let message;
         let valid = fields.every((field, index) => {
           let value = data[field.index];
@@ -633,7 +622,7 @@ export class FileService {
                 message += ' instead of having a format matching ' +
                            `'${field.format}'. For example: '${current}'`;
               }
-              return moment.utc(value, field.format).isValid();
+              return moment.utc(value, field.format, true).isValid();
             default:
               return true;
             }
@@ -655,7 +644,7 @@ export class FileService {
       .once('end', () => {
         file.records = row;
         file.rowOffset = offset;
-        if (file.records < 400) {
+        if (file.records < 400 && !dataError) {
           dataError = 'The CSV file needs to have at least 400 rows with' +
                       ' a valid timestamp';
         }
