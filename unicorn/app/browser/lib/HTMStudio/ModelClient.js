@@ -21,7 +21,7 @@ import {ipcRenderer as ipc} from 'electron';
 
 import ModelErrorAction from '../../actions/ModelError';
 import NotifyNewModelResultsAction from '../../actions/NotifyNewModelResults';
-import StopModelAction from '../../actions/StopModel';
+import CloseModelAction from '../../actions/CloseModel';
 
 const MODEL_SERVER_IPC_CHANNEL = 'MODEL_SERVER_IPC_CHANNEL';
 
@@ -96,8 +96,8 @@ export default class ModelClient {
         error: `Error closing model ${error}`
       });
     } else {
-      // Stop model
-      this._context.executeAction(StopModelAction, modelId);
+      // Close model
+      this._context.executeAction(CloseModelAction, modelId);
     }
   }
 }
