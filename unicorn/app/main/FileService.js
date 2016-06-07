@@ -238,7 +238,7 @@ export class FileService {
   }
 
   /**
-   * Get all field definitions for the give file guessing header row and
+   * Get all field definitions for the given file, guessing header row and
    * data types based on first record, validating the file structure based on
    * the following criteria:
    * - The file must be valid CSV file
@@ -246,8 +246,9 @@ export class FileService {
    * - The file must have at least one scalar fields
    * - Ignore all other fields
    *
-   * If the first row only contain strings then use it as header row, otherwise
-   * the header should be based on data type, something like this:
+   * If the first row only contain a combination of strings and/or numbers, then
+   * use it as header row; otherwise, the header should be based on data type,
+   * something like this:
    *
    * ```
    *   timestamp, metric1, metric2, ...
@@ -595,11 +596,12 @@ export class FileService {
       csvParser.on('data', (data) => {
         let validTimestamp = typeof timestampField !== 'undefined' &&
                              !isNA(data[timestampField.index]);
-        // Skip header row offset and increment when dataerror and timestamp isnt na.
+        // Skip header row offset and increment when 
+        // dataerror and timestamp isnt na.
         if (row < offset || (dataError && validTimestamp)) {
           row++;
           return;
-        } else if (dataError) { // don't increment row if the timestamp is not valid
+        } else if (dataError) { // don't increment if the timestamp is not valid
           return;
         } else if (validTimestamp) { // increment and validate.
           row++;
