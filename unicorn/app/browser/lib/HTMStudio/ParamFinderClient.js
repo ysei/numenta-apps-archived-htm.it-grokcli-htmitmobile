@@ -23,7 +23,7 @@ import {ipcRenderer as ipc} from 'electron';
 const PARAM_FINDER_IPC_CHANNEL = 'PARAM_FINDER_IPC_CHANNEL';
 
 import ParamFinderErrorAction from '../../actions/ParamFinderError';
-import StopParamFinderAction from '../../actions/StopParamFinder';
+import CloseParamFinderAction from '../../actions/CloseParamFinder';
 import ReceiveParamFinderData from '../../actions/ReceiveParamFinderData'
 
 /**
@@ -96,7 +96,7 @@ export default class ParamFinderClient {
         error: `Error closing param finder ${error}`
       });
     } else {
-      this._context.executeAction(StopParamFinderAction, metricId);
+      this._context.executeAction(CloseParamFinderAction, metricId);
     }
   }
 
