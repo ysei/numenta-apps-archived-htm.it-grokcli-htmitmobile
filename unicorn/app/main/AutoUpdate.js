@@ -49,7 +49,7 @@ export default class AppUpdater {
   constructor(browserWindow) {
     this._window = browserWindow;
     let updateUrl = config.get('update:url');
-    let feedUrl = `${updateUrl}/${os.platform()}/update.${app.getVersion()}.json`;
+    let feedUrl = `${updateUrl}/${os.platform()}/update.${app.getVersion()}.json`; // eslint-disable-line
     autoUpdater.setFeedURL(feedUrl);
 
     autoUpdater.addListener('error', (event, error) => {
