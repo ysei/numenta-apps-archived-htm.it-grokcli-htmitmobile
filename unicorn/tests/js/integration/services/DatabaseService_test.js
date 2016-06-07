@@ -54,11 +54,16 @@ const EXPECTED_FILENAME_ID = generateFileId(EXPECTED_FILENAME);
 const EXPECTED_METRIC_ID = generateMetricId(EXPECTED_FILENAME, 'metric');
 const EXPECTED_TIMESTAMP_ID = generateMetricId(EXPECTED_FILENAME, 'timestamp');
 
+const NA_CSV_FILE = path.join(FIXTURES, 'na.csv');
+const NA_CSV_FILE_ID = generateFileId(NA_CSV_FILE);
+// const NA_CSV_METRIC_ID = generateMetricId(NA_CSV_FILE , 'metric');
+// const NA_CSV_FILE_TIMESTAMP_ID = generateMetricId(NA_CSV_FILE , 'timestamp');
+
 const EXPECTED_FILE = Object.assign({}, INSTANCES.File, {
   filename: EXPECTED_FILENAME,
   name: path.basename(EXPECTED_FILENAME),
   uid: EXPECTED_FILENAME_ID,
-  records: 7
+  records: 400
 });
 
 const EXPECTED_FILE_WITH_OPTIONAL_FIELDS = Object.assign({}, EXPECTED_FILE, {
@@ -234,7 +239,8 @@ const EXPECTED_EXPORTED_RESULTS =
 2015-08-26T02:49:31+08:00,44,HIGH,1
 2015-08-26T02:50:31+08:00,45,HIGH,1`;
 
-const TEMP_DIR = path.join(os.tmpDir(), 'unicorn_db');
+const TEMP_DB_DIR = path.join(os.tmpDir(), 'unicorn_db');
+const TEMP_CACHE_DIR = path.join(os.tmpDir(), 'unicorn_files');
 
 const BATCH_MODEL_DATA_NO_TZ = [
   {
@@ -283,7 +289,7 @@ describe('DatabaseService:', () => {
   let service;
 
   before(() => {
-    service = new DatabaseService(TEMP_DIR);
+    service = new DatabaseService(TEMP_DB_DIR, TEMP_CACHE_DIR);
   });
   after(() => {
     service.close((err) => assert.ifError(err));
@@ -390,7 +396,9 @@ describe('DatabaseService:', () => {
         assert.ifError(error);
         service.getFile(EXPECTED_FILENAME_ID, (error, actual) => {
           assert.ifError(error);
-          assert.deepStrictEqual(JSON.parse(actual), EXPECTED_FILE);
+          let filename = path.join(TEMP_CACHE_DIR, path.basename(EXPECTED_FILE.filename));
+          let expected = Object.assign(EXPECTED_FILE, {filename});
+          assert.deepStrictEqual(JSON.parse(actual), expected);
           assert.ifError(error);
           service.getMetricsByFile(EXPECTED_FILENAME_ID, (error, actual) => {
             assert.ifError(error);
@@ -398,8 +406,10 @@ describe('DatabaseService:', () => {
             service.getMetricData(EXPECTED_METRIC_ID, (error, actual) => {
               assert.ifError(error);
               let data =  JSON.parse(actual);
-              assert.equal(data.length, EXPECTED_METRIC_DATA.length);
-              assert.deepStrictEqual(data, EXPECTED_METRIC_DATA_RESULT);
+              assert.equal(data.length, 399);
+              let testDataLength = EXPECTED_METRIC_DATA_RESULT.length;
+              assert.deepStrictEqual(data.slice(0,testDataLength),
+               EXPECTED_METRIC_DATA_RESULT);
               done();
             })
           });
@@ -411,7 +421,9 @@ describe('DatabaseService:', () => {
         assert.ifError(error);
         service.getFile(NO_HEADER_CSV_FILE_ID, (error, actual) => {
           assert.ifError(error);
-          assert.deepStrictEqual(JSON.parse(actual), EXPECTED_NO_HEADER_CSV_FILE);
+          let filename = path.join(TEMP_CACHE_DIR, path.basename(EXPECTED_NO_HEADER_CSV_FILE.filename));
+          let expected = Object.assign(EXPECTED_NO_HEADER_CSV_FILE, {filename});
+          assert.deepStrictEqual(JSON.parse(actual), expected);
           assert.ifError(error);
           service.getMetricsByFile(NO_HEADER_CSV_FILE_ID, (error, actual) => {
             assert.ifError(error);
@@ -426,12 +438,32 @@ describe('DatabaseService:', () => {
         assert.ifError(error);
         service.getFile(IGNORE_FIELDS_FILE_ID, (error, actual) => {
           assert.ifError(error);
-          assert.deepStrictEqual(JSON.parse(actual), EXPECTED_IGNORE_FIELDS_FILE);
+          let filename = path.join(TEMP_CACHE_DIR, path.basename(EXPECTED_IGNORE_FIELDS_FILE.filename));
+          let expected = Object.assign(EXPECTED_IGNORE_FIELDS_FILE, {filename});
+          assert.deepStrictEqual(JSON.parse(actual), expected);
           assert.ifError(error);
           service.getMetricsByFile(IGNORE_FIELDS_FILE_ID, (error, actual) => {
             assert.ifError(error);
             assert.deepStrictEqual(JSON.parse(actual), EXPECTED_FIELDS_IGNORE_FIELDS_FILE);
             done();
+          });
+        });
+      });
+    });
+    it('should upload file with missing values to the database', (done) => {
+      service.uploadFile(NA_CSV_FILE, (error, file) => {
+        assert.ifError(error);
+        service.getFile(NA_CSV_FILE_ID, (error, actual) => {
+          assert.ifError(error);
+          service.getMetricsByFile(NA_CSV_FILE_ID, (error, actual) => {
+            assert.ifError(error);
+            let metricinfo = JSON.parse(actual).find((column) => column.index === 1);
+            assert.equal(typeof metricinfo === undefined, false); // eslint-disable-line
+            service.getMetricData(metricinfo.uid, (error, data) => {
+              assert.ifError(error);
+              assert.equal(JSON.parse(data).length, 530)
+              done();
+            });
           });
         });
       });
@@ -451,29 +483,6 @@ describe('DatabaseService:', () => {
                 assert.ifError(error);
                 assert.equal(JSON.parse(actual).length, 0);
                 done();
-              });
-            });
-          });
-        });
-      });
-    });
-    it('should delete file by id from the database', (done) => {
-      service.uploadFile(EXPECTED_FILENAME, (error, file) => {
-        service.uploadFile(EXPECTED_FILENAME, (error, file) => {
-          assert.ifError(error);
-          service.deleteFileById(EXPECTED_FILENAME_ID, (error) => {
-            assert.ifError(error);
-            service.getFile(EXPECTED_FILENAME_ID, (error, actual) => {
-              assert(error && error.type === 'NotFoundError',
-                'File was not deleted');
-              service.getMetricsByFile(EXPECTED_FILENAME_ID, (error, actual) => {
-                assert.ifError(error);
-                assert.equal(JSON.parse(actual).length, 0);
-                service.getMetricData(EXPECTED_METRIC_ID, (error, actual) => {
-                  assert.ifError(error);
-                  assert.equal(JSON.parse(actual).length, 0);
-                  done();
-                });
               });
             });
           });
@@ -852,7 +861,7 @@ describe('DatabaseService:', () => {
         });
     });
     it('should export ModelData from the database (time zone: yes)', (done) => {
-      const EXPORTED_FILENAME = path.join(TEMP_DIR, 'file.csv');
+      const EXPORTED_FILENAME = path.join(TEMP_DB_DIR, 'file.csv');
       after(() => {
         fs.unlinkSync(EXPORTED_FILENAME); // eslint-disable-line no-sync
       });
@@ -875,7 +884,7 @@ describe('DatabaseService:', () => {
     });
 
     it('should export ModelData from the database (time zone: no)', (done) => {
-      const EXPORTED_FILENAME = path.join(TEMP_DIR, 'file2.csv');
+      const EXPORTED_FILENAME = path.join(TEMP_DB_DIR, 'file2.csv');
       after(() => {
         fs.unlinkSync(EXPORTED_FILENAME); // eslint-disable-line no-sync
       });

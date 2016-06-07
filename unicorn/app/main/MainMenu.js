@@ -92,7 +92,6 @@ let crossPlatformMenu = [
 
 
 if (process.platform === 'darwin') {
-
   let aboutMenu = crossPlatformMenu.find((item) => item.label === name);
 
   aboutMenu.submenu.push(
