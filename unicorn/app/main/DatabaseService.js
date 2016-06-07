@@ -159,6 +159,17 @@ export class DatabaseService {
   }
 
   /**
+   * Get a single File by name.
+   * @param {string} filename Unique ID of file to get
+   * @param {Function} callback Async callback function(error, results).
+   *                            The results will be JSON.stringified
+   */
+  getFileByName(filename, callback) {
+    let fileid = generateFileId(filename);
+    this._files.get(fileid, stringifyResultsCallback(callback));
+  }
+
+  /**
    * Get all Files.
    * @param {Function} callback Async callback function(error, results)
    *                            The results will be JSON.stringified

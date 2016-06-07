@@ -97,6 +97,8 @@ const STYLES = {
   }
 };
 
+const NO_FILE_SUPPORTED_ERRORS = ['File already exists'];
+
 /**
  * Show file details page. The file must be available from the {@link FileStore}
  */
@@ -236,7 +238,8 @@ export default class FileDetails extends React.Component {
                         </p>);
     }
 
-    if (this.props.error) {
+    if (this.props.error &&
+      NO_FILE_SUPPORTED_ERRORS.indexOf(this.props.error) === -1) {
       supportedFormats = (
           <a style={STYLES.supportedFormats}
            onClick={this._onSupportedFormatsClick}>
@@ -245,6 +248,10 @@ export default class FileDetails extends React.Component {
       );
       error = (<p style={STYLES.error}>
                  {this.props.error} (see {supportedFormats})
+               </p>);
+    } else if (this.props.error) {
+      error = (<p style={STYLES.error}>
+                 {this.props.error}
                </p>);
     } else if (this.props.warning) {
       warning = (<p style={STYLES.error}>{this.props.warning}</p>);
