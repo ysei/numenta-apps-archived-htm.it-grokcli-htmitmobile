@@ -279,9 +279,14 @@ export default class Model extends React.Component {
   }
 
   _exportModelResults(modelId, timestampFormat) {
+    let filename = this.props.file.name;
+    if (filename) {
+      filename = filename.replace('.csv', '');  // get rid of extra .csv
+    }
+    let metricname = this.props.valueField.name;
     dialog.showSaveDialog({
       title: this._config.get('dialog:model:export:title'),
-      defaultPath: this._config.get('dialog:model:export:path')
+      defaultPath: `htm_results_${filename}_${metricname}.csv`
     }, (filename) => {
       if (filename) {
         this.context.getGATracker().event(

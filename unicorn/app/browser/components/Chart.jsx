@@ -544,7 +544,7 @@ export default class Chart extends React.Component {
     }
   }
 
-  _chartHoverPaintText(item) { // eslint-disable-line max-statements
+  _chartHoverPaintText(item) { // eslint-disable-line
     let chartNode = ReactDOM.findDOMNode(this.refs['chart']);
     let legend = d3.select(chartNode).select('.legend');
     legend.html('');
