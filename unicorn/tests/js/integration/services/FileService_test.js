@@ -30,6 +30,10 @@ import {
 import {
   DBFileSchema, DBMetricSchema
 } from '../../../../app/database/schema';
+import {
+  UNIX_TIMESTAMP_MOMENT_FORMAT
+} from '../../../../app/common/timestamp';
+
 
 function createFileInstance(filename, properties) {
   return Object.assign({}, FILE_INSTANCE, {
@@ -112,6 +116,31 @@ const NUMERIC_ONLY_HEADER_FILE = path.join(
 const STRING_AND_NUMERIC_HEADER_FILE = path.join(
   FIXTURES,
   'string-and-numeric-header.csv');
+
+const UNIX_TIMESTAMP_AS_SECONDS_FILE = path.join(
+  FIXTURES,
+  'unix-timestamp-as-seconds.csv'
+);
+const UNIX_TIMESTAMP_AS_SECONDS_FILE_ID = generateFileId(
+  UNIX_TIMESTAMP_AS_SECONDS_FILE);
+const EXPECTED_FIELDS_UNIX_TIMESTAMP_AS_SECONDS_FILE = [
+  Object.assign({}, METRIC_INSTANCE, {
+    uid: generateMetricId(UNIX_TIMESTAMP_AS_SECONDS_FILE, 'TIMESTAMP'),
+    file_uid: UNIX_TIMESTAMP_AS_SECONDS_FILE_ID,
+    index: 0,
+    name: 'TIMESTAMP',
+    type: 'date',
+    format: UNIX_TIMESTAMP_MOMENT_FORMAT
+  }),
+  Object.assign({}, METRIC_INSTANCE, {
+    uid: generateMetricId(UNIX_TIMESTAMP_AS_SECONDS_FILE, 'v1'),
+    file_uid: UNIX_TIMESTAMP_AS_SECONDS_FILE_ID,
+    index: 1,
+    name: 'v1',
+    type: 'number'
+  })
+];
+
 const NO_HEADER_CSV_FILE = path.join(FIXTURES, 'no-header-no-tz.csv');
 const NO_HEADER_CSV_FILE_ID = generateFileId(NO_HEADER_CSV_FILE);
 const EXPECTED_FIELDS_NO_HEADER_CSV_FILE = [
@@ -237,6 +266,15 @@ describe('FileService', () => {
       service.getFields(INVALID_CSV_FILE, (error, fields) => {
         assert.equal(error, 'The file should have one and' +
           ' only one date/time column');
+        done();
+      });
+    });
+    it('should get fields from file with unix timestamp', (done) => {
+      service.getFields(UNIX_TIMESTAMP_AS_SECONDS_FILE, (error, results) => {
+        assert.ifError(error);
+        assert.equal(results.offset, 1);
+        assert.deepEqual(results.fields,
+                         EXPECTED_FIELDS_UNIX_TIMESTAMP_AS_SECONDS_FILE);
         done();
       });
     });

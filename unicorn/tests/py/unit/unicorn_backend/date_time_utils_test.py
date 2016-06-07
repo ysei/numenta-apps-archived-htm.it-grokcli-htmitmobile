@@ -21,6 +21,7 @@
 # ----------------------------------------------------------------------
 """Unit test of the unicorn_backend.date_time_utils module"""
 
+from datetime import datetime
 import json
 import logging
 import os
@@ -35,7 +36,35 @@ g_log = logging.getLogger(__name__)
 
 
 
-class DateTimeUtilsTestCase(unittest.TestCase):
+class UnixTimestampTestCase(unittest.TestCase):
+
+  def testPositiveFloatingPointUnixTimestamp(self):
+    result = date_time_utils.parseDatetime("1465257536.142103", "#T")
+    self.assertEqual(result, datetime(2016, 6, 6, 23, 58, 56, 142103))
+
+
+  def testZeroUnixTimestamp(self):
+    result = date_time_utils.parseDatetime("0", "#T")
+    self.assertEqual(result, datetime(1970, 1, 1, 0, 0))
+
+
+  def testNegativeUnixTimestampRaisesValueError(self):
+    with self.assertRaises(ValueError) as errorCtx:
+      date_time_utils.parseDatetime("-5", "#T")
+
+    self.assertIn("Expected non-negative Unix Timestamp",
+                  errorCtx.exception.args[0])
+
+
+  def testNonNumericUnixTimestampRaisesValueError(self):
+    with self.assertRaises(ValueError) as errorCtx:
+      date_time_utils.parseDatetime("xyz", "#T")
+
+    self.assertIn("xyz", errorCtx.exception.args[0])
+
+
+
+class ExtendedStrptimeTestCase(unittest.TestCase):
 
   # Each element is a three-tuple: format, input, result of datetime.isoformat
   _GOOD_SAMPLES = [
@@ -266,8 +295,8 @@ class DateTimeUtilsTestCase(unittest.TestCase):
       "2016-01-29 23:00",
       "2016-01-29T23:00:00",
     ),
-    
-    
+
+
     # Format "%Y-%m-%d %H%z"
     (
       "%Y-%m-%d %H%z",
@@ -368,7 +397,7 @@ class DateTimeUtilsTestCase(unittest.TestCase):
       "01-29-16",
       "2016-01-29T00:00:00",
     ),
-    
+
     #
     # "Variation of ISO 8601"
     #
@@ -529,8 +558,8 @@ class DateTimeUtilsTestCase(unittest.TestCase):
       "2016/01/29T23:00",
       "2016-01-29T23:00:00",
     ),
-    
-        # Format "%Y/%m/%dT%H%z"
+
+    # Format "%Y/%m/%dT%H%z"
     (
       "%Y/%m/%dT%H%z",
       "2016/01/29T23-08",
@@ -596,7 +625,7 @@ class DateTimeUtilsTestCase(unittest.TestCase):
       "2016/01/29 23:00",
       "2016-01-29T23:00:00",
     ),
-    
+
     # Format "%Y/%m/%d %H%z"
     (
       "%Y/%m/%d %H%z",
@@ -904,7 +933,7 @@ class DateTimeUtilsTestCase(unittest.TestCase):
       len(set(self._GOOD_SAMPLES)),
       msg="There are duplicate test cases: {}".format(
         set(item for item in self._GOOD_SAMPLES
-             if self._GOOD_SAMPLES.count(item) > 1))
+            if self._GOOD_SAMPLES.count(item) > 1))
     )
 
     # Verify the parser
