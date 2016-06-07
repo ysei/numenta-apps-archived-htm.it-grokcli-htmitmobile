@@ -181,9 +181,6 @@ export default class FileDetails extends React.Component {
 
   _renderDataTable() {
     let {fields, data} = this.state;
-    if (!fields || !data) {
-      return;
-    }
     if (fields.length > 0  && data.length > 0) {
       let columnHeaders;
       let tableRows = [];

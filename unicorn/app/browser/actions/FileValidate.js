@@ -35,7 +35,7 @@ export default function (actionContext, filename) {
         let file = JSON.parse(dbfile);
         actionContext.getGATracker().exception(ACTIONS.VALIDATE_FILE_FAILED);
         actionContext.dispatch(ACTIONS.VALIDATE_FILE_FAILED, {
-          error: 'File already exists', warning: null, file
+          error: 'File already exists', warning: null, file, fields: []
         });
       } else {
         fs.validate(filename, (error, warning, results) => {
