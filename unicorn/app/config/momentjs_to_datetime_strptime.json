@@ -117,7 +117,6 @@
       "MM/DD/YY HH:mm:SS": "%m/%d/%y %H:%M:%S",
       "MM/DD/YY H": "%m/%d/%y %H",
       "MM/DD/YY HH": "%m/%d/%y %H",
-
       "MM/D/YY H:mm": "%m/%d/%y %H:%M",
       "MM/D/YY H:mm:SS": "%m/%d/%y %H:%M:%S",
       "MM/D/YY HH:mm": "%m/%d/%y %H:%M",
@@ -125,7 +124,6 @@
       "MM/D/YY H": "%m/%d/%y %H",
       "MM/D/YY HH": "%m/%d/%y %H",
       "MM/D/YY": "%m/%d/%y",
-
       "M/DD/YY H:mm": "%m/%d/%y %H:%M",
       "M/DD/YY H:mm:SS": "%m/%d/%y %H:%M:%S",
       "M/DD/YY HH:mm": "%m/%d/%y %H:%M",
@@ -133,7 +131,6 @@
       "M/DD/YY H": "%m/%d/%y %H",
       "M/DD/YY HH": "%m/%d/%y %H",
       "M/DD/YY": "%m/%d/%y",
-
       "M/D/YY H:mm": "%m/%d/%y %H:%M",
       "M/D/YY H:mm:SS": "%m/%d/%y %H:%M:%S",
       "M/D/YY HH:mm": "%m/%d/%y %H:%M",
