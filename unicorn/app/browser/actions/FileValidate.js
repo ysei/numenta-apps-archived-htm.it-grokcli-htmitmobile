@@ -40,7 +40,8 @@ export default function (actionContext, filename) {
       } else {
         fs.validate(filename, (error, warning, results) => {
           if (error) {
-            actionContext.getGATracker().exception(ACTIONS.VALIDATE_FILE_FAILED);
+            actionContext.getGATracker()
+              .exception(ACTIONS.VALIDATE_FILE_FAILED);
             actionContext.dispatch(ACTIONS.VALIDATE_FILE_FAILED, {
               error, warning, ...results
             });
