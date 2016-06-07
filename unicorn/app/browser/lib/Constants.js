@@ -58,6 +58,7 @@ Object.assign(module.exports, CommonConstants);
  *  - DELETE_MODEL: {@link DeleteModel}
  *  - START_MODEL: {@link StartModel}
  *  - STOP_MODEL: {@link StopModel}
+ *  - CLOSE_MODEL: {@link CloseModel}
  *  - SHOW_MODEL: {@link ShowModel}
  *  - HIDE_MODEL: {@link HideModel}
  *  - ADD_MODEL_FAILED
@@ -75,6 +76,7 @@ Object.assign(module.exports, CommonConstants);
  * - Param Finder
  *   - START_PARAM_FINDER: {@link StartParamFinder}
  *   - STOP_PARAM_FINDER: {@link StopParamFinder}
+ *   - CLOSE_PARAM_FINDER: {@link CloseParamFinder}
  *   - START_PARAM_FINDER_FAILED {@link ParamFinderError}
  *   - STOP_PARAM_FINDER_FAILED {@link ParamFinderError}
  *   - UNKNOWN_PARAM_FINDER_FAILURE {@link ParamFinderError}
@@ -132,6 +134,7 @@ export const ACTIONS = Object.freeze({
   LIST_MODELS: 'LIST_MODELS',
   START_MODEL: 'START_MODEL',
   STOP_MODEL: 'STOP_MODEL',
+  CLOSE_MODEL: 'CLOSE_MODEL',
   SHOW_MODEL: 'SHOW_MODEL',
   HIDE_MODEL: 'HIDE_MODEL',
   ADD_MODEL_FAILED: 'ADD_MODEL_FAILED',
@@ -151,6 +154,7 @@ export const ACTIONS = Object.freeze({
   // Param Finder
   START_PARAM_FINDER: 'START_PARAM_FINDER',
   STOP_PARAM_FINDER: 'STOP_PARAM_FINDER',
+  CLOSE_PARAM_FINDER: 'CLOSE_PARAM_FINDER',
   START_PARAM_FINDER_FAILED: 'START_PARAM_FINDER_FAILED',
   STOP_PARAM_FINDER_FAILED: 'STOP_PARAM_FINDER_FAILED',
   UNKNOWN_PARAM_FINDER_FAILURE: 'UNKNOWN_PARAM_FINDER_FAILURE',

@@ -142,7 +142,6 @@ app.on('window-all-closed', () => {
 
 // Electron finished init and ready to create browser window
 app.on('ready', () => {
-
   // set main menu
   Menu.setApplicationMenu(Menu.buildFromTemplate(MainMenu));
 

@@ -17,21 +17,14 @@
 
 import {ACTIONS} from '../lib/Constants';
 
-
 /**
- * Show {@link CreateModelDialog} page
- * @emits {SHOW_CREATE_MODEL_DIALOG}
- * @param {FluxibleContext} actionContext - The action context
- * @param {Object} payload - Payload data object
- * @param {String} payload.fileName - Filename path of metric
- * @param {String} payload.metricName - Name to use for Metric
- * @emits {SHOW_CREATE_MODEL_DIALOG}
+ * ParamFinder Process was closed either via {@link StopParamFinder} action or
+ * because the process ended
+ * @param {FluxibleContext} actionContext - Fluxible action context object
+ * @param {string} metricId - metric ID
+ * @emits {CLOSE_PARAM_FINDER}
  */
-export default function (actionContext, payload) {
-  actionContext.getGATracker().event('ACTION',
-    ACTIONS.SHOW_CREATE_MODEL_DIALOG);
-  let {fileName, metricName} = payload;
-  actionContext.dispatch(ACTIONS.SHOW_CREATE_MODEL_DIALOG, {
-    fileName, metricName
-  });
+export default function (actionContext, metricId) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.CLOSE_PARAM_FINDER);
+  actionContext.dispatch(ACTIONS.CLOSE_PARAM_FINDER, metricId);
 }
