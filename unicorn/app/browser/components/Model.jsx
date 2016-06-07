@@ -27,24 +27,27 @@ import Colors from 'material-ui/lib/styles/colors';
 import connectToStores from 'fluxible-addons-react/connectToStores';
 import Dialog from 'material-ui/lib/dialog';
 import FlatButton from 'material-ui/lib/flat-button';
+let path = require('path');
 import RaisedButton from 'material-ui/lib/raised-button';
 import React from 'react';
 import {remote} from 'electron';
 import Snackbar from 'material-ui/lib/snackbar';
 
 import ChartUpdateViewpoint from '../actions/ChartUpdateViewpoint';
+import {COMPONENT_GA_EVENTS} from '../lib/Constants';
 import CreateModelDialog from './CreateModelDialog'
 import DeleteModelAction from '../actions/DeleteModel';
-import ExportModelResultsAction from '../actions/ExportModelResults';
 import FileStore from '../stores/FileStore';
 import MetricStore from '../stores/MetricStore';
 import ModelData from './ModelData';
 import ModelProgress from './ModelProgress';
 import ModelStore from '../stores/ModelStore';
 import ModelDataStore from '../stores/ModelDataStore';
+import {PROBATION_LENGTH} from '../lib/Constants';
 import ShowCreateModelDialogAction from '../actions/ShowCreateModelDialog';
 import HideCreateModelDialogAction from '../actions/HideCreateModelDialog';
 import StartParamFinderAction from '../actions/StartParamFinder';
+import {trims} from '../../common/common-utils';
 import {TIMESTAMP_FORMAT_PY_MAPPING} from '../../common/timestamp';
 import {
   DATA_FIELD_INDEX, ANOMALY_YELLOW_VALUE, ANOMALY_RED_VALUE
@@ -73,6 +76,8 @@ export default class Model extends React.Component {
     return {
       executeAction: React.PropTypes.func,
       getConfigClient: React.PropTypes.func,
+      getDatabaseClient: React.PropTypes.func,
+      getGATracker: React.PropTypes.func,
       getStore: React.PropTypes.func,
       muiTheme: React.PropTypes.object
     };
@@ -274,14 +279,45 @@ export default class Model extends React.Component {
   }
 
   _exportModelResults(modelId, timestampFormat) {
+    let filename = this.props.file.name;
+    if (filename) {
+      filename = filename.replace('.csv', '');  // get rid of extra .csv
+    }
+    let metricname = this.props.valueField.name;
     dialog.showSaveDialog({
       title: this._config.get('dialog:model:export:title'),
-      defaultPath: this._config.get('dialog:model:export:path')
+      defaultPath: `htm_results_${filename}_${metricname}.csv`
     }, (filename) => {
       if (filename) {
-        this.context.executeAction(ExportModelResultsAction, {
-          modelId, filename, timestampFormat
-        });
+        this.context.getGATracker().event(
+          'COMPONENT',
+          COMPONENT_GA_EVENTS.EXPORT_MODEL_RESULTS);
+
+        let database = this.context.getDatabaseClient();
+        database.exportModelData(
+          modelId, filename, timestampFormat, PROBATION_LENGTH, (error) => {
+            if (error) {
+              this.context.getGATracker().exception(
+                COMPONENT_GA_EVENTS.EXPORT_MODEL_RESULTS_FAILED);
+              if (error.code === 'EACCES' || error.code === 'EPERM') {
+                dialog.showErrorBox(
+                  trims`You do not have permission to save files to
+                    ${path.dirname(filename)}.`,
+                  trims`Make sure that you have write access for this location
+                    or select a different location.`);
+              } else {
+                dialog.showErrorBox('Model export failed.',
+                                    `${error}`);
+              }
+            } else {
+              let message = this._config.get('snackbar:exported:message');
+              let title = this.props.model.metric;
+              let fileName = this.props.file.name;
+              this._showModelSnackbar(message.replace(
+                '%s',
+                `${fileName} (${title})`));
+            }
+          });
       } else {
         // @TODO trigger error about "bad file"
       }
