@@ -44,6 +44,7 @@ const dialog = remote.require('dialog');
   getLoggerClient: React.PropTypes.func,
   getDatabaseClient: React.PropTypes.func,
   getFileClient: React.PropTypes.func,
+  getGATracker: React.PropTypes.func,
   getModelClient: React.PropTypes.func,
   getParamFinderClient: React.PropTypes.func
 })
