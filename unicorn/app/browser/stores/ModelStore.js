@@ -43,6 +43,7 @@ export default class ModelStore extends BaseStore {
    * @listens {ADD_MODEL}
    * @listens {DELETE_MODEL}
    * @listens {LIST_MODELS}
+   * @listens {CLOSE_MODEL}
    * @listens {STOP_MODEL}
    * @listens {START_MODEL}
    * @listens {SHOW_MODEL}
@@ -60,6 +61,7 @@ export default class ModelStore extends BaseStore {
       DELETE_MODEL: '_deleteModel',
       LIST_MODELS: '_addModels',
       STOP_MODEL: '_stopModel',
+      CLOSE_MODEL: '_stopModel',
       START_MODEL: '_startModel',
       SHOW_MODEL: '_showModel',
       HIDE_MODEL: '_hideModel',
