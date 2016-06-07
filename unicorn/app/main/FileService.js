@@ -81,7 +81,7 @@ function containsNA(row) {
 
 /**
  * Check if a row in the csv file is valid (exactly one date and at least
- * one numeric type)
+ * one numeric type and does not contain a missing value)
  * @param  {array}  row: entries of the csv row to be validated
  * @return {boolean}  returns true if the row fits the above criteria and false
  *                    otherwise.
@@ -308,7 +308,7 @@ export class FileService {
             return field.type === 'date';
           });
           if (dateFields.length === 0 && offset === 0) {
-
+            // No date field in first row: assume it's the header row
           } else {
             if (dateFields.length !== 1) {
               error = 'The file should have one and only one date/time column';
@@ -596,7 +596,7 @@ export class FileService {
       csvParser.on('data', (data) => {
         let validTimestamp = typeof timestampField !== 'undefined' &&
                              !isNA(data[timestampField.index]);
-        // Skip header row offset and increment when 
+        // Skip header row offset and increment when
         // dataerror and timestamp isnt na.
         if (row < offset || (dataError && validTimestamp)) {
           row++;
