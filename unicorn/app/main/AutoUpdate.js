@@ -49,12 +49,13 @@ export default class AppUpdater {
   constructor(browserWindow) {
     this._window = browserWindow;
     let updateUrl = config.get('update:url');
-    let feedUrl = `${updateUrl}/${os.platform()}/update.${app.getVersion()}.json`;
+    let feedUrl = `${updateUrl}/${os.platform()}/update.${app.getVersion()}.json`; // eslint-disable-line
     autoUpdater.setFeedURL(feedUrl);
 
     autoUpdater.addListener('error', (event, error) => {
-      let title = config.get('update:errorTitle');
-      dialog.showErrorBox(title, error);
+      // Ingore auto update errors. Output to console for debugging
+      // See https://github.com/electron/electron/issues/4699
+      console.warn('AppUpdater:error', error); // eslint-disable-line
     });
 
     autoUpdater.addListener('update-downloaded', (event,

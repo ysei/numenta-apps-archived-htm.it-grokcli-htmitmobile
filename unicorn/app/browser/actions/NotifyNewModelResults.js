@@ -17,21 +17,13 @@
 
 import {ACTIONS} from '../lib/Constants';
 
-
 /**
- * Show {@link CreateModelDialog} page
- * @emits {SHOW_CREATE_MODEL_DIALOG}
- * @param {FluxibleContext} actionContext - The action context
- * @param {Object} payload - Payload data object
- * @param {String} payload.fileName - Filename path of metric
- * @param {String} payload.metricName - Name to use for Metric
- * @emits {SHOW_CREATE_MODEL_DIALOG}
+ * Notify the stores that there are new model results available.
+ *
+ * @param  {FluxibleContext} actionContext - The action context
+ * @param  {string} modelId - The model that changed.
+ * @emits {NOTIFY_NEW_MODEL_RESULTS}
  */
-export default function (actionContext, payload) {
-  actionContext.getGATracker().event('ACTION',
-    ACTIONS.SHOW_CREATE_MODEL_DIALOG);
-  let {fileName, metricName} = payload;
-  actionContext.dispatch(ACTIONS.SHOW_CREATE_MODEL_DIALOG, {
-    fileName, metricName
-  });
+export default function NotifyNewModelResultsAction(actionContext, modelId) {
+  actionContext.dispatch(ACTIONS.NOTIFY_NEW_MODEL_RESULTS, modelId);
 }

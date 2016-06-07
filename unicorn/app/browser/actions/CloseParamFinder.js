@@ -15,23 +15,16 @@
 //
 // http://numenta.org/licenses/
 
-
 import {ACTIONS} from '../lib/Constants';
 
-
 /**
- * Receive model data
- *
+ * ParamFinder Process was closed either via {@link StopParamFinder} action or
+ * because the process ended
  * @param {FluxibleContext} actionContext - Fluxible action context object
- * @param {Object} payload - The action payload
- * @param {String} payload.modelId - Required model id
- * @param {Object[]} payload.data - New data to be appended
- * @emits {RECEIVE_MODEL_DATA}
- * @TODO {@link ModelService} should save model results to database
+ * @param {string} metricId - metric ID
+ * @emits {CLOSE_PARAM_FINDER}
  */
-export default function (actionContext, payload) {
-  let {modelId, data} = payload;
-  actionContext.dispatch(ACTIONS.RECEIVE_MODEL_DATA, {
-    modelId, data
-  });
+export default function (actionContext, metricId) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.CLOSE_PARAM_FINDER);
+  actionContext.dispatch(ACTIONS.CLOSE_PARAM_FINDER, metricId);
 }

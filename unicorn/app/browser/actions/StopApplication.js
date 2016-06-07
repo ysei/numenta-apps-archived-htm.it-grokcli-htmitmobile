@@ -19,19 +19,11 @@ import {ACTIONS} from '../lib/Constants';
 
 
 /**
- * Show {@link CreateModelDialog} page
- * @emits {SHOW_CREATE_MODEL_DIALOG}
- * @param {FluxibleContext} actionContext - The action context
- * @param {Object} payload - Payload data object
- * @param {String} payload.fileName - Filename path of metric
- * @param {String} payload.metricName - Name to use for Metric
- * @emits {SHOW_CREATE_MODEL_DIALOG}
+ * Close application
+ * @param {FluxibleContext} actionContext - Fluxible action context object
+ * @emits {STOP_APPLICATION}
  */
-export default function (actionContext, payload) {
-  actionContext.getGATracker().event('ACTION',
-    ACTIONS.SHOW_CREATE_MODEL_DIALOG);
-  let {fileName, metricName} = payload;
-  actionContext.dispatch(ACTIONS.SHOW_CREATE_MODEL_DIALOG, {
-    fileName, metricName
-  });
+export default function (actionContext) {
+  actionContext.getGATracker().event('ACTION', ACTIONS.STOP_APPLICATION);
+  actionContext.dispatch(ACTIONS.STOP_APPLICATION);
 }

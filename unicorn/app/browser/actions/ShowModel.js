@@ -26,11 +26,14 @@ import LoadMetricDataAction from './LoadMetricData';
  * @param  {string} modelId - The model to show.
  *                            Must be in the {@link ModelStore}
  * @emits {SHOW_MODEL}
+ * @emits {PREPARE_FOR_MODEL_RESULTS}
  * @emits {LoadMetricDataAction}
  * @returns {Promise} - A Promise to be resolved with return value
  */
 export default function (actionContext, modelId) {
   actionContext.getGATracker().event('ACTION', ACTIONS.SHOW_MODEL);
+
+  actionContext.dispatch(ACTIONS.PREPARE_FOR_MODEL_RESULTS, modelId);
 
   return Promise.all([
     actionContext.executeAction(LoadModelDataAction, modelId),

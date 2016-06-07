@@ -3,12 +3,6 @@
   "id": "/db/MetricData",
   "type": "object",
   "properties": {
-    "metric_uid": {
-      "type": "string",
-      "maxLength": 50,
-      "minLength": 1,
-      "required": true
-    },
     "iso_timestamp": {
       "type": "string",
       "minLength": 10,

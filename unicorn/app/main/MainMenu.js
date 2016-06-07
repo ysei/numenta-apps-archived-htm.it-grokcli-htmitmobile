@@ -15,64 +15,194 @@
 //
 // http://numenta.org/licenses/
 
-import defaultMenu from 'electron-default-menu';
-let electron = require('electron');
-
 /**
  * Main top system menu (File/Open.., etc) for application
  */
 
-let menu = defaultMenu();
+const electron = require('electron');
+const name = electron.app.getName();
+const VERSION = electron.app.getVersion();
 
-let aboutMenuItem = menu[0].submenu[0];
-if (aboutMenuItem.label === 'About HTM Studio') {
-  // Don't show the default Electron dialog.
-  delete aboutMenuItem.role;
+/* eslint-disable no-process-env */
+const DEBUG = process.env.NODE_ENV === 'development';
+/* eslint-enable no-process-env */
 
-  // Do this instead.
-  aboutMenuItem.click = () => {
-    const BrowserWindow = electron.BrowserWindow;
-    let win = new BrowserWindow({width: 283, height: 230, title: ''});
-    win.loadURL(`file://${__dirname}/../browser/about.html`);
-  };
-} else {
-  throw new Error(
-    `Unexpected menu item in first position: ${aboutMenuItem.label}`
+let crossPlatformMenu = [
+  {
+    label: name,
+    submenu: [
+      {
+        label: `About ${name}`,
+        click() {
+          const BrowserWindow = electron.BrowserWindow;
+          let win = new BrowserWindow({width: 283, height: 230, title: ''});
+          win.loadURL(`file://${__dirname}/../browser/about.html`);
+        }
+      }
+    ]
+  },
+  {
+    label: 'View',
+    submenu: [
+      {
+        label: 'Toggle Full Screen',
+        accelerator: process.platform === 'darwin' ? 'Ctrl+Command+F' : 'F11',
+        click(item, focusedWindow) {
+          if (focusedWindow)
+            focusedWindow.setFullScreen(!focusedWindow.isFullScreen());
+        }
+      }
+    ]
+  },
+  {
+    label: 'Help',
+    role: 'help',
+    submenu: [
+      {
+        label: 'Learn More',
+        click() {
+          let url = 'http://numenta.com/htm-studio';
+          electron.shell.openExternal(url);
+        }
+      },
+      {
+        label: 'Frequently Asked Questions',
+        click() {
+          let url = 'http://numenta.com/htm-studio#faq';
+          electron.shell.openExternal(url);
+        }
+      },
+      {
+        label: 'Provide Feedback',
+        click() {
+          let url = 'http://numenta.com/htm-studio#feedback';
+          electron.shell.openExternal(url);
+        }
+      },
+      {
+        label: 'Report Bug',
+        click() {
+          let url = `mailto:htm-studio@numenta.com?subject=HTM Studio ${VERSION} bug&body=DO NOT REMOVE THIS INFORMATION: HTM Studio version ${VERSION}. Please describe the steps to reproduce the bug below. `; // eslint-disable-line
+          electron.shell.openExternal(url);
+        }
+      }
+    ]
+  }
+];
+
+
+if (process.platform === 'darwin') {
+  let aboutMenu = crossPlatformMenu.find((item) => item.label === name);
+
+  aboutMenu.submenu.push(
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Services',
+      role: 'services',
+      submenu: []
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: `Hide ${name}`,
+      accelerator: 'Command+H',
+      role: 'hide'
+    },
+    {
+      label: 'Hide Others',
+      accelerator: 'Command+Alt+H',
+      role: 'hideothers'
+    },
+    {
+      label: 'Show All',
+      role: 'unhide'
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Quit',
+      accelerator: 'Command+Q',
+      click() {
+        electron.app.quit();
+      }
+    }
   );
+
+  // FIXME: UNI-520 - Bring back Edit menu on windows
+  const editMenu = {
+    label: 'Edit',
+    submenu: [
+      {
+        label: 'Undo',
+        accelerator: 'CmdOrCtrl+Z',
+        role: 'undo'
+      },
+      {
+        label: 'Redo',
+        accelerator: 'Shift+CmdOrCtrl+Z',
+        role: 'redo'
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Cut',
+        accelerator: 'CmdOrCtrl+X',
+        role: 'cut'
+      },
+      {
+        label: 'Copy',
+        accelerator: 'CmdOrCtrl+C',
+        role: 'copy'
+      },
+      {
+        label: 'Paste',
+        accelerator: 'CmdOrCtrl+V',
+        role: 'paste'
+      },
+      {
+        label: 'Select All',
+        accelerator: 'CmdOrCtrl+A',
+        role: 'selectall'
+      }
+    ]
+  };
+
+  const windowMenu = {
+    label: 'Window',
+    role: 'window',
+    submenu: [
+      {
+        label: 'Minimize',
+        accelerator: 'CmdOrCtrl+M',
+        role: 'minimize'
+      },
+      {
+        label: 'Close',
+        accelerator: 'CmdOrCtrl+W',
+        role: 'close'
+      }
+    ]
+  };
+
+  // Add developer tools to window menu in development mode
+  if (DEBUG) {
+    windowMenu.submenu.push({
+      label: 'Toggle Developer Tools',
+      accelerator: process.platform === 'darwin' ? 'Alt+Command+I'
+                                                 : 'Ctrl+Shift+I',
+      click(item, focusedWindow) {
+        if (focusedWindow)
+          focusedWindow.toggleDevTools();
+      }
+    });
+  }
+
+  crossPlatformMenu.splice(1, 0, editMenu, windowMenu);
 }
 
-let helpMenu = menu.find((item) => item.label === 'Help');
-if (helpMenu) {
-  // Learn More
-  helpMenu.submenu.splice(0, 1); // Remove old behavior
-  helpMenu.submenu.push({
-    label: 'Lean More',
-    click() {
-      let url = 'http://numenta.com/htm-studio';
-      electron.shell.openExternal(url);
-    }
-  });
-
-  // FAQ
-  helpMenu.submenu.push({
-    label: 'Frequently Asked Questions',
-    click() {
-      let url = 'http://numenta.com/htm-studio#faq';
-      electron.shell.openExternal(url);
-    }
-  });
-
-  // Provide Feedback
-  helpMenu.submenu.push({
-    label: 'Provide Feedback',
-    click() {
-      let url = 'http://numenta.com/htm-studio#feedback';
-      electron.shell.openExternal(url);
-    }
-  });
-
-} else {
-  throw new Error('Could not find Help menu.');
-}
-
-export default menu;
+export default crossPlatformMenu;

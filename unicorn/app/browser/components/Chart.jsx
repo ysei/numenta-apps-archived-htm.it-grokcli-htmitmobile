@@ -180,6 +180,22 @@ export default class Chart extends React.Component {
     return this._minDelta * element.offsetWidth / ANOMALY_BAR_WIDTH;
   }
 
+  _getEndDateWindow() {
+    let timespan = this._guardResolution
+          ? this._xScale.domain()[1] - this._xScale.domain()[0]
+          : this._getMinTimespan();
+
+    let bottom = this._data[0][DATA_INDEX_TIME];
+    let top = this._data[this._data.length - 1][DATA_INDEX_TIME];
+    let extent = [Math.max(bottom, (top - timespan)), top];
+    let discrepancy = timespan - (extent[1] - extent[0]);
+    if (discrepancy > 0) {
+      extent[1] += discrepancy;
+    }
+
+    return extent;
+  }
+
   _describeZoomLevel(zoomLevel) {
     if (zoomLevel === 1) {
       return this._config.get('chart:zoom:all');
@@ -551,7 +567,7 @@ export default class Chart extends React.Component {
     }
   }
 
-  _chartHoverPaintText(item) { // eslint-disable-line max-statements
+  _chartHoverPaintText(item) { // eslint-disable-line
     let chartNode = ReactDOM.findDOMNode(this.refs['chart']);
     let legend = d3.select(chartNode).select('.legend');
     legend.html('');
@@ -771,7 +787,9 @@ export default class Chart extends React.Component {
     }
 
     let dateWindow;
-    if (metric.dateWindow) {
+    if (this.props.model.active) {
+      dateWindow = this._getEndDateWindow();
+    } else if (metric.dateWindow) {
       dateWindow = metric.dateWindow;
 
       let minTimespan = this._getMinTimespan();
@@ -1027,18 +1045,8 @@ export default class Chart extends React.Component {
       if (this._showAll) {
         this._xScale.domain([bottom, top]);
       } else if (this._jumpToNewResults && this.props.modelData.length > 0) {
-        let timespan = this._guardResolution
-              ? this._xScale.domain()[1] - this._xScale.domain()[0]
-              : this._getMinTimespan();
-
-        let extent = [Math.max(bottom, (top - timespan)),
-                      top];
-        let discrepancy = timespan - (extent[1] - extent[0]);
-        if (discrepancy > 0) {
-          extent[1] += discrepancy;
-        }
-
-        this._xScale.domain(extent);
+        let dateWindow = this._getEndDateWindow();
+        this._xScale.domain(dateWindow);
       }
 
       this._yScaleUpdate();

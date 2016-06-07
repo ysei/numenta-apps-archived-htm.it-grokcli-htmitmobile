@@ -24,10 +24,12 @@ Object.assign(module.exports, CommonConstants);
  *
  * - Application
  *  - START_APPLICATION: {@StartApplication}
+ *  - STOP_APPLICATION
  *
  * - File
  *  - DELETE_FILE: {@link DeleteFile}
  *  - LIST_FILES: {@link ListFiles}
+ *  - SET_FILE_EXPANDED_STATE: {@link SetFileExpandedState}
  *  - UPLOADED_FILE: {@link FileUpload}
  *  - UPDATE_FILE: {@link FileUpdate}
  *  - VALIDATE_FILE: {@link FileValidate}
@@ -56,23 +58,25 @@ Object.assign(module.exports, CommonConstants);
  *  - DELETE_MODEL: {@link DeleteModel}
  *  - START_MODEL: {@link StartModel}
  *  - STOP_MODEL: {@link StopModel}
+ *  - CLOSE_MODEL: {@link CloseModel}
  *  - SHOW_MODEL: {@link ShowModel}
  *  - HIDE_MODEL: {@link HideModel}
- *  - EXPORT_MODEL_RESULTS: {@link ExportModelResults}
  *  - ADD_MODEL_FAILED
  *  - LIST_MODELS_FAILURE
  *  - DELETE_MODEL_FAILED
  *  - START_MODEL_FAILED
  *  - STOP_MODEL_FAILED
- *  - EXPORT_MODEL_RESULTS_FAILED: {@link ExportModelResults}
  *  - UNKNOWN_MODEL_FAILURE
  *
  * - Model Data
+ *  - PREPARE_FOR_MODEL_RESULTS
+ *  - NOTIFY_NEW_MODEL_RESULTS
  *  - RECEIVE_MODEL_DATA: {@link ReceiveModelData}
  *
  * - Param Finder
  *   - START_PARAM_FINDER: {@link StartParamFinder}
  *   - STOP_PARAM_FINDER: {@link StopParamFinder}
+ *   - CLOSE_PARAM_FINDER: {@link CloseParamFinder}
  *   - START_PARAM_FINDER_FAILED {@link ParamFinderError}
  *   - STOP_PARAM_FINDER_FAILED {@link ParamFinderError}
  *   - UNKNOWN_PARAM_FINDER_FAILURE {@link ParamFinderError}
@@ -98,10 +102,12 @@ Object.assign(module.exports, CommonConstants);
 export const ACTIONS = Object.freeze({
   // Application
   START_APPLICATION: 'START_APPLICATION',
+  STOP_APPLICATION: 'STOP_APPLICATION',
 
   // File
   DELETE_FILE: 'DELETE_FILE',
   LIST_FILES: 'LIST_FILES',
+  SET_FILE_EXPANDED_STATE: 'SET_FILE_EXPANDED_STATE',
   UPLOADED_FILE: 'UPLOADED_FILE',
   UPDATE_FILE: 'UPDATE_FILE',
   VALIDATE_FILE: 'VALIDATE_FILE',
@@ -128,18 +134,19 @@ export const ACTIONS = Object.freeze({
   LIST_MODELS: 'LIST_MODELS',
   START_MODEL: 'START_MODEL',
   STOP_MODEL: 'STOP_MODEL',
+  CLOSE_MODEL: 'CLOSE_MODEL',
   SHOW_MODEL: 'SHOW_MODEL',
   HIDE_MODEL: 'HIDE_MODEL',
-  EXPORT_MODEL_RESULTS: 'EXPORT_MODEL_RESULTS',
   ADD_MODEL_FAILED: 'ADD_MODEL_FAILED',
   DELETE_MODEL_FAILED: 'DELETE_MODEL_FAILED',
   LIST_MODELS_FAILURE: 'LIST_MODELS_FAILURE',
   START_MODEL_FAILED: 'START_MODEL_FAILED',
   STOP_MODEL_FAILED: 'STOP_MODEL_FAILED',
-  EXPORT_MODEL_RESULTS_FAILED: 'EXPORT_MODEL_RESULTS_FAILED',
   UNKNOWN_MODEL_FAILURE: 'UNKNOWN_MODEL_FAILURE',
 
   // Model Data
+  PREPARE_FOR_MODEL_RESULTS: 'PREPARE_FOR_MODEL_RESULTS',
+  NOTIFY_NEW_MODEL_RESULTS: 'NOTIFY_NEW_MODEL_RESULTS',
   RECEIVE_MODEL_DATA: 'RECEIVE_MODEL_DATA',
   LOAD_MODEL_DATA: 'LOAD_MODEL_DATA',
   LOAD_MODEL_DATA_FAILED: 'LOAD_MODEL_DATA_FAILED',
@@ -147,6 +154,7 @@ export const ACTIONS = Object.freeze({
   // Param Finder
   START_PARAM_FINDER: 'START_PARAM_FINDER',
   STOP_PARAM_FINDER: 'STOP_PARAM_FINDER',
+  CLOSE_PARAM_FINDER: 'CLOSE_PARAM_FINDER',
   START_PARAM_FINDER_FAILED: 'START_PARAM_FINDER_FAILED',
   STOP_PARAM_FINDER_FAILED: 'STOP_PARAM_FINDER_FAILED',
   UNKNOWN_PARAM_FINDER_FAILURE: 'UNKNOWN_PARAM_FINDER_FAILURE',
@@ -168,6 +176,16 @@ export const ACTIONS = Object.freeze({
 
   // UI Chart update view position
   CHART_UPDATE_VIEWPOINT: 'CHART_UPDATE_VIEWPOINT'
+});
+
+
+/**
+ * Component Google Analytics events
+ */
+export const COMPONENT_GA_EVENTS = Object.freeze({
+  // Model
+  EXPORT_MODEL_RESULTS: 'EXPORT_MODEL_RESULTS',
+  EXPORT_MODEL_RESULTS_FAILED: 'EXPORT_MODEL_RESULTS_FAILED'
 });
 
 

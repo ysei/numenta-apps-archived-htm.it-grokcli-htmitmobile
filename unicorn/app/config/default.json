@@ -90,6 +90,9 @@
   "snackbar": {
     "completed": {
       "message": "HTM Model completed for %s"
+    },
+    "exported": {
+      "message": "HTM Model results exported for %s"
     }
   },
   "heading": {

@@ -22,8 +22,8 @@ import {ACTIONS} from '../lib/Constants';
  * Dispatches `model_runner` errors
  * @param {FluxActionContext} actionContext FluxibleContext
  * @param {object} payload       Error payload
- * @param {string} payload.modelId The model that generate the error
  * @param {string} payload.command The command that generate the error
+ * @param {string} payload.modelId The model that generate the error
  * @param {string} payload.error The error description
  * @emits {START_MODEL_FAILED}
  * @emits {STOP_MODEL_FAILED}

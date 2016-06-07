@@ -29,6 +29,7 @@ import TableRow from 'material-ui/lib/table/table-row';
 import TableRowColumn from 'material-ui/lib/table/table-row-column';
 import TextField from 'material-ui/lib/text-field';
 import Colors from 'material-ui/lib/styles/colors';
+import {shell} from 'electron';
 
 import FileDetailsStore from '../stores/FileDetailsStore';
 import FileUploadAction from '../actions/FileUpload';
@@ -83,9 +84,18 @@ const STYLES = {
     width: '200px',
     height: '2rem',
     textOverflow: 'ellipsis'
+  },
+  recordsDisplay: {
+    fontStyle: 'italic',
+    marginTop: '2.5rem',
+    whiteSpace: 'nowrap'
+  },
+  supportedFormats: {
+    cursor: 'pointer',
+    textDecoration: 'underline',
+    color: 'grey'
   }
 };
-
 
 /**
  * Show file details page. The file must be available from the {@link FileStore}
@@ -155,6 +165,10 @@ export default class FileDetails extends React.Component {
     this.context.executeAction(HideFileDetailsAction);
   }
 
+  _onSupportedFormatsClick() {
+    shell.openExternal('http://numenta.com/htm-studio/#start');
+  }
+
   _onSave() {
     let file = this.props.file;
     if (file) {
@@ -211,15 +225,30 @@ export default class FileDetails extends React.Component {
 
   _renderBody() {
     let file = this.props.file;
+    let error, numRecords, recordsDisplay, supportedFormats, warning;
     // File Size in KB
     let fileSize = (this.state.fileSize / 1024).toFixed();
-    let error, warning;
+    let table = this._renderDataTable();
+    if (file && table) {
+      numRecords = (file.records > 20) ? 20 : file.records;
+      recordsDisplay = (<p style={STYLES.recordsDisplay}>
+                          Displaying {numRecords} rows out of {file.records}
+                        </p>);
+    }
+
     if (this.props.error) {
-      error =  (<p style={STYLES.error}>{this.props.error}</p>);
+      supportedFormats = (
+          <a style={STYLES.supportedFormats}
+           onClick={this._onSupportedFormatsClick}>
+            supported formats
+          </a>
+      );
+      error = (<p style={STYLES.error}>
+                 {this.props.error} (see {supportedFormats})
+               </p>);
     } else if (this.props.warning) {
       warning = (<p style={STYLES.error}>{this.props.warning}</p>);
     }
-
     return (
       <div style={STYLES.container}>
         {error} {warning}
@@ -234,7 +263,7 @@ export default class FileDetails extends React.Component {
             ref="fileSize"
             value={`${fileSize} KB`}/>
           <TextField
-            floatingLabelText="Number of rows"
+            floatingLabelText="Number of valid rows"
             name="numOfRows"
             readOnly={true}
             ref="numOfRows"
@@ -242,8 +271,9 @@ export default class FileDetails extends React.Component {
             underlineFocusStyle={{display:'none'}}
             underlineStyle={{display:'none'}}
             value={file.records.toString()}/>
+            {recordsDisplay}
         </div>
-        {this._renderDataTable()}
+        {table}
       </div>
     );
   }
@@ -251,15 +281,17 @@ export default class FileDetails extends React.Component {
   _renderActions() {
     if (this.props.newFile) {
       return [
-        <FlatButton label="Cancel"
-                    onRequestClose={this._onRequestClose.bind(this)}
-                    onTouchTap={this._onRequestClose.bind(this)}/>,
+        <div>
+          <FlatButton label="Cancel"
+                      onRequestClose={this._onRequestClose.bind(this)}
+                      onTouchTap={this._onRequestClose.bind(this)}/>
 
-        <RaisedButton label="Add File" primary={true} ref="submit"
-                    disabled={this.props.error}
-                    style={STYLES.button}
-                    onRequestClose={this._onRequestClose.bind(this)}
-                    onTouchTap={this._onSave.bind(this)}/>
+          <RaisedButton label="Add File" primary={true} ref="submit"
+                      disabled={this.props.error}
+                      style={STYLES.button}
+                      onRequestClose={this._onRequestClose.bind(this)}
+                      onTouchTap={this._onSave.bind(this)}/>
+        </div>
       ];
     }
     return(<RaisedButton label="Close" primary={true}
