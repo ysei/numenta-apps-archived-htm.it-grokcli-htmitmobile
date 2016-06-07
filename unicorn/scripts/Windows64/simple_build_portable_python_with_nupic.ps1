@@ -1,7 +1,7 @@
 ﻿# See README.md for instructions about prerequisites and how to run this script.
 
 param (
-    [string]$nupic_version = "0.3.6"
+    [string]$nupic_version = "0.5.0"
 )
 
 # Make the script fail on cmlets errors
