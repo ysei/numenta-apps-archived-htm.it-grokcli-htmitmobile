@@ -566,7 +566,7 @@ export class DatabaseService {
     let idx = 0;
 
     // Metric Data id is based on metric Id. See Util.generateMetricDataId
-    this._modelData.createValueStream({
+    let inputStream = this._modelData.createValueStream({
       gte: `${metricId}`,
       lt: `${metricId}\xff`
     })
@@ -601,6 +601,11 @@ export class DatabaseService {
       parser.end();
       callback();
     });
+
+    output.on('error', (error) => {
+      inputStream.destroy();
+      callback(error);
+    })
   }
 
   /**
