@@ -239,7 +239,8 @@ const EXPECTED_EXPORTED_RESULTS =
 2015-08-26T02:49:31+08:00,44,HIGH,1
 2015-08-26T02:50:31+08:00,45,HIGH,1`;
 
-const TEMP_DIR = path.join(os.tmpDir(), 'unicorn_db');
+const TEMP_DB_DIR = path.join(os.tmpDir(), 'unicorn_db');
+const TEMP_CACHE_DIR = path.join(os.tmpDir(), 'unicorn_files');
 
 const BATCH_MODEL_DATA_NO_TZ = [
   {
@@ -288,7 +289,7 @@ describe('DatabaseService:', () => {
   let service;
 
   before(() => {
-    service = new DatabaseService(TEMP_DIR);
+    service = new DatabaseService(TEMP_DB_DIR, TEMP_CACHE_DIR);
   });
   after(() => {
     service.close((err) => assert.ifError(err));
@@ -395,7 +396,9 @@ describe('DatabaseService:', () => {
         assert.ifError(error);
         service.getFile(EXPECTED_FILENAME_ID, (error, actual) => {
           assert.ifError(error);
-          assert.deepStrictEqual(JSON.parse(actual), EXPECTED_FILE);
+          let filename = path.join(TEMP_CACHE_DIR, path.basename(EXPECTED_FILE.filename));
+          let expected = Object.assign(EXPECTED_FILE, {filename});
+          assert.deepStrictEqual(JSON.parse(actual), expected);
           assert.ifError(error);
           service.getMetricsByFile(EXPECTED_FILENAME_ID, (error, actual) => {
             assert.ifError(error);
@@ -418,7 +421,9 @@ describe('DatabaseService:', () => {
         assert.ifError(error);
         service.getFile(NO_HEADER_CSV_FILE_ID, (error, actual) => {
           assert.ifError(error);
-          assert.deepStrictEqual(JSON.parse(actual), EXPECTED_NO_HEADER_CSV_FILE);
+          let filename = path.join(TEMP_CACHE_DIR, path.basename(EXPECTED_NO_HEADER_CSV_FILE.filename));
+          let expected = Object.assign(EXPECTED_NO_HEADER_CSV_FILE, {filename});
+          assert.deepStrictEqual(JSON.parse(actual), expected);
           assert.ifError(error);
           service.getMetricsByFile(NO_HEADER_CSV_FILE_ID, (error, actual) => {
             assert.ifError(error);
@@ -433,7 +438,9 @@ describe('DatabaseService:', () => {
         assert.ifError(error);
         service.getFile(IGNORE_FIELDS_FILE_ID, (error, actual) => {
           assert.ifError(error);
-          assert.deepStrictEqual(JSON.parse(actual), EXPECTED_IGNORE_FIELDS_FILE);
+          let filename = path.join(TEMP_CACHE_DIR, path.basename(EXPECTED_IGNORE_FIELDS_FILE.filename));
+          let expected = Object.assign(EXPECTED_IGNORE_FIELDS_FILE, {filename});
+          assert.deepStrictEqual(JSON.parse(actual), expected);
           assert.ifError(error);
           service.getMetricsByFile(IGNORE_FIELDS_FILE_ID, (error, actual) => {
             assert.ifError(error);
@@ -476,29 +483,6 @@ describe('DatabaseService:', () => {
                 assert.ifError(error);
                 assert.equal(JSON.parse(actual).length, 0);
                 done();
-              });
-            });
-          });
-        });
-      });
-    });
-    it('should delete file by id from the database', (done) => {
-      service.uploadFile(EXPECTED_FILENAME, (error, file) => {
-        service.uploadFile(EXPECTED_FILENAME, (error, file) => {
-          assert.ifError(error);
-          service.deleteFileById(EXPECTED_FILENAME_ID, (error) => {
-            assert.ifError(error);
-            service.getFile(EXPECTED_FILENAME_ID, (error, actual) => {
-              assert(error && error.type === 'NotFoundError',
-                'File was not deleted');
-              service.getMetricsByFile(EXPECTED_FILENAME_ID, (error, actual) => {
-                assert.ifError(error);
-                assert.equal(JSON.parse(actual).length, 0);
-                service.getMetricData(EXPECTED_METRIC_ID, (error, actual) => {
-                  assert.ifError(error);
-                  assert.equal(JSON.parse(actual).length, 0);
-                  done();
-                });
               });
             });
           });
@@ -877,7 +861,7 @@ describe('DatabaseService:', () => {
         });
     });
     it('should export ModelData from the database (time zone: yes)', (done) => {
-      const EXPORTED_FILENAME = path.join(TEMP_DIR, 'file.csv');
+      const EXPORTED_FILENAME = path.join(TEMP_DB_DIR, 'file.csv');
       after(() => {
         fs.unlinkSync(EXPORTED_FILENAME); // eslint-disable-line no-sync
       });
@@ -900,7 +884,7 @@ describe('DatabaseService:', () => {
     });
 
     it('should export ModelData from the database (time zone: no)', (done) => {
-      const EXPORTED_FILENAME = path.join(TEMP_DIR, 'file2.csv');
+      const EXPORTED_FILENAME = path.join(TEMP_DB_DIR, 'file2.csv');
       after(() => {
         fs.unlinkSync(EXPORTED_FILENAME); // eslint-disable-line no-sync
       });
