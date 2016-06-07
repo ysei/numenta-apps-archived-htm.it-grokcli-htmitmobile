@@ -1027,7 +1027,7 @@ export class DatabaseService {
           if (err.code && err.code === 'EEXIST') {
             callback();
             return;
-}
+          }
           callback(err);
           return;
         }
