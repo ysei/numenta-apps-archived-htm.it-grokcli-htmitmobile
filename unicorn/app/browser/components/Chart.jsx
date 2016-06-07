@@ -251,17 +251,6 @@ export default class Chart extends React.Component {
     let height = this._styles.root.height - RANGE_SELECTOR_HEIGHT - 3;
     let range = [height - paddingPx, paddingPx];
 
-    // If we base the y scale on the maximum and minimum for the entire time
-    // series, datasets that have large spikes become mostly unreadable. The y
-    // scale should change based on the range of visible values.
-    //
-    // If we base the y scale on the visible minimum and maximum, the chart is
-    // deceptive. As you view different part of the time series, the fact that
-    // the data's peaks and troughs are changing is obscured.
-    //
-    // Current strategy: by default, use a fixed scale, but make sure the
-    // visible data is using at least 20% of the vertical space. If it's not,
-    // change the domain so that it is.
     let xExtentVisible = this._xScale.domain();
     let yExtentVisible = [Infinity, -Infinity];
     for (let i = 0; i < this._data.length; i++) {
@@ -284,25 +273,6 @@ export default class Chart extends React.Component {
       }
     }
 
-    let ySpread = this._valueExtent[1] - this._valueExtent[0];
-    let ySpreadVisible = yExtentVisible[1] - yExtentVisible[0];
-    let spreadCovered = ySpreadVisible / ySpread;
-    let minVerticalSpaceUsage = 1/5;
-
-    let yExtentAdjusted;
-
-    if (spreadCovered < minVerticalSpaceUsage) {
-      let adjustment = spreadCovered / minVerticalSpaceUsage;
-      yExtentAdjusted = [
-        yExtentVisible[0] -
-          (yExtentVisible[0] - this._valueExtent[0]) * adjustment,
-        yExtentVisible[1] +
-          (this._valueExtent[1] - yExtentVisible[1]) * adjustment
-      ];
-    } else {
-      yExtentAdjusted = [this._valueExtent[0], this._valueExtent[1]];
-    }
-
     if (this.props.modelData.length > 0) {
       // Add space for green anomaly bars.
       range[0] -= anomalyScale(0) * height;
@@ -311,7 +281,7 @@ export default class Chart extends React.Component {
     // Use d3's 'nice' so that small changes in the domain don't cause
     // the scale to change.
     let yScaleIntermediate = d3.scale.linear()
-          .domain(yExtentAdjusted)
+          .domain(yExtentVisible)
           .range(range)
           .nice();
 
