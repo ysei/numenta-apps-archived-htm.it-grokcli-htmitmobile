@@ -32,6 +32,7 @@ import {
   parseTimestampFallbackUtc, parseIsoTimestampFallbackUtc, getNaiveTime
 } from '../common/timestamp';
 
+import config from './ConfigService';
 import fileService from './FileService';
 import {
   generateMetricDataId, generateFileId
@@ -63,6 +64,8 @@ function isNA(field) {
   return (NA_STRINGS.indexOf(field.toLowerCase()) > -1);
 }
 
+/** samples location */
+const SAMPLES_FILE_PATH = path.join(__dirname, config.get('samples:path'));
 
 /**
  * Calculate default database location. If running inside `Electron` then use
@@ -77,6 +80,24 @@ function _getDefaultDatabaseLocation() {
       // This module is only available inside 'Electron' main process
       const app = require('app'); // eslint-disable-line
       location = path.join(app.getPath('userData'), 'database2');
+    } catch (error) { /* no-op */ }
+  }
+  return location;
+}
+
+/**
+ * Calculate file cache location. If running inside `Electron` then use
+ * the application user data folder.
+ * See https://github.com/atom/electron/blob/master/docs/api/app.md
+ * @return {string} Full path name
+ */
+function _getDefaultFileCacheLocation() {
+  let location = path.join(os.tmpdir());
+  if (!isElectronRenderer) {
+    try {
+      // This module is only available inside 'Electron' main process
+      const app = require('app'); // eslint-disable-line
+      location = path.join(app.getPath('userData'), 'files');
     } catch (error) { /* no-op */ }
   }
   return location;
@@ -98,11 +119,16 @@ function stringifyResultsCallback(callback) {
  *  For sharing our access to a file-based NodeJS database system.
  *  Meant for heavy persistence.
  * @param {string} [path] - Database location path (optional)
+ * @param {string} [fileCachePath] - File cache location path (optional)
  */
 export class DatabaseService {
 
-  constructor(path) {
+  constructor(path, fileCachePath) {
     let location = path || _getDefaultDatabaseLocation();
+    this._fileCachePath = fileCachePath || _getDefaultFileCacheLocation();
+
+    // Create File Cache directory
+    this._createFileCacheDir()
 
     // Configure schema validator
     this.validator = new Validator();
@@ -723,27 +749,12 @@ export class DatabaseService {
 
   /**
    * Delete metric and associated metrics from database.
-   * @param  {string}   fileId   File to delete
-   * @param  {Function} callback called when the operation is complete,
-   *                             with a possible error argument
-   */
-  deleteFileById(fileId, callback) {
-    this._files.del(fileId, (error) => {
-      if (error) {
-        callback(error);
-        return;
-      }
-      this.deleteMetricsByFile(fileId, callback);
-    });
-  }
-
-  /**
-   * Delete metric and associated metrics from database.
    * @param  {string}   filename   File to delete
    * @param  {Function} callback called when the operation is complete,
    *                             with a possible error argument
    */
   deleteFile(filename, callback) {
+    this._deleteFileFromCache(filename);
     let fileId = generateFileId(filename);
     this._files.del(fileId, (error) => {
       if (error) {
@@ -905,8 +916,8 @@ export class DatabaseService {
     if (typeof file === 'string') {
       file = instantiator.instantiate(DBFileSchema);
       file.uid = generateFileId(fileToUpload);
-      file.filename = fileToUpload;
       file.name = path.basename(fileToUpload);
+      file.filename = path.join(this._fileCachePath, file.name);
     } else {
       // Validate file object
       const validation = this.validator.validate(file, DBFileSchema);
@@ -914,9 +925,25 @@ export class DatabaseService {
         callback(validation.errors);
         return;
       }
+      // Get file to upload original name from 'file' object
+      fileToUpload = file.filename;
     }
 
-    promisify(::fileService.getFields, file.filename)
+    new Promise((resolve, reject) => {
+      if (path.dirname(fileToUpload) === SAMPLES_FILE_PATH) {
+        // Do not copy sample files
+        resolve();
+        return;
+      }
+
+      // Copy file to cache
+      let source = fs.createReadStream(fileToUpload);
+      let target = fs.createWriteStream(file.filename);
+      source.on('error', reject);
+      target.on('error', reject);
+      target.on('finish', resolve);
+      source.pipe(target);
+    }).then(() => promisify(::fileService.getFields, file.filename))
       .then((results) => {
         let {offset, fields} = results;
         file.rowOffset = offset;
@@ -981,7 +1008,55 @@ export class DatabaseService {
           recordIndex++;
         }));
       })
-      .catch(callback);
+      .catch((error) => {
+        // Delete file from cache
+        this._deleteFileFromCache(file.filename);
+        callback(error);
+      });
+  }
+
+  /**
+   * Create File cache dir if it does not exist
+   * @param  {Function} callback Async callback
+   */
+  _createFileCacheDir(callback) {
+    fs.mkdir(this._fileCachePath, (err) => {
+      if (callback) {
+        if (err) {
+          // Ignore 'EEXIST: file already exists'
+          if (err.code && err.code === 'EEXIST') {
+            callback();
+            return;
+          }
+          callback(err);
+          return;
+        }
+        callback();
+        return;
+      }
+    });
+  }
+
+  /**
+   * Delete file from cache
+   * @param  {filename} filename File to delete
+   * @param {Function} callback Async callback function(error, )
+  */
+  _deleteFileFromCache(filename, callback) {
+    // Delete file from cache
+    if (path.dirname(filename) === this._fileCachePath) {
+      fs.access(filename, (err) => {
+        if (!err) {
+          fs.unlink(filename, callback);
+        } else if (callback) {
+          callback(err)
+          return;
+        }
+      });
+    } else if (callback) {
+      callback()
+      return;
+    }
   }
 }
 
