@@ -24,6 +24,7 @@ Object.assign(module.exports, CommonConstants);
  *
  * - Application
  *  - START_APPLICATION: {@StartApplication}
+ *  - STOP_APPLICATION
  *
  * - File
  *  - DELETE_FILE: {@link DeleteFile}
@@ -59,13 +60,11 @@ Object.assign(module.exports, CommonConstants);
  *  - STOP_MODEL: {@link StopModel}
  *  - SHOW_MODEL: {@link ShowModel}
  *  - HIDE_MODEL: {@link HideModel}
- *  - EXPORT_MODEL_RESULTS: {@link ExportModelResults}
  *  - ADD_MODEL_FAILED
  *  - LIST_MODELS_FAILURE
  *  - DELETE_MODEL_FAILED
  *  - START_MODEL_FAILED
  *  - STOP_MODEL_FAILED
- *  - EXPORT_MODEL_RESULTS_FAILED: {@link ExportModelResults}
  *  - UNKNOWN_MODEL_FAILURE
  *
  * - Model Data
@@ -101,6 +100,7 @@ Object.assign(module.exports, CommonConstants);
 export const ACTIONS = Object.freeze({
   // Application
   START_APPLICATION: 'START_APPLICATION',
+  STOP_APPLICATION: 'STOP_APPLICATION',
 
   // File
   DELETE_FILE: 'DELETE_FILE',
@@ -134,13 +134,11 @@ export const ACTIONS = Object.freeze({
   STOP_MODEL: 'STOP_MODEL',
   SHOW_MODEL: 'SHOW_MODEL',
   HIDE_MODEL: 'HIDE_MODEL',
-  EXPORT_MODEL_RESULTS: 'EXPORT_MODEL_RESULTS',
   ADD_MODEL_FAILED: 'ADD_MODEL_FAILED',
   DELETE_MODEL_FAILED: 'DELETE_MODEL_FAILED',
   LIST_MODELS_FAILURE: 'LIST_MODELS_FAILURE',
   START_MODEL_FAILED: 'START_MODEL_FAILED',
   STOP_MODEL_FAILED: 'STOP_MODEL_FAILED',
-  EXPORT_MODEL_RESULTS_FAILED: 'EXPORT_MODEL_RESULTS_FAILED',
   UNKNOWN_MODEL_FAILURE: 'UNKNOWN_MODEL_FAILURE',
 
   // Model Data
@@ -174,6 +172,16 @@ export const ACTIONS = Object.freeze({
 
   // UI Chart update view position
   CHART_UPDATE_VIEWPOINT: 'CHART_UPDATE_VIEWPOINT'
+});
+
+
+/**
+ * Component Google Analytics events
+ */
+export const COMPONENT_GA_EVENTS = Object.freeze({
+  // Model
+  EXPORT_MODEL_RESULTS: 'EXPORT_MODEL_RESULTS',
+  EXPORT_MODEL_RESULTS_FAILED: 'EXPORT_MODEL_RESULTS_FAILED'
 });
 
 
