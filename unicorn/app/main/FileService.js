@@ -112,7 +112,7 @@ function guessTimestampFormat(timestamp) {
  * Check whether or not the given string can be converted into a valid
  *  {@link Date}
  * > NOTE: Based on 'Date.parse' which is browser and locale dependent and may
- * >			 not work in all cases.
+ * >       not work in all cases.
  * @param  {string}  value string value to chaeck
  * @return {Boolean}       true for valid date false otherwise
  */
@@ -306,23 +306,23 @@ export class FileService {
           let dateFields = fields.filter((field) => {
             return field.type === 'date';
           });
-          if (dateFields.length !== 1) {
-            error = 'The file should have one and only one date/time column';
-          } else if (!dateFields[0].format) {
-            error = `The date/time format used on column ` +
-                    `${dateFields[0].index + 1} is not supported`;
-          } else if (!fields.some((field) => field.type === 'number')) {
-            error = 'The file should have at least one numeric value';
-          }
+          if (dateFields.length === 0 && offset === 0) {
 
-          parser.removeAllListeners();
-          stream.destroy();
-          if (error) {
+          } else {
+            if (dateFields.length !== 1) {
+              error = 'The file should have one and only one date/time column';
+            } else if (!dateFields[0].format) {
+              error = `The date/time format used on column ` +
+                      `${dateFields[0].index + 1} is not supported`;
+            } else if (!fields.some((field) => field.type === 'number')) {
+              error = 'The file should have at least one numeric value';
+            }
+
+            parser.removeAllListeners();
+            stream.destroy();
             callback(error, {fields, offset});
             return;
           }
-          callback(error, {fields, offset});
-          return;
         }
         // Use first line as headers and wait for the second line
         headers = values;
