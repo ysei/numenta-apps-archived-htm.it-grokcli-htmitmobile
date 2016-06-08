@@ -5870,42 +5870,6 @@
     "stockExchange": "NYSE", 
     "symbol": "TWX"
   }, 
-  "Time Warner Cable": {
-    "metrics": {
-      "TWITTER.TWEET.HANDLE.TWC.VOLUME": {
-        "metricType": "TwitterVolume", 
-        "metricTypeName": "Twitter Volume", 
-        "modelParams": {
-          "minResolution": 0.6
-        }, 
-        "provider": "twitter", 
-        "screenNames": [
-          "TWC", 
-          "TWC_NYNJ"
-        ]
-      }, 
-      "XIGNITE.TWC.CLOSINGPRICE": {
-        "metricType": "StockPrice", 
-        "metricTypeName": "Stock Price", 
-        "modelParams": {
-          "minResolution": 0.2
-        }, 
-        "provider": "xignite", 
-        "sampleKey": "Close"
-      }, 
-      "XIGNITE.TWC.VOLUME": {
-        "metricType": "StockVolume", 
-        "metricTypeName": "Stock Volume", 
-        "modelParams": {
-          "minResolution": 0.2
-        }, 
-        "provider": "xignite", 
-        "sampleKey": "Volume"
-      }
-    }, 
-    "stockExchange": "NYSE", 
-    "symbol": "TWC"
-  }, 
   "Travelers Companies": {
     "metrics": {
       "TWITTER.TWEET.HANDLE.TRV.VOLUME": {
