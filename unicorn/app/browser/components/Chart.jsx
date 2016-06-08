@@ -269,10 +269,20 @@ export default class Chart extends React.Component {
 
     let xExtentVisible = this._xScale.domain();
     let yExtentVisible = [Infinity, -Infinity];
-    for (let i = 0; i < this._data.length; i++) {
+
+    // Find the start point.
+    let i = binarySearch(this._data, xExtentVisible[DATA_INDEX_TIME],
+                         (item, k) => {
+                           return item[DATA_INDEX_TIME] - k;
+                         });
+    if (i < 0) {
+      i = ~i;
+    }
+
+    for (; i < this._data.length; i++) {
       let t = this._data[i][0];
 
-      if (t < xExtentVisible[0]) continue;
+      // Find the end point.
       if (t > xExtentVisible[1]) break;
 
       let v1 = this._data[i][1];
@@ -281,9 +291,7 @@ export default class Chart extends React.Component {
       if (v1 || v1 === 0) {
         yExtentVisible[0] = Math.min(yExtentVisible[0], v1);
         yExtentVisible[1] = Math.max(yExtentVisible[1], v1);
-      }
-
-      if (v2 || v2 === 0) {
+      } else if (v2 || v2 === 0) {
         yExtentVisible[0] = Math.min(yExtentVisible[0], v2);
         yExtentVisible[1] = Math.max(yExtentVisible[1], v2);
       }
