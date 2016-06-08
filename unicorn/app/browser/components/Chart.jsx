@@ -266,6 +266,37 @@ export default class Chart extends React.Component {
     let paddingPx = 2;
     let height = this._styles.root.height - RANGE_SELECTOR_HEIGHT - 3;
     let range = [height - paddingPx, paddingPx];
+
+    let xExtentVisible = this._xScale.domain();
+    let yExtentVisible = [Infinity, -Infinity];
+
+    // Find the start point.
+    let i = binarySearch(this._data, xExtentVisible[DATA_INDEX_TIME],
+                         (item, k) => {
+                           return item[DATA_INDEX_TIME] - k;
+                         });
+    if (i < 0) {
+      i = ~i;
+    }
+
+    for (; i < this._data.length; i++) {
+      let t = this._data[i][0];
+
+      // Find the end point.
+      if (t > xExtentVisible[1]) break;
+
+      let v1 = this._data[i][1];
+      let v2 = this._data[i][2];
+
+      if (v1 || v1 === 0) {
+        yExtentVisible[0] = Math.min(yExtentVisible[0], v1);
+        yExtentVisible[1] = Math.max(yExtentVisible[1], v1);
+      } else if (v2 || v2 === 0) {
+        yExtentVisible[0] = Math.min(yExtentVisible[0], v2);
+        yExtentVisible[1] = Math.max(yExtentVisible[1], v2);
+      }
+    }
+
     if (this.props.modelData.length > 0) {
       // Add space for green anomaly bars.
       range[0] -= anomalyScale(0) * height;
@@ -274,7 +305,7 @@ export default class Chart extends React.Component {
     // Use d3's 'nice' so that small changes in the domain don't cause
     // the scale to change.
     let yScaleIntermediate = d3.scale.linear()
-          .domain([this._valueExtent[0], this._valueExtent[1]])
+          .domain(yExtentVisible)
           .range(range)
           .nice();
 
@@ -786,6 +817,7 @@ export default class Chart extends React.Component {
     this._xScale
       .domain(dateWindow)
       .range([0, element.offsetWidth + CHART_W_DIFFERENCE]);
+    this._yScaleUpdate();
 
     let muiTheme = this.context.muiTheme;
     let options = {
@@ -1025,6 +1057,8 @@ export default class Chart extends React.Component {
         this._xScale.domain(dateWindow);
       }
 
+      this._yScaleUpdate();
+
       let options = {
         dateWindow: this._xScale.domain(),
         valueRange: this._yScale.domain(),
@@ -1035,7 +1069,6 @@ export default class Chart extends React.Component {
       this._dygraph.updateOptions(options);
     }
 
-    this._yScaleUpdate();
     this._paintZoomText();
     this._paintBrush();
     this._paintChartHover();
@@ -1085,7 +1118,6 @@ export default class Chart extends React.Component {
     this._data = sortedMerge(values.map((v) => [v[0], v[1], null]),
                              adjustedValues2.map((v) => [v[0], null, v[1]]),
                              (a, b) => a[0] - b[0]);
-    this._yScaleUpdate();
   }
 
   componentWillMount() {

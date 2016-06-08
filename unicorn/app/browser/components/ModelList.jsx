@@ -29,7 +29,8 @@ import ModelStore from '../stores/ModelStore';
  * List of Model Charts, React component
  */
 @connectToStores([ModelStore], (context) => ({
-  models: context.getStore(ModelStore).getModels()
+  models: context.getStore(ModelStore).getModels(),
+  visibleModelStack: context.getStore(ModelStore).getVisibleModelStack()
 }))
 export default class ModelList extends React.Component {
 
@@ -85,10 +86,8 @@ export default class ModelList extends React.Component {
   }
 
   _renderModels() {
-    let visibleModels = this.props.models.find((model) => model.visible);
     let checkboxColor, emptyMessage;
-
-    if (! visibleModels) {
+    if (!this.props.visibleModelStack) {
       emptyMessage = this._config.get('heading:chart:empty');
       checkboxColor = this.context.muiTheme.rawTheme.palette.primary1Color;
 
@@ -100,8 +99,7 @@ export default class ModelList extends React.Component {
       );
     }
 
-    return this.props.models
-      .filter((model) => model.visible)
+    return this.props.visibleModelStack
       .map((model) => {
         return (
           <Model key={model.modelId} modelId={model.modelId} />

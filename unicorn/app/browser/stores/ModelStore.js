@@ -77,6 +77,7 @@ export default class ModelStore extends BaseStore {
   constructor(dispatcher) {
     super(dispatcher);
     this._models = new Map();
+    this._visibleModelStack = [];
   }
 
   /**
@@ -110,6 +111,11 @@ export default class ModelStore extends BaseStore {
    * @param {string} modelId - Model to delete
    */
   _deleteModel(modelId) {
+    let model = this._models.get(modelId);
+    let index = this._visibleModelStack.indexOf(model);
+    if (index !== -1) {
+      this._visibleModelStack.splice(index, 1);
+    }
     this._models.delete(modelId);
     this.emitChange();
   }
@@ -122,6 +128,10 @@ export default class ModelStore extends BaseStore {
     let model = this._models.get(modelId);
     if (model) {
       model.visible = false;
+      let index = this._visibleModelStack.indexOf(model);
+      if (index !== -1) {
+        this._visibleModelStack.splice(index, 1);
+      }
       this.emitChange();
     }
   }
@@ -134,6 +144,7 @@ export default class ModelStore extends BaseStore {
     let model = this._models.get(modelId);
     if (model) {
       model.visible = true;
+      this._visibleModelStack.unshift(model);
       this.emitChange();
     }
   }
@@ -203,5 +214,14 @@ export default class ModelStore extends BaseStore {
    */
   getModels() {
     return Array.from(this._models.values());
+  }
+
+  /**
+   * Returns a list of all models currently being displayed
+   * @return {ModelStore.visibleModelStack[]} All models beinng displayed
+   *         in the order they were added.
+   */
+  getVisibleModelStack() {
+    return this._visibleModelStack;
   }
 }
