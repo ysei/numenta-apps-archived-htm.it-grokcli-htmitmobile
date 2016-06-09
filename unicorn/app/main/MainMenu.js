@@ -42,6 +42,44 @@ let crossPlatformMenu = [
     ]
   },
   {
+    label: 'Edit',
+    submenu: [
+      {
+        label: 'Undo',
+        accelerator: 'CmdOrCtrl+Z',
+        role: 'undo'
+      },
+      {
+        label: 'Redo',
+        accelerator: 'Shift+CmdOrCtrl+Z',
+        role: 'redo'
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Cut',
+        accelerator: 'CmdOrCtrl+X',
+        role: 'cut'
+      },
+      {
+        label: 'Copy',
+        accelerator: 'CmdOrCtrl+C',
+        role: 'copy'
+      },
+      {
+        label: 'Paste',
+        accelerator: 'CmdOrCtrl+V',
+        role: 'paste'
+      },
+      {
+        label: 'Select All',
+        accelerator: 'CmdOrCtrl+A',
+        role: 'selectall'
+      }
+    ]
+  },
+  {
     label: 'View',
     submenu: [
       {
@@ -51,6 +89,22 @@ let crossPlatformMenu = [
           if (focusedWindow)
             focusedWindow.setFullScreen(!focusedWindow.isFullScreen());
         }
+      }
+    ]
+  },
+  {
+    label: 'Window',
+    role: 'window',
+    submenu: [
+      {
+        label: 'Minimize',
+        accelerator: 'CmdOrCtrl+M',
+        role: 'minimize'
+      },
+      {
+        label: 'Close',
+        accelerator: 'CmdOrCtrl+W',
+        role: 'close'
       }
     ]
   },
@@ -91,6 +145,21 @@ let crossPlatformMenu = [
 ];
 
 
+// Add developer tools to window menu in development mode
+if (DEBUG) {
+  let windowMenu = crossPlatformMenu.find((item) => item.role === 'window');
+  windowMenu.submenu.push({
+    label: 'Toggle Developer Tools',
+    accelerator: process.platform === 'darwin' ? 'Alt+Command+I'
+      : 'Ctrl+Shift+I',
+    click(item, focusedWindow) {
+      if (focusedWindow)
+        focusedWindow.toggleDevTools();
+    }
+  });
+}
+
+// Add additional menu options for OSX
 if (process.platform === 'darwin') {
   let aboutMenu = crossPlatformMenu.find((item) => item.label === name);
 
@@ -131,78 +200,6 @@ if (process.platform === 'darwin') {
       }
     }
   );
-
-  // FIXME: UNI-520 - Bring back Edit menu on windows
-  const editMenu = {
-    label: 'Edit',
-    submenu: [
-      {
-        label: 'Undo',
-        accelerator: 'CmdOrCtrl+Z',
-        role: 'undo'
-      },
-      {
-        label: 'Redo',
-        accelerator: 'Shift+CmdOrCtrl+Z',
-        role: 'redo'
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: 'Cut',
-        accelerator: 'CmdOrCtrl+X',
-        role: 'cut'
-      },
-      {
-        label: 'Copy',
-        accelerator: 'CmdOrCtrl+C',
-        role: 'copy'
-      },
-      {
-        label: 'Paste',
-        accelerator: 'CmdOrCtrl+V',
-        role: 'paste'
-      },
-      {
-        label: 'Select All',
-        accelerator: 'CmdOrCtrl+A',
-        role: 'selectall'
-      }
-    ]
-  };
-
-  const windowMenu = {
-    label: 'Window',
-    role: 'window',
-    submenu: [
-      {
-        label: 'Minimize',
-        accelerator: 'CmdOrCtrl+M',
-        role: 'minimize'
-      },
-      {
-        label: 'Close',
-        accelerator: 'CmdOrCtrl+W',
-        role: 'close'
-      }
-    ]
-  };
-
-  // Add developer tools to window menu in development mode
-  if (DEBUG) {
-    windowMenu.submenu.push({
-      label: 'Toggle Developer Tools',
-      accelerator: process.platform === 'darwin' ? 'Alt+Command+I'
-                                                 : 'Ctrl+Shift+I',
-      click(item, focusedWindow) {
-        if (focusedWindow)
-          focusedWindow.toggleDevTools();
-      }
-    });
-  }
-
-  crossPlatformMenu.splice(1, 0, editMenu, windowMenu);
 }
 
 export default crossPlatformMenu;

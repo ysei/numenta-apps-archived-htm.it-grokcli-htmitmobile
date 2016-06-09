@@ -48,7 +48,10 @@ _MAX_UTC_OFFSET_IN_SECONDS = ((_MAX_UTC_OFFSET_PARTS[0] * 60 +
 
 
 def parseDatetime(dateString, dateFormat):
-  """Supplements `datetime.strptime` functionality with the following format
+  """ Utility for parsing timestamps. Supports `datetime.strptime` formats
+  with extensions as well as custom formats described below.
+
+  1. Extends `datetime.strptime` functionality with the following format
   designators:
 
   Timezone offset %z at end of format string: accepts
@@ -56,6 +59,10 @@ def parseDatetime(dateString, dateFormat):
 
     NOTE: python presently supports %z in datetime.strftime, but not in
     strptime due to lack of builtin timezone implementation
+
+  2. Unix Timestamp custom format: "#T"
+
+  Seconds since Unix Epoch as int or float.
 
 
   :param str dateString: date string to parse
@@ -69,6 +76,17 @@ def parseDatetime(dateString, dateFormat):
   """
   originalDateString = dateString
   originalDateFormat = dateFormat
+
+  if dateFormat == "#T":
+    # Our custom format: Seconds since Unix Epoch as int or float
+    timestampFloat = float(dateString)
+    if timestampFloat < 0:
+      raise ValueError(
+        "Expected non-negative Unix Timestamp, but got {}".format(dateString))
+
+    return datetime.utcfromtimestamp(timestampFloat)
+
+  # Handle datetime.strptime formats with extensions
 
   # If timestamp is not naive, parse tzinfo and strip it from date and format
   tzinfo = None
