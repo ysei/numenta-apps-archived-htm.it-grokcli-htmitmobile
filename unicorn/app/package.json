@@ -1,7 +1,7 @@
 {
   "name": "htmstudio",
   "productName": "HTM Studio",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Numenta HTM Studio Cross-platform HTM Example Desktop Application",
   "main": "main/loader.js",
   "private": true,
