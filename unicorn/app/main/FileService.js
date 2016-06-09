@@ -34,10 +34,13 @@ import {
   PFInputSchema, PFOutputSchema
 } from '../database/schema';
 import TimeAggregator from './TimeAggregator';
-import {TIMESTAMP_FORMATS} from '../common/timestamp';
+import {
+  COMPOUND_TIMESTAMP_FORMATS, UNIX_TIMESTAMP_MOMENT_FORMAT
+} from '../common/timestamp';
 import {
   generateFileId, generateMetricId
 } from './generateId';
+import {NA_STRINGS} from '../config/na';
 
 const INSTANCES = {
   FILE: instantiator.instantiate(DBFileSchema),
@@ -54,7 +57,9 @@ SCHEMAS.forEach((schema) => {
   VALIDATOR.addSchema(schema);
 });
 
-import {NA_STRINGS} from '../config/na';
+// Substrings of column names that are hints that the column might contain a
+// timestamp
+const TIMESTAMP_HEADER_SUBSTRINGS = ['time', 'date'];
 
 
 /**
@@ -80,30 +85,32 @@ function containsNA(row) {
 }
 
 /**
- * Check if a row in the csv file is valid (exactly one date and at least
- * one numeric type and does not contain a missing value)
+ * Check if a row in the csv file is possibly a valid header row, based on its
+ * lack of resemblance to a valid data row with a compound timestamp (exactly
+ * one compound date and at least one numeric type and does not contain a
+ * missing value)
  * @param  {array}  row: entries of the csv row to be validated
- * @return {boolean}  returns true if the row fits the above criteria and false
- *                    otherwise.
+ * @return {boolean}  returns true if the row resembles a CSV header row and
+ *                    false otherwise.
  */
-function isValidRow(row) {
+function resemblesHeaderRow(row) {
   let numdates = row.map((entry) =>
-                    (typeof guessTimestampFormat(entry) !== 'undefined'))
-                    .reduce((curr,prev) => curr + prev);
+                  (typeof guessCompoundTimestampFormat(entry) !== 'undefined'))
+                  .reduce((curr,prev) => curr + prev);
   let hasNumeric = row.some((entry) => Number.isFinite(Number(entry)))
-  return (!containsNA(row) && numdates === 1 && hasNumeric);
+  return !(!containsNA(row) && numdates === 1 && hasNumeric);
 }
 
 
 /**
  * Check if the given value is a valid datetime value and returns the best
- * matching timestamp format defined in {@link TIMESTAMP_FORMATS}
+ * matching timestamp format defined in {@link COMPOUND_TIMESTAMP_FORMATS}
  * @param  {string}  timestamp Formatted timestamp string to validate
  * @return {string}            The best matching datetime format
  *                             or `null` if value is not a valid date
  */
-function guessTimestampFormat(timestamp) {
-  return TIMESTAMP_FORMATS.find((format) => {
+function guessCompoundTimestampFormat(timestamp) {
+  return COMPOUND_TIMESTAMP_FORMATS.find((format) => {
     return moment.utc(timestamp, format, true).isValid();
   });
 }
@@ -157,7 +164,7 @@ function guessFields(filename, values, names) {
     // Check for valid field types (date or number)
     let value = values[index].trim();
     if (value.length > 0) {
-      let format = guessTimestampFormat(value);
+      let format = guessCompoundTimestampFormat(value);
       if (format) {
         field.type = 'date';
         field.format = format;
@@ -191,6 +198,20 @@ function guessFields(filename, values, names) {
     }
   }
   return fields;
+}
+
+/**
+ * Checks if the field name could be that of a timestamp
+ *
+ * @param {string} name   Field name
+ *
+ * @return {boolean}      true if field name could be that of a timestamp
+ */
+function fieldNameCouldBeTimestamp(name) {
+  name = name.toLowerCase();
+  return TIMESTAMP_HEADER_SUBSTRINGS.some((v) => {
+    return name.indexOf(v) >= 0;
+  });
 }
 
 
@@ -290,7 +311,7 @@ export class FileService {
       .pipe(parser)
       .on('data', (line) => {
         let values = Object.values(line);
-        let isHeader = validRowCounter === 0 && !isValidRow(line);
+        let isHeader = validRowCounter === 0 && resemblesHeaderRow(line);
         // could either be a header or a data row. If it is a data row, we only
         // want to use it to determine fields if it has no missing values.
         if (!isHeader && containsNA(line)) {
@@ -310,6 +331,25 @@ export class FileService {
           if (dateFields.length === 0 && offset === 0) {
             // No date field in first row: assume it's the header row
           } else {
+            if (dateFields.length === 0) {
+              // No date field found in second row: check if any of the scalar
+              // fields could be a unix timestamp by examining their field names
+              for (let i in fields) {
+                let field = fields[i];
+                if (field.type === 'number' &&  // eslint-disable-line max-depth
+                    Number(values[field.index].trim()) >= 0 &&
+                    fieldNameCouldBeTimestamp(field.name)) {
+                  // Convert field to timestamp
+                  field.type = 'date';
+                  field.format = UNIX_TIMESTAMP_MOMENT_FORMAT;
+                }
+              }
+
+              dateFields = fields.filter((field) => {
+                return field.type === 'date';
+              });
+            }
+
             if (dateFields.length !== 1) {
               error = 'The file should have one and only one date/time column';
             } else if (!dateFields[0].format) {
@@ -624,7 +664,15 @@ export class FileService {
                 message += ' instead of having a format matching ' +
                            `'${field.format}'. For example: '${current}'`;
               }
-              return moment.utc(value, field.format, true).isValid();
+              let isValid;
+              if (field.format === UNIX_TIMESTAMP_MOMENT_FORMAT) {
+                // Work around moment's failure to validate floating point
+                // Unix Timestamp in strict mode
+                isValid = moment.utc(value, field.format, false).isValid();
+              } else {
+                isValid = moment.utc(value, field.format, true).isValid();
+              }
+              return isValid;
             default:
               return true;
             }
