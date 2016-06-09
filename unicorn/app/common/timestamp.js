@@ -19,20 +19,37 @@ import moment from 'moment';
 const MOMENT_TO_STRPTIME = require('../config/momentjs_to_datetime_strptime.json'); // eslint-disable-line
 
 /**
- * List of supported timestamp formats mapped to python dateutil format
- * @type {string}
+ * List of supported compound (non-int/float unix timestamps) momentjs timestamp
+ * formats mapped to python dateutil format
+ * @type {object}
  * @see ../config/momentjs_to_datetime_strptime.json
  */
-export const TIMESTAMP_FORMAT_PY_MAPPING =
+const COMPOUND_TIMESTAMP_FORMAT_PY_MAPPINGS =
    MOMENT_TO_STRPTIME.reduce((prev, cur) => {
      return Object.assign(prev, cur.mappings);
    }, {});
 
 /**
- * List of supported timestamp formats
+ * List of supported compound timestamp momentjs formats
  * @type {string}
  */
-export const TIMESTAMP_FORMATS = Object.keys(TIMESTAMP_FORMAT_PY_MAPPING);
+export const COMPOUND_TIMESTAMP_FORMATS = Object.keys(
+  COMPOUND_TIMESTAMP_FORMAT_PY_MAPPINGS);
+
+// momentjs format string for Unix Timestamp (seconds)
+export const UNIX_TIMESTAMP_MOMENT_FORMAT = 'X';
+
+// unicorn_backend's format string for Unix Timestamp (seconds)
+const UNIX_TIMESTAMP_BACKEND_FORMAT = '#T';
+
+// Add the Unix Timestamp mapping to the compound timestamp mapping table;
+// COMPOUND_TIMESTAMP_FORMAT_PY_MAPPINGS doesn't have it in order to avoid
+// collision between Unix Timestamp and scalar values in the current field type
+// assessment heuristic.
+export const ALL_TIMESTAMP_FORMAT_PY_MAPPINGS = Object.assign(
+  {},
+  COMPOUND_TIMESTAMP_FORMAT_PY_MAPPINGS,
+  {[UNIX_TIMESTAMP_MOMENT_FORMAT]: UNIX_TIMESTAMP_BACKEND_FORMAT});
 
 /**
  * Parse an ISO 8601 timestamp, preserving its current time zone. If there's no

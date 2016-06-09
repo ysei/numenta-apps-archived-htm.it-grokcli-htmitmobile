@@ -48,7 +48,7 @@ import ShowCreateModelDialogAction from '../actions/ShowCreateModelDialog';
 import HideCreateModelDialogAction from '../actions/HideCreateModelDialog';
 import StartParamFinderAction from '../actions/StartParamFinder';
 import {trims} from '../../common/common-utils';
-import {TIMESTAMP_FORMAT_PY_MAPPING} from '../../common/timestamp';
+import {ALL_TIMESTAMP_FORMAT_PY_MAPPINGS} from '../../common/timestamp';
 import {
   DATA_FIELD_INDEX, ANOMALY_YELLOW_VALUE, ANOMALY_RED_VALUE
 } from '../lib/Constants';
@@ -56,7 +56,6 @@ import moment from 'moment';
 import _ from 'lodash';
 
 const dialog = remote.require('dialog');
-
 
 /**
  * Model component, contains Chart details, actions, and Chart Graph itself.
@@ -240,7 +239,7 @@ export default class Model extends React.Component {
       rowOffset: file.rowOffset,
       timestampIndex: timestampField.index,
       valueIndex: valueField.index,
-      datetimeFormat: TIMESTAMP_FORMAT_PY_MAPPING[timestampField.format]
+      datetimeFormat: ALL_TIMESTAMP_FORMAT_PY_MAPPINGS[timestampField.format]
     };
 
     this._openCreateModelDialog(file, valueField);
