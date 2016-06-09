@@ -508,10 +508,10 @@ HTM Studio uses Electron built-in support for automatic updates based on [Squirr
   * *update.0.0.2.json*
   ```javascript
   {
-    url: "http://public.numenta.com/updates/htmstudio/darwin/HTM%20Studio-0.0.3-mac.zip",
-    name: "0.0.3",
-    notes: "* Automatic Updates \n* Improved Charts \n* Fix timezone when exporting results",
-    pub_date: "2016-02-02T21:51:58Z"
+    "url": "http://public.numenta.com/updates/htmstudio/darwin/HTM%20Studio-0.0.3-mac.zip",
+    "name": "0.0.3",
+    "notes": "* Automatic Updates \n* Improved Charts \n* Fix timezone when exporting results",
+    "pub_date": "2016-02-02T21:51:58Z"
   }
   ```
   These variables can be used to format the update [dialog](https://github.com/electron/electron/blob/master/docs/api/dialog.md#dialogshowmessageboxbrowserwindow-options-callback) shown to the user once a new update is available. See  `app/config/default.json` under `update:message` and `update:detail`.
