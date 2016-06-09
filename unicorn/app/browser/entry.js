@@ -153,20 +153,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let modelCount = active.length || 0;
     let cancel;
     if (modelCount > 0) {
-      let isOrAre = 'are';
-      let trailingS = 's';
+      let detail;
       if (modelCount === 1) {
-        isOrAre = 'is';
-        trailingS = '';
+        detail = config.get('dialog:close_application:singular');
+      } else {
+        detail = config.get('dialog:close_application:plural')
+          .replace('%modelCount', modelCount);
       }
       cancel = dialog.showMessageBox({
         buttons: ['Quit', 'Cancel'],
         message: trims`Are you sure you want to quit the app and stop all
                   running models?`,
-        detail: trims`There ${isOrAre} still ${modelCount} active
-                  model${trailingS} running. All models will be interrupted upon
-                  quitting, and it won’t be possible to restart these models.
-                  All results obtained so far will be persisted.`,
+        detail: detail,
         title: 'Exit?',
         type: 'question'
       });
