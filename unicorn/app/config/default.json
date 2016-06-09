@@ -39,6 +39,10 @@
     }
   },
   "dialog": {
+    "close_application": {
+      "singular": "There is still one active model running. The active model will be interrupted upon quitting and it won’t be possible to restart the model. All results obtained so far will be persisted.",
+      "plural": "There are still %modelCount active models running. All models will be interrupted upon quitting and it won’t be possible to restart these models. All results obtained so far will be persisted."
+    },
     "file": {
       "add": {
         "title": "Add new data file"
