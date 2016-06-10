@@ -70,7 +70,7 @@ const TIMESTAMP_HEADER_SUBSTRINGS = ['time', 'date'];
  */
 function isNA(entry) {
   if (typeof entry === 'undefined') {
-    return true;
+    return false;  // somewhat arbitrary decision to return false in this case
   }
   return NA_STRINGS.indexOf(entry.toString()
     .toLowerCase().replace(/\s+/g, '')) > -1
