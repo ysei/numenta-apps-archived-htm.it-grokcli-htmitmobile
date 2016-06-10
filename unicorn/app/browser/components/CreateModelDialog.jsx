@@ -40,7 +40,8 @@ import {trims} from '../../common/common-utils';
   metricName: context.getStore(CreateModelStore).metricName,
   modelRunnerParams: context.getStore(CreateModelStore).modelRunnerParams(),
   recommendAgg: context.getStore(CreateModelStore).recommendAggregation(),
-  aggregateData: context.getStore(CreateModelStore).aggregateData
+  aggregateData: context.getStore(CreateModelStore).aggregateData,
+  paramFinderError: context.getStore(CreateModelStore).paramFinderError
 }))
 export default class CreateModelDialog extends React.Component {
 
@@ -136,6 +137,7 @@ export default class CreateModelDialog extends React.Component {
                                   `${metricName} (${path.basename(fileName)})`)
                 );
 
+    let paramFinderError = Boolean(this.props.paramFinderError);
     if (modelRunnerParams && !this.state.progress) {
       let modelRunnerPayload = {
         metricId,
@@ -144,7 +146,7 @@ export default class CreateModelDialog extends React.Component {
         aggOpts: aggregateData ? modelRunnerParams.aggInfo : {}
       };
 
-      let AdvancedSection, advancedButtonText;
+      let AdvancedSection, advancedButtonLink, advancedButtonText;
 
       // choose file visibility toggle icon
       if (this.state.showAdvanced) {
@@ -161,7 +163,9 @@ export default class CreateModelDialog extends React.Component {
       }
 
       let description = '';
-      if (this.state.showAdvanced) {
+      if (paramFinderError) {
+        description = this._config.get('dialog:model:create:paramFinderError')
+      } else if (this.state.showAdvanced) {
         description = this._config.get('dialog:model:create:' +
                                        'advanced:description')
       } else if (recommendAgg) {
@@ -170,10 +174,8 @@ export default class CreateModelDialog extends React.Component {
         description = this._config.get('dialog:model:create:recommendRaw')
       }
 
-      body = (
-        <div>
-          {description}
-          {AdvancedSection}
+      if (!paramFinderError) {
+        advancedButtonLink = (
           <a className="advancedButtonLink"
              href="#"
              style={this._styles.advancedButton}
@@ -181,6 +183,13 @@ export default class CreateModelDialog extends React.Component {
           >
             {advancedButtonText}
           </a>
+        );
+      }
+      body = (
+        <div>
+          {description}
+          {AdvancedSection}
+          {advancedButtonLink}
         </div>
       );
 
@@ -196,6 +205,7 @@ export default class CreateModelDialog extends React.Component {
           label={this._config.get('button:analyze')}
           onTouchTap={this._startModel.bind(this, modelRunnerPayload)}
           primary={true}
+          disabled={paramFinderError}
           style={this._styles.agg}
           />
       );
