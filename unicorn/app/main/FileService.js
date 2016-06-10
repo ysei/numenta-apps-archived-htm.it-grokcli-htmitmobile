@@ -26,6 +26,7 @@ import instantiator from 'json-schema-instantiator';
 import moment from 'moment';
 import path from 'path';
 import {Validator} from 'jsonschema';
+import log from ./Logger
 
 import config from './ConfigService';
 import {
@@ -70,6 +71,7 @@ const TIMESTAMP_HEADER_SUBSTRINGS = ['time', 'date'];
  */
 function isNA(entry) {
   if (typeof entry === 'undefined') {
+    log.error(new Error('Param "entry" of FileService.isNA() is not defined.'));
     return false;  // somewhat arbitrary decision to return false in this case
   }
   return NA_STRINGS.indexOf(entry.toString()
