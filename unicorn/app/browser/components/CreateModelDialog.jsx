@@ -164,7 +164,12 @@ export default class CreateModelDialog extends React.Component {
 
       let description = '';
       if (paramFinderError) {
-        description = this._config.get('dialog:model:create:paramFinderError')
+        description = (
+          // Required to format message with 'mailto:' link
+          <div dangerouslySetInnerHTML={
+              {__html: this._config.get('dialog:model:create:paramFinderError')}
+            }/>
+        );
       } else if (this.state.showAdvanced) {
         description = this._config.get('dialog:model:create:' +
                                        'advanced:description')

@@ -58,7 +58,7 @@
         "title": "HTM analysis for %s",
         "recommendAggregate": "We found the best parameters for the HTM ​and your data will be aggregated​. While you can tweak them in the advanced settings below, we recommend that you proceed with these parameters for the analysis.",
         "recommendRaw": "We found the best parameters for the HTM​. While you can tweak them in the advanced settings below, we recommend that you proceed with these parameters for the analysis.",
-        "paramFinderError": "We were unable to find parameters for this metric. Please check your data file.",
+        "paramFinderError": "We were unable to find parameters for this metric.<br>Please contact support at <a href='mailto:htm-studio@numenta.com'>htm-studio@numenta.com</a>",
         "advanced": {
           "description": "Be aware that changing the settings below will impact the HTM results.",
           "showAdvanced": "Show advanced settings",
