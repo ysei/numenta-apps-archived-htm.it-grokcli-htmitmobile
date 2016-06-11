@@ -34,7 +34,10 @@ export default class CreateModelStore extends BaseStore {
       START_PARAM_FINDER: '_handleStartParamFinder',
       RECEIVE_PARAM_FINDER_DATA: '_handleReceiveParamFinderData',
       OVERRIDE_PARAM_FINDER_RESULTS: '_handleOverrideParamFinderResults',
-      TOGGLE_AGGREGATE_DATA: '_handleToggleAggregateData'
+      TOGGLE_AGGREGATE_DATA: '_handleToggleAggregateData',
+      START_PARAM_FINDER_FAILED: '_handleParamFinderError',
+      STOP_PARAM_FINDER_FAILED: '_handleParamFinderError',
+      UNKNOWN_PARAM_FINDER_FAILURE: '_handleParamFinderError'
     }
   }
   constructor(dispatcher) {
@@ -60,6 +63,7 @@ export default class CreateModelStore extends BaseStore {
     this.paramFinderResults = null;
     this.userParamOverrides = null;
     this.inputOpts = null;
+    this.paramFinderError = null;
   }
 
   _setDefaultOverrides() {
@@ -110,6 +114,11 @@ export default class CreateModelStore extends BaseStore {
 
   _handleToggleAggregateData(payload) {
     this.aggregateData = payload.aggregateData;
+    this.emitChange();
+  }
+
+  _handleParamFinderError(payload) {
+    this.paramFinderError = payload.error;
     this.emitChange();
   }
 }
