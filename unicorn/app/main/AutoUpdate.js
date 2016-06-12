@@ -55,9 +55,8 @@ export default class AppUpdater {
     autoUpdater.setFeedURL(feedUrl);
 
     autoUpdater.addListener('error', (event, error) => {
-      // Ingore auto update errors. Output to console for debugging
+      // Ingore auto update errors.
       // See https://github.com/electron/electron/issues/4699
-      log.warn(error, 'AppUpdater error');
     });
 
     autoUpdater.addListener('update-downloaded', (event,
