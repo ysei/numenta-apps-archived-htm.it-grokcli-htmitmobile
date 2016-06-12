@@ -16,7 +16,6 @@
 // http://numenta.org/licenses/
 import bunyan from 'bunyan';
 import config from './ConfigService';
-import isElectronRenderer from 'is-electron-renderer';
 import path from 'path';
 import os from 'os';
 
@@ -33,13 +32,14 @@ const DEFAULT = {
  *                           application data folder
  */
 function _getLogLocation(filename) {
-  let location = path.join(os.tmpdir());
-  if (!isElectronRenderer) {
+  let location = filename;
+  if (!path.isAbsolute(location)) {
     try {
-      // This module is only available inside 'Electron' main process
       const app = require('app'); // eslint-disable-line
       location = path.join(app.getPath('userData'), filename);
-    } catch (error) { /* no-op */ }
+    } catch (error) {
+      location = path.join(os.tmpdir(), filename);
+    }
   }
   return location;
 }
