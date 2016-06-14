@@ -26,7 +26,7 @@ import instantiator from 'json-schema-instantiator';
 import moment from 'moment';
 import path from 'path';
 import {Validator} from 'jsonschema';
-import log from ./Logger
+import log from './Logger';
 
 import config from './ConfigService';
 import {
