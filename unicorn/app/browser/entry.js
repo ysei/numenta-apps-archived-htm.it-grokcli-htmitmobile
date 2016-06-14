@@ -25,7 +25,6 @@
  * @external {React.Component} https://facebook.github.io/react/docs/component-api.html
  */
 
-import bunyan from 'bunyan';
 import Fluxible from 'fluxible';
 import FluxibleReact from 'fluxible-addons-react';
 import batchedUpdatePlugin from 'fluxible-addons-react/batchedUpdatePlugin';
@@ -41,7 +40,6 @@ import FileDetailsStore from './stores/FileDetailsStore';
 import FileStore from './stores/FileStore';
 import GoogleAnalytics from './lib/analytics/GoogleAnalytics';
 import HTMStudioPlugin from './lib/Fluxible/HTMStudioPlugin';
-import loggerConfig from '../config/logger';
 import MainComponent from './components/Main';
 import MetricDataStore from './stores/MetricDataStore';
 import MetricStore from './stores/MetricStore';
@@ -54,7 +52,7 @@ import StopApplicationAction from './actions/StopApplication';
 import {trims} from '../common/common-utils';
 
 const dialog = remote.require('dialog');
-const logger = bunyan.createLogger(loggerConfig);
+const log = remote.require('./Logger')
 const {app} = require('electron').remote;
 
 const modelClient = new ModelClient();
@@ -85,7 +83,7 @@ function startApplication(context) {
     })
     .catch((error) => {
       gaTracker.exception('Startup Error');
-      console.log(error); // eslint-disable-line
+      log.error(error, 'Startup Error');
       dialog.showErrorBox('Startup Error', `Startup Error: ${error}`);
     });
 }
@@ -100,11 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // global uncaught exception handler
   window.onerror = (message, file, line, col, error) => {
     gaTracker.exception('Unknown Error');
+    log.error(error, `Unknown Error: ${message}`);
     dialog.showErrorBox('Unknown Error', `Unknown Error: ${message}`);
   };
 
   // verify web target
   if (!(document && ('body' in document))) {
+    log.error('No document body found');
     dialog.showErrorBox('Document Error', 'No document body found');
   }
 
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // add context to app
   context = app.createContext({
     configClient: config,
-    loggerClient: logger,
+    logger: log,
     databaseClient,
     fileClient,
     modelClient,
