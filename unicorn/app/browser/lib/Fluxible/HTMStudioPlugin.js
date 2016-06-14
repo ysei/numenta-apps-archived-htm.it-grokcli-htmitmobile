@@ -26,7 +26,7 @@ export default {
 
   plugContext(options, context, app) {
     let {
-      configClient, loggerClient, databaseClient, fileClient, modelClient,
+      configClient, logger, databaseClient, fileClient, modelClient,
       paramFinderClient, gaTracker
     } = options;
 
@@ -35,8 +35,8 @@ export default {
         actionContext.getConfigClient = function () {
           return configClient;
         };
-        actionContext.getLoggerClient = function () {
-          return loggerClient;
+        actionContext.getLogger = function () {
+          return logger;
         };
         actionContext.getDatabaseClient = function () {
           return databaseClient;
@@ -59,8 +59,8 @@ export default {
         componentContext.getConfigClient = function () {
           return configClient;
         };
-        componentContext.getLoggerClient = function () {
-          return loggerClient;
+        componentContext.getLogger = function () {
+          return logger;
         };
         componentContext.getDatabaseClient = function () {
           return databaseClient;
@@ -83,8 +83,8 @@ export default {
         storeContext.getConfigClient = function () {
           return configClient;
         };
-        storeContext.getLoggerClient = function () {
-          return loggerClient;
+        storeContext.getLogger = function () {
+          return logger;
         };
         storeContext.getDatabaseClient = function () {
           return databaseClient;

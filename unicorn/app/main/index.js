@@ -17,7 +17,6 @@
 // http://numenta.org/licenses/
 
 import {app, BrowserWindow, crashReporter, dialog, Menu} from 'electron';
-import bunyan from 'bunyan';
 import path from 'path';
 
 import AutoUpdate from './AutoUpdate';
@@ -30,11 +29,8 @@ import MainMenu from './MainMenu';
 import ModelServiceIPC from './ModelServiceIPC';
 import ParamFinderServiceIPC from './ParamFinderServiceIPC';
 import {promisify} from '../common/common-utils';
+import log from './Logger'
 
-const log = bunyan.createLogger({
-  level: 'debug',  // @TODO higher for Production
-  name: config.get('title')
-});
 const initialPage = path.join(__dirname, config.get('browser:entry'));
 
 let activeModels = new Map();  // Active models and their event handlers
@@ -77,10 +73,10 @@ function initializeApplicationData() {
  * @param {Object} modelServiceIPC - Communication channel to browser
  */
 function receiveModelData(modelId, recordIndex, modelData, modelServiceIPC) {
-  database.putModelData(modelId, recordIndex, modelData, (error) => {
-    if (error) {
-      log.error('Error saving model data', error, modelId, recordIndex,
-                modelData);
+  database.putModelData(modelId, recordIndex, modelData, (err) => {
+    if (err) {
+      log.error({err, modelId, recordIndex, modelData},
+        'Error saving model data');
     } else {
       modelServiceIPC._notifyNewModelResult(modelId);
     }
@@ -103,8 +99,8 @@ function handleModelEvents(modelServiceIPC) {
             let [index, modelData] = data;
             receiveModelData(modelId, index, modelData, modelServiceIPC);
           }
-        } catch (e) {
-          log.error('Model Error', e, modelId, command, data);
+        } catch (err) {
+          log.error({err, modelId, command, data}, 'Model Error');
         }
       };
       activeModels.set(modelId, listener);
@@ -162,9 +158,11 @@ app.on('ready', () => {
 
   // browser window web contents events
   mainWindow.webContents.on('crashed', () => {
+    log.error(new Error('Application crashed'));
     dialog.showErrorBox('Error', 'Application crashed');
   });
   mainWindow.webContents.on('did-fail-load', () => {
+    log.error(new Error('Application failed to load'));
     dialog.showErrorBox('Error', 'Application failed to load');
   });
   mainWindow.webContents.on('dom-ready', () => {

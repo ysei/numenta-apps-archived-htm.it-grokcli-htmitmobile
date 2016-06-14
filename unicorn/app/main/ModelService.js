@@ -22,6 +22,7 @@ import system from 'os';
 import getPortablePython from './PortablePython';
 import UserError from './UserError';
 import {parseIsoTimestampFallbackUtc, getNaiveTime} from '../common/timestamp';
+import log from './Logger'
 
 const PYTHON_EXECUTABLE = getPortablePython();
 
@@ -96,10 +97,14 @@ export class ModelService extends EventEmitter {
    */
   createModel(modelId, inputOpt, aggregationOpt, modelOpt) {
     if (this.availableSlots() <= 0) {
-      throw new MaximumConcurrencyError();
+      let err = new MaximumConcurrencyError();
+      log.error({err, modelId, inputOpt, aggregationOpt, modelOpt});
+      throw err;
     }
     if (this._models.has(modelId)) {
-      throw new DuplicateIDError();
+      let err = new DuplicateIDError();
+      log.error({err, modelId, inputOpt, aggregationOpt, modelOpt});
+      throw err;
     }
 
     let params = [
@@ -115,11 +120,14 @@ export class ModelService extends EventEmitter {
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
 
-    child.on('error', (error) => {
-      this.emit(modelId, 'error', error);
+    child.on('error', (err) => {
+      log.error({err, modelId, inputOpt, aggregationOpt, modelOpt});
+      this.emit(modelId, 'error', err);
     });
 
     child.stderr.on('data', (error) => {
+      log.error({err: new Error(error),
+        modelId, inputOpt, aggregationOpt, modelOpt});
       this.emit(modelId, 'error', error);
     });
 
@@ -144,6 +152,10 @@ export class ModelService extends EventEmitter {
     });
 
     child.once('close', (code) => {
+      if (code) {
+        log.error({err: new Error(`close error: ${code}`),
+                    modelId, inputOpt, aggregationOpt, modelOpt});
+      }
       this._models.delete(modelId);
       this.emit(modelId, 'close', code);
     });
@@ -167,7 +179,9 @@ export class ModelService extends EventEmitter {
    */
   removeModel(modelId) {
     if (!this._models.has(modelId)) {
-      throw new ModelNotFoundError();
+      let err = new ModelNotFoundError();
+      log.error({err, modelId});
+      throw err;
     }
 
     const model = this._models.get(modelId);

@@ -22,6 +22,7 @@ import config from './ConfigService';
 import os from 'os';
 import path from 'path';
 import spawn from 'child_process';
+import log from './Logger'
 
 // Squirrel Windows update process name
 const UPDATE_EXE =
@@ -35,8 +36,9 @@ function _updateWin32(args) {
   try {
     spawn(UPDATE_EXE, args, {detached: true})
       .on('close', app.quit);
-  } catch (error) {
-    dialog.showErrorBox('Update Error', error);
+  } catch (err) {
+    log.error({err, args}, 'Update Error');
+    dialog.showErrorBox('Update Error', err);
     app.quit();
   }
 }
@@ -53,9 +55,8 @@ export default class AppUpdater {
     autoUpdater.setFeedURL(feedUrl);
 
     autoUpdater.addListener('error', (event, error) => {
-      // Ingore auto update errors. Output to console for debugging
+      // Ingore auto update errors.
       // See https://github.com/electron/electron/issues/4699
-      console.warn('AppUpdater:error', error); // eslint-disable-line
     });
 
     autoUpdater.addListener('update-downloaded', (event,
