@@ -232,38 +232,50 @@ def findParameters(samples):
   timestampsInMs = numpy.array(timestamps, dtype="datetime64[ms]")
   values = numpy.array(values).astype("float64")
 
+  assert len(values) == len(timestampsInMs)
   numDataPts = len(values)
 
   medianSamplingIntervalInMs = _getMedianSamplingInterval(timestampsInMs)
-
-  values = _resampleData(timestampsInMs,
-                         values,
-                         medianSamplingIntervalInMs)
-
-  (cwtVar, timeScaleInMs) = _calculateContinuousWaveletTransform(
-    medianSamplingIntervalInMs, values)
-
-  suggestedSamplingIntervalInMs = _determineAggregationWindow(
-    timeScale=timeScaleInMs,
-    cwtVar=cwtVar,
-    thresh=_AGGREGATION_WINDOW_THRESH,
-    samplingInterval=medianSamplingIntervalInMs,
-    numDataPts=numDataPts)
-
-  # Decide whether to use TimeOfDay and DayOfWeek encoders.
-  # Note: We only need the timescale in seconds since periods like TimeOfDay 
-  # and DayOfWeek are so much more granular than a millisecond scale.
-  timeScaleInS = timeScaleInMs.astype('timedelta64[s]')
-  (useTimeOfDay, useDayOfWeek) = _determineEncoderTypes(cwtVar, timeScaleInS)
-
-  # decide the aggregation function ("mean" or "sum")
-  aggFunc = _getAggregationFunction(values)
-
-  return {
-    "aggInfo": _getAggInfo(medianSamplingIntervalInMs,
+  
+  if medianSamplingIntervalInMs > 0:
+    values = _resampleData(timestampsInMs,
+                           values,
+                           medianSamplingIntervalInMs)
+  
+    (cwtVar, timeScaleInMs) = _calculateContinuousWaveletTransform(
+      medianSamplingIntervalInMs, values)
+      
+    suggestedSamplingIntervalInMs = _determineAggregationWindow(
+      timeScale=timeScaleInMs,
+      cwtVar=cwtVar,
+      thresh=_AGGREGATION_WINDOW_THRESH,
+      samplingInterval=medianSamplingIntervalInMs,
+      numDataPts=numDataPts)
+  
+    # Decide whether to use TimeOfDay and DayOfWeek encoders.
+    # Note: We only need the timescale in seconds since periods like TimeOfDay 
+    # and DayOfWeek are so much more granular than a millisecond scale.
+    timeScaleInS = timeScaleInMs.astype('timedelta64[s]')
+    (useTimeOfDay, useDayOfWeek) = _determineEncoderTypes(cwtVar, timeScaleInS)
+  
+    # decide the aggregation function ("mean" or "sum")
+    aggFunc = _getAggregationFunction(values)
+  
+    aggInfo = _getAggInfo(medianSamplingIntervalInMs,
                            suggestedSamplingIntervalInMs,
-                           aggFunc),
-    "modelInfo": _getModelParams(useTimeOfDay, useDayOfWeek, values),
+                           aggFunc)
+    
+  
+  else:
+    aggInfo = None
+    useTimeOfDay = False
+    useDayOfWeek = False
+
+  
+  modelInfo = _getModelParams(useTimeOfDay, useDayOfWeek, values)
+  return {
+    "aggInfo": aggInfo,
+    "modelInfo": modelInfo
   }
 
 
@@ -357,25 +369,27 @@ def _resampleData(timestamps, values, newSamplingInterval):
 
   @return "newValues" (numpy array) data values after resamplings
   """
-
-  assert timestamps.dtype == numpy.dtype("datetime64[ms]")
-  assert newSamplingInterval.dtype == numpy.dtype("timedelta64[ms]")
-
-  totalDuration = (timestamps[-1] - timestamps[0])
-
-  nSampleNew = numpy.floor(totalDuration / newSamplingInterval) + 1
-  nSampleNew = nSampleNew.astype("int")
-
-  newTimeStamps = numpy.empty(nSampleNew, dtype="datetime64[ms]")
-  for sampleI in xrange(nSampleNew):
-    newTimeStamps[sampleI] = timestamps[0] + sampleI * newSamplingInterval
-
-  newValues = numpy.interp((newTimeStamps - timestamps[0]).astype("float32"),
-                           (timestamps - timestamps[0]).astype("float32"),
-                           values)
-
-  assert len(newValues) == nSampleNew
-  return newValues
+  if newSamplingInterval == 0.0:
+    return values  # don't resample in this case
+  else:
+    assert timestamps.dtype == numpy.dtype("datetime64[ms]")
+    assert newSamplingInterval.dtype == numpy.dtype("timedelta64[ms]")
+  
+    totalDuration = (timestamps[-1] - timestamps[0])
+  
+    nSampleNew = numpy.floor(totalDuration / newSamplingInterval) + 1
+    nSampleNew = nSampleNew.astype("int")
+  
+    newTimeStamps = numpy.empty(nSampleNew, dtype="datetime64[ms]")
+    for sampleI in xrange(nSampleNew):
+      newTimeStamps[sampleI] = timestamps[0] + sampleI * newSamplingInterval
+  
+    newValues = numpy.interp((newTimeStamps - timestamps[0]).astype("float32"),
+                             (timestamps - timestamps[0]).astype("float32"),
+                             values)
+  
+    assert len(newValues) == nSampleNew
+    return newValues
 
 
 
@@ -436,11 +450,6 @@ def _getMedianSamplingInterval(timestamps):
   medianSamplingInterval = numpy.median(samplingIntervals)
 
   assert medianSamplingInterval.dtype == numpy.dtype("timedelta64[ms]")
-
-  # the median sampling interval needs to be at least 1 ms. This is the 
-  # minimum re-sampling granularity that we'll allow.  
-  medianSamplingInterval = max(numpy.timedelta64(1,'ms'), 
-                               medianSamplingInterval)
   
   return medianSamplingInterval
 
