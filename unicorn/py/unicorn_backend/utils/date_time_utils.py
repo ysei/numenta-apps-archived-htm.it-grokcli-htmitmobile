@@ -46,6 +46,9 @@ _MAX_UTC_OFFSET_PARTS = (24, 59)
 _MAX_UTC_OFFSET_IN_SECONDS = ((_MAX_UTC_OFFSET_PARTS[0] * 60 +
                                _MAX_UTC_OFFSET_PARTS[1]) * 60)
 
+# The year 10,000 in unix seconds, the maximum value datetime parses
+# UNIX seconds
+_MAX_UNIX_SECONDS = 253402300799.0
 
 def parseDatetime(dateString, dateFormat):
   """ Utility for parsing timestamps. Supports `datetime.strptime` formats
@@ -83,6 +86,16 @@ def parseDatetime(dateString, dateFormat):
     if timestampFloat < 0:
       raise ValueError(
         "Expected non-negative Unix Timestamp, but got {}".format(dateString))
+
+    # Check to see if the timestamp float is beyond the range of
+    # _MAX_UNIX_SECONDS. If it is, interpret is as a ms timestamp. To be clear
+    # we are taking the convention that we only support unix timestamps in
+    # seconds that are between 0 and strictly below
+    # 253402300800.0 (10000-01-01T00:00:00+00:00). And we support unix
+    # timestamps in milliseconds that are at or above 253402300800
+    # (unix timestamp in ms) which is 1978-01-11T21:31:40+00:00.
+    if timestampFloat > _MAX_UNIX_SECONDS:
+      timestampFloat /= 1000
 
     return datetime.utcfromtimestamp(timestampFloat)
 
