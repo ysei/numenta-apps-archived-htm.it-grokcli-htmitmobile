@@ -436,6 +436,12 @@ def _getMedianSamplingInterval(timestamps):
   medianSamplingInterval = numpy.median(samplingIntervals)
 
   assert medianSamplingInterval.dtype == numpy.dtype("timedelta64[ms]")
+
+  # the median sampling interval needs to be at least 1 ms. This is the 
+  # minimum re-sampling granularity that we'll allow.  
+  medianSamplingInterval = max(numpy.timedelta64(1,'ms'), 
+                               medianSamplingInterval)
+  
   return medianSamplingInterval
 
 
