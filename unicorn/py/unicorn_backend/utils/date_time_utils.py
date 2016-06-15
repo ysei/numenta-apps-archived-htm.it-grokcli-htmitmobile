@@ -87,11 +87,13 @@ def parseDatetime(dateString, dateFormat):
       raise ValueError(
         "Expected non-negative Unix Timestamp, but got {}".format(dateString))
 
-    # check to see if the timestamp float is beyond the range of UNIX SECONDS
-    # if it is, interpret is as a ms timestamp. To be clear we are taking the 
-    # convention that we only support unix timestamps in seconds that are above
-    # 253402300.800 ( 1978-01-11T21:31:40+00:00) and below
-    # 253402300800 (10000-01-01T00:00:00+00:00)
+    # Check to see if the timestamp float is beyond the range of
+    # _MAX_UNIX_SECONDS. If it is, interpret is as a ms timestamp. To be clear
+    # we are taking the convention that we only support unix timestamps in
+    # seconds that are between 0 and strictly below
+    # 253402300800.0 (10000-01-01T00:00:00+00:00). And we support unix
+    # timestamps in milliseconds that are at or above 253402300800
+    # (unix timestamp in ms) which is 1978-01-11T21:31:40+00:00.
     if timestampFloat > _MAX_UNIX_SECONDS:
       timestampFloat /= 1000
 
