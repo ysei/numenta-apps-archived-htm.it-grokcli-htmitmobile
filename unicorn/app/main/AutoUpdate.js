@@ -59,41 +59,46 @@ export default class AppUpdater {
       // See https://github.com/electron/electron/issues/4699
     });
 
-    autoUpdater.addListener('update-downloaded', (event,
-      notes, name, pubDate, url) => {
-      let title = config.get('update:readyTitle');
+    // Per UNI-551/UNI-552
+    // Disable update dialog for now as it can take several minutes to complete
+    // the update without any progress shown to the user.
+    // Uncomment this line to re-enable.
+    // autoUpdater.addListener('update-downloaded', this._handleUpdateDownloaded.bind(this));
+  }
 
-      // Format release notes if given. May not be avaialbe on all platforms
-      let detail = config.get('update:detail')
-                     .replace('%url', url)
-                     .replace('%name', name)
-                     .replace('%notes', notes)
-                     .replace('%pub_date', pubDate);
+  _handleUpdateDownloaded(event, notes, name, pubDate, url) {
+    let title = config.get('update:readyTitle');
 
-      // Format update message
-      let message = config.get('update:message')
-                          .replace('%url', url)
-                          .replace('%name', name)
-                          .replace('%notes', notes)
-                          .replace('%pub_date', pubDate);
+    // Format release notes if given. May not be avaialbe on all platforms
+    let detail = config.get('update:detail')
+                   .replace('%url', url)
+                   .replace('%name', name)
+                   .replace('%notes', notes)
+                   .replace('%pub_date', pubDate);
 
-      // Ask the user whether or not we should quit and install the new version
-      let buttons = [
-        config.get('update:button:yes'),
-        config.get('update:button:no')];
+    // Format update message
+    let message = config.get('update:message')
+                        .replace('%url', url)
+                        .replace('%name', name)
+                        .replace('%notes', notes)
+                        .replace('%pub_date', pubDate);
 
-      dialog.showMessageBox(this._window, {
-        buttons, title, message, detail,
-        type: 'question', defaultId: 0, cancelId: 1
-      }, (response) => {
-        // Check if the user replied "Yes"
-        if (response === 0) {
-          // Force quit and install the new version
-          setTimeout(() => {
-            autoUpdater.quitAndInstall();
-          });
-        }
-      });
+    // Ask the user whether or not we should quit and install the new version
+    let buttons = [
+      config.get('update:button:yes'),
+      config.get('update:button:no')];
+
+    dialog.showMessageBox(this._window, {
+      buttons, title, message, detail,
+      type: 'question', defaultId: 0, cancelId: 1
+    }, (response) => {
+      // Check if the user replied "Yes"
+      if (response === 0) {
+        // Force quit and install the new version
+        setTimeout(() => {
+          autoUpdater.quitAndInstall();
+        });
+      }
     });
   }
 
