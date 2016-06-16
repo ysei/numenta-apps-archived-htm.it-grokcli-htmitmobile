@@ -35,7 +35,7 @@ let crossPlatformMenu = [
         label: `About ${name}`,
         click() {
           const BrowserWindow = electron.BrowserWindow;
-          let win = new BrowserWindow({width: 283, height: 230, title: ''});
+          let win = new BrowserWindow({width: 350, height: 300, title: ''});
           win.loadURL(`file://${__dirname}/../browser/about.html`);
         }
       }
