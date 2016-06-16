@@ -47,7 +47,7 @@ _ONE_WEEK_IN_SEC = 604800.0
 
 # Maximum time scale for wavelet analysis. The longer time scale will be ignored
 # in unit of seconds
-MAX_WAVELET_TIME_WINDOW_SEC = _ONE_WEEK_IN_SEC * 20
+MAX_WAVELET_TIME_WINDOW_MS = _ONE_WEEK_IN_SEC * 20 * 1000
 
 # Maximum number of rows param_finder will process
 # If the input data exceeds MAX_NUM_ROWS, the first MAX_NUM_ROWS will be used
@@ -228,39 +228,54 @@ def findParameters(samples):
     }
     return outputInfo
 
-  timestamps = numpy.array(timestamps, dtype="datetime64[s]")
+  # make sure that timestamps are parsed in ms
+  timestampsInMs = numpy.array(timestamps, dtype="datetime64[ms]")
   values = numpy.array(values).astype("float64")
 
+  assert len(values) == len(timestampsInMs)
   numDataPts = len(values)
 
-  (medianSamplingInterval,
-   medianAbsoluteDevSamplingInterval) = _getMedianSamplingInterval(timestamps)
+  medianSamplingIntervalInMs = _getMedianSamplingInterval(timestampsInMs)
+  
+  if medianSamplingIntervalInMs > 0:
+    values = _resampleData(timestampsInMs,
+                           values,
+                           medianSamplingIntervalInMs)
+  
+    (cwtVar, timeScaleInMs) = _calculateContinuousWaveletTransform(
+      medianSamplingIntervalInMs, values)
+      
+    suggestedSamplingIntervalInMs = _determineAggregationWindow(
+      timeScale=timeScaleInMs,
+      cwtVar=cwtVar,
+      thresh=_AGGREGATION_WINDOW_THRESH,
+      samplingInterval=medianSamplingIntervalInMs,
+      numDataPts=numDataPts)
+  
+    # Decide whether to use TimeOfDay and DayOfWeek encoders.
+    # Note: We only need the timescale in seconds since periods like TimeOfDay 
+    # and DayOfWeek are so much more granular than a millisecond scale.
+    timeScaleInS = timeScaleInMs.astype('timedelta64[s]')
+    (useTimeOfDay, useDayOfWeek) = _determineEncoderTypes(cwtVar, timeScaleInS)
+  
+    # decide the aggregation function ("mean" or "sum")
+    aggFunc = _getAggregationFunction(values)
+  
+    aggInfo = _getAggInfo(medianSamplingIntervalInMs,
+                           suggestedSamplingIntervalInMs,
+                           aggFunc)
+    
+  
+  else:
+    aggInfo = None
+    useTimeOfDay = False
+    useDayOfWeek = False
 
-  (timestamps, values) = _resampleData(timestamps,
-                                       values,
-                                       medianSamplingInterval)
-
-  (cwtVar, timeScale) = _calculateContinuousWaveletTransform(
-    medianSamplingInterval, values)
-
-  suggestedSamplingInterval = _determineAggregationWindow(
-    timeScale=timeScale,
-    cwtVar=cwtVar,
-    thresh=_AGGREGATION_WINDOW_THRESH,
-    samplingInterval=medianSamplingInterval,
-    numDataPts=numDataPts)
-
-  # decide whether to use TimeOfDay and DayOfWeek encoders
-  (useTimeOfDay, useDayOfWeek) = _determineEncoderTypes(cwtVar, timeScale)
-
-  # decide the aggregation function ("mean" or "sum")
-  aggFunc = _getAggregationFunction(values)
-
+  
+  modelInfo = _getModelParams(useTimeOfDay, useDayOfWeek, values)
   return {
-    "aggInfo": _getAggInfo(medianSamplingInterval,
-                           suggestedSamplingInterval,
-                           aggFunc),
-    "modelInfo": _getModelParams(useTimeOfDay, useDayOfWeek, values),
+    "aggInfo": aggInfo,
+    "modelInfo": modelInfo
   }
 
 
@@ -270,9 +285,9 @@ def _getAggInfo(medianSamplingInterval, suggestedSamplingInterval, aggFunc):
   Return a JSON object containing the aggregation window size and
   aggregation function type.
 
-  @param suggestedSamplingInterval (timedelta64)
+  @param suggestedSamplingInterval (timedelta64) in ms
 
-  @param medianSamplingInterval (timedelta64)
+  @param medianSamplingInterval (timedelta64) in ms
 
   @param aggFunc (str) "mean" or "sum"
 
@@ -282,7 +297,7 @@ def _getAggInfo(medianSamplingInterval, suggestedSamplingInterval, aggFunc):
     aggInfo = None
   else:
     aggInfo = {
-      "windowSize": suggestedSamplingInterval.astype("int"),
+      "windowSize": suggestedSamplingInterval.astype("int") / 1000,
       "func": aggFunc
     }
   return aggInfo
@@ -346,29 +361,35 @@ def _resampleData(timestamps, values, newSamplingInterval):
   Note: the resampling function is using interpolation,
   it may not be appropriate for aggregation purpose.
 
-  @param timestamps numpy array of timestamp in datetime64 type
+  @param timestamps numpy array of timestamp in datetime64 type in ms
 
   @param values numpy array of float64 values
 
-  @param newSamplingInterval numpy timedelta64 format
+  @param newSamplingInterval numpy timedelta64 format in ms
 
-  @return (tuple) Contains:
-          "newTimeStamps" (numpy array) time stamps after resampling
-          "newValues" (numpy array) data values after resamplings
+  @return "newValues" (numpy array) data values after resamplings
   """
-  totalDuration = (timestamps[-1] - timestamps[0])
-  nSampleNew = numpy.floor(totalDuration / newSamplingInterval) + 1
-  nSampleNew = nSampleNew.astype("int")
-
-  newTimeStamps = numpy.empty(nSampleNew, dtype="datetime64[s]")
-  for sampleI in xrange(nSampleNew):
-    newTimeStamps[sampleI] = timestamps[0] + sampleI * newSamplingInterval
-
-  newValues = numpy.interp((newTimeStamps - timestamps[0]).astype("float32"),
-                           (timestamps - timestamps[0]).astype("float32"),
-                           values)
-
-  return newTimeStamps, newValues
+  if newSamplingInterval == 0.0:
+    return values  # don't resample in this case
+  else:
+    assert timestamps.dtype == numpy.dtype("datetime64[ms]")
+    assert newSamplingInterval.dtype == numpy.dtype("timedelta64[ms]")
+  
+    totalDuration = (timestamps[-1] - timestamps[0])
+  
+    nSampleNew = numpy.floor(totalDuration / newSamplingInterval) + 1
+    nSampleNew = nSampleNew.astype("int")
+  
+    newTimeStamps = numpy.empty(nSampleNew, dtype="datetime64[ms]")
+    for sampleI in xrange(nSampleNew):
+      newTimeStamps[sampleI] = timestamps[0] + sampleI * newSamplingInterval
+  
+    newValues = numpy.interp((newTimeStamps - timestamps[0]).astype("float32"),
+                             (timestamps - timestamps[0]).astype("float32"),
+                             values)
+  
+    assert len(newValues) == nSampleNew
+    return newValues
 
 
 
@@ -377,20 +398,25 @@ def _calculateContinuousWaveletTransform(samplingInterval, values):
   Calculate continuous wavelet transformation (CWT).
   Return variance of the cwt coefficients over time.
 
-  @param samplingInterval: sampling interval of the time series
+  @param samplingInterval: (timedelta64[ms]) sampling interval of the 
+  timeseries 
 
   @param values: numpy array of float64 values
 
   @return (tuple) Contains
-    "cwtVar" (numpy array) Stores variance of the wavelet coefficents
-    "timeScale" (numpy array) Stores the corresponding time scales
+    "cwtVar" (numpy array) Stores variance of the wavelet coefficents 
+    "timeScale" (numpy array) Stores the corresponding time scales in ms
   """
 
-  maxTimeScaleN = min(float(MAX_WAVELET_TIME_WINDOW_SEC)/
-                      samplingInterval.astype("float32"),
-                      len(values)/10)
+  # This is unit-less
+  maxTimeScaleN = min(float(MAX_WAVELET_TIME_WINDOW_MS) /
+                      samplingInterval.astype('float32'),
+                      len(values) / 10)
+  # This is unit-less
   widths = numpy.logspace(0, numpy.log10(maxTimeScaleN), 50)
+
   timeScale = widths * samplingInterval * 4
+  assert timeScale.dtype == numpy.dtype('timedelta64[ms]')
 
   # continuous wavelet transformation with ricker wavelet
   cwtMatrix = _cwt(values, _rickerWavelet, widths)
@@ -410,23 +436,22 @@ def _getMedianSamplingInterval(timestamps):
   """
   Calculate median and median absolute deviation of sampling interval.
 
-  @param timestamps numpy array of timestamps in datetime64 format
+  @param timestamps numpy array of timestamps in datetime64 format in ms
 
   @return: (tuple) Contains:
-    "medianSamplingInterval" (datetime64) in unit of seconds
+    "medianSamplingInterval" (datetime64) in unit of milliseconds
     "medianAbsoluteDev" (timedelta64) the median absolute deviation of
-           sampling intervals
+           sampling intervals in ms
   """
-  if timestamps.dtype != numpy.dtype("<M8[s]"):
-    timestamps = timestamps.astype("datetime64[s]")
+
+  assert timestamps.dtype == numpy.dtype("datetime64[ms]")
 
   samplingIntervals = numpy.diff(timestamps)
-
   medianSamplingInterval = numpy.median(samplingIntervals)
-  medianAbsoluteDev = numpy.median(
-    numpy.abs(samplingIntervals - medianSamplingInterval))
 
-  return medianSamplingInterval, medianAbsoluteDev
+  assert medianSamplingInterval.dtype == numpy.dtype("timedelta64[ms]")
+  
+  return medianSamplingInterval
 
 
 
@@ -444,18 +469,25 @@ def _determineAggregationWindow(timeScale,
 
   @param thresh (float) cutoff threshold between 0 and 1
 
-  @param samplingInterval (timedelta64), original sampling interval
+  @param samplingInterval (timedelta64), original sampling interval in ms
 
   @param numDataPts (float) number of data points
 
-  @return aggregationTimeScale (timedelta64) suggested sampling interval
+  @return aggregationTimeScale (timedelta64) suggested sampling interval in ms
   """
+
+  assert samplingInterval.dtype == numpy.dtype("timedelta64[ms]")
+  assert timeScale.dtype == numpy.dtype("timedelta64[ms]")
+
   samplingInterval = samplingInterval.astype("float64")
   cumulativeCwtVar = numpy.cumsum(cwtVar)
   cutoffTimeScale = timeScale[numpy.where(cumulativeCwtVar >= thresh)[0][0]]
 
   aggregationTimeScale = cutoffTimeScale / 10.0
-  aggregationTimeScale = aggregationTimeScale.astype("float64")
+
+  assert aggregationTimeScale.dtype == numpy.dtype("timedelta64[ms]")
+  aggregationTimeScale = aggregationTimeScale.astype('float64')
+
   if aggregationTimeScale < samplingInterval:
     aggregationTimeScale = samplingInterval
 
@@ -468,7 +500,7 @@ def _determineAggregationWindow(timeScale,
     if aggregationTimeScale > maxSamplingInterval > samplingInterval:
       aggregationTimeScale = maxSamplingInterval
 
-  aggregationTimeScale = numpy.timedelta64(int(aggregationTimeScale), "s")
+  aggregationTimeScale = numpy.timedelta64(int(aggregationTimeScale), "ms")
   return aggregationTimeScale
 
 
@@ -487,16 +519,19 @@ def _determineEncoderTypes(cwtVar, timeScale):
 
   @param cwtVar (numpy array) wavelet coefficients variance over time
 
-  @param timeScale (numpy array) corresponding time scales for wavelet coeffs
+  @param timeScale (numpy array) corresponding time scales for wavelet 
+    coeffs in s
 
   @return (tuple) Contains:
           "useTimeOfDay" (bool) indicating whether to use timeOfDay encoder
           "useDayOfWeek" (bool) indicating whether to use dayOfWeek encoder
   """
 
+  assert timeScale.dtype == numpy.dtype("timedelta64[s]")
+
   # discard slow time scale (> 4 weeks ) before peak detection
   timeScale = timeScale.astype("float32")
-  selectedIdx = numpy.where(timeScale < 4*_ONE_WEEK_IN_SEC)[0]
+  selectedIdx = numpy.where(timeScale < 4 * _ONE_WEEK_IN_SEC)[0]
   cwtVar = cwtVar[selectedIdx]
   timeScale = timeScale[selectedIdx]
 
@@ -535,7 +570,7 @@ def _determineEncoderTypes(cwtVar, timeScale):
     nearestLocalMinValue = numpy.max(leftLocalMinValue, rightLocalMinValue)
 
     if ((localMaxValue - nearestLocalMinValue) / localMaxValue > 0.1 and
-        localMaxValue > baselineValue):
+            localMaxValue > baselineValue):
       strongLocalMax.append(localMax[i])
 
       if (timeScale[leftLocalMin] < _ONE_DAY_IN_SEC < timeScale[rightLocalMin]
@@ -544,8 +579,8 @@ def _determineEncoderTypes(cwtVar, timeScale):
 
       if not DISABLE_DAY_OF_WEEK_ENCODER:
         if (timeScale[leftLocalMin] < _ONE_WEEK_IN_SEC <
-            timeScale[rightLocalMin] and
-            cwtVarAtWeekPeriod > localMaxValue * 0.5):
+              timeScale[rightLocalMin] and
+                cwtVarAtWeekPeriod > localMaxValue * 0.5):
           useDayOfWeek = True
 
   return useTimeOfDay, useDayOfWeek

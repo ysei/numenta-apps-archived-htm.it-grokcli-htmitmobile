@@ -321,25 +321,26 @@ class _ModelRunner(object):
                     inputRow, numRowsToSkip)
         continue
       
-      if not (na.isNA(str(inputRow[inputRowValueIndex])) or
-       na.isNA(str(inputRow[inputRowTimestampIndex]))):
-        # Extract timestamp and value
-        # NOTE: the order must match the `inputFields` that we passed to the
-        # Aggregator constructor
-
-        fields = [
-          date_time_utils.parseDatetime(inputRow[inputRowTimestampIndex],
-                                        datetimeFormat),
-          float(inputRow[inputRowValueIndex])
-        ]
-
-        # Aggregate
-        aggRow, _ = self._aggregator.next(fields, None)
-        g_log.debug("Aggregator returned %s for %s", aggRow, fields)
-        if aggRow is not None:
-          self._emitOutputMessage(
-            dataRow=aggRow,
-            anomalyProbability=self._computeAnomalyProbability(aggRow))
+      if len(inputRow) > inputRowValueIndex:
+        if not (na.isNA(str(inputRow[inputRowValueIndex])) or
+         na.isNA(str(inputRow[inputRowTimestampIndex]))):
+          # Extract timestamp and value
+          # NOTE: the order must match the `inputFields` that we passed to the
+          # Aggregator constructor
+  
+          fields = [
+            date_time_utils.parseDatetime(inputRow[inputRowTimestampIndex],
+                                          datetimeFormat),
+            float(inputRow[inputRowValueIndex])
+          ]
+  
+          # Aggregate
+          aggRow, _ = self._aggregator.next(fields, None)
+          g_log.debug("Aggregator returned %s for %s", aggRow, fields)
+          if aggRow is not None:
+            self._emitOutputMessage(
+              dataRow=aggRow,
+              anomalyProbability=self._computeAnomalyProbability(aggRow))
 
 
     # Reap remaining data from aggregator
