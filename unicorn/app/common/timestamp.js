@@ -37,19 +37,35 @@ export const COMPOUND_TIMESTAMP_FORMATS = Object.keys(
   COMPOUND_TIMESTAMP_FORMAT_PY_MAPPINGS);
 
 // momentjs format string for Unix Timestamp (seconds)
-export const UNIX_TIMESTAMP_MOMENT_FORMAT = 'X';
+export const UNIX_TIMESTAMP_SEC_MOMENT_FORMAT = 'X';
+
+// momentjs format string for Unix Timestamp (milliseconds)
+export const UNIX_TIMESTAMP_MILLISEC_MOMENT_FORMAT = 'x'
 
 // unicorn_backend's format string for Unix Timestamp (seconds)
-const UNIX_TIMESTAMP_BACKEND_FORMAT = '#T';
+const UNIX_TIMESTAMP_SEC_BACKEND_FORMAT = '#T';
 
-// Add the Unix Timestamp mapping to the compound timestamp mapping table;
+// unicorn_backend's format string for Unix Timestamp (milliseconds)
+const UNIX_TIMESTAMP_MILLISEC_BACKEND_FORMAT = '#t';
+
+// Last day/hour/min/sec of year 9999 in unix seconds is the maximum value
+// parsed successfully by python's datetime.utcfromtimestamp().
+// Unicorn uses this value as a threshold to discern between timestamps in
+// seconds versus milliseconds: timestamps up to this value are considered
+// seconds and values above it are interpreted as milliseconds.
+export const MAX_UNIX_TIMESTAMP_IN_SECONDS = 253402300799.0;
+
+// CombineUnix Timestamp mappings with the compound timestamp mapping table;
 // COMPOUND_TIMESTAMP_FORMAT_PY_MAPPINGS doesn't have it in order to avoid
 // collision between Unix Timestamp and scalar values in the current field type
 // assessment heuristic.
 export const ALL_TIMESTAMP_FORMAT_PY_MAPPINGS = Object.assign(
   {},
   COMPOUND_TIMESTAMP_FORMAT_PY_MAPPINGS,
-  {[UNIX_TIMESTAMP_MOMENT_FORMAT]: UNIX_TIMESTAMP_BACKEND_FORMAT});
+  {[UNIX_TIMESTAMP_SEC_MOMENT_FORMAT]:
+     UNIX_TIMESTAMP_SEC_BACKEND_FORMAT,
+   [UNIX_TIMESTAMP_MILLISEC_MOMENT_FORMAT]:
+     UNIX_TIMESTAMP_MILLISEC_BACKEND_FORMAT});
 
 /**
  * Parse an ISO 8601 timestamp, preserving its current time zone. If there's no

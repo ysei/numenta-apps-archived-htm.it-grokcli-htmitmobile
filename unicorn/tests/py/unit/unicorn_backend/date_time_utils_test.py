@@ -21,6 +21,9 @@
 # ----------------------------------------------------------------------
 """Unit test of the unicorn_backend.date_time_utils module"""
 
+# Disable warnings concerning access to protected members
+# pylint: disable=W0212
+
 from datetime import datetime
 import json
 import logging
@@ -36,19 +39,31 @@ g_log = logging.getLogger(__name__)
 
 
 
-class UnixTimestampTestCase(unittest.TestCase):
+class UnixSecTimestampTestCase(unittest.TestCase):
 
-  def testPositiveFloatingPointUnixTimestamp(self):
+  def testPositiveFloatingPointTimestamp(self):
     result = date_time_utils.parseDatetime("1465257536.142103", "#T")
     self.assertEqual(result, datetime(2016, 6, 6, 23, 58, 56, 142103))
 
 
-  def testZeroUnixTimestamp(self):
+  def testZeroTimestamp(self):
     result = date_time_utils.parseDatetime("0", "#T")
     self.assertEqual(result, datetime(1970, 1, 1, 0, 0))
 
 
-  def testNegativeUnixTimestampRaisesValueError(self):
+  def testMaxTimestampDoesNotRaise(self): # pylint: disable=R0201
+    date_time_utils.parseDatetime(str(date_time_utils._MAX_UNIX_SECONDS), "#T")
+
+
+  def testAboveMaxTimestampRaisesValueError(self):
+    with self.assertRaises(ValueError) as errorCtx:
+      date_time_utils.parseDatetime(str(date_time_utils._MAX_UNIX_SECONDS + 1),
+                                    "#T")
+
+    self.assertIn("Unable to parse", errorCtx.exception.args[0])
+
+
+  def testNegativeTimestampRaisesValueError(self):
     with self.assertRaises(ValueError) as errorCtx:
       date_time_utils.parseDatetime("-5", "#T")
 
@@ -56,9 +71,51 @@ class UnixTimestampTestCase(unittest.TestCase):
                   errorCtx.exception.args[0])
 
 
-  def testNonNumericUnixTimestampRaisesValueError(self):
+  def testNonNumericTimestampRaisesValueError(self):
     with self.assertRaises(ValueError) as errorCtx:
       date_time_utils.parseDatetime("xyz", "#T")
+
+    self.assertIn("xyz", errorCtx.exception.args[0])
+
+
+
+class UnixMillisecTimestampTestCase(unittest.TestCase):
+
+  def testPositiveFloatingPointTimestamp(self):
+    result = date_time_utils.parseDatetime("1465257536142.103", "#t")
+    self.assertEqual(result, datetime(2016, 6, 6, 23, 58, 56, 142103))
+
+
+  def testZeroTimestamp(self):
+    result = date_time_utils.parseDatetime("0", "#t")
+    self.assertEqual(result, datetime(1970, 1, 1, 0, 0))
+
+
+  def testMaxTimestampDoesNotRaise(self): # pylint: disable=R0201
+    date_time_utils.parseDatetime(str(date_time_utils._MAX_UNIX_SECONDS * 1000),
+                                  "#t")
+
+
+  def testAboveMaxTimestampRaisesValueError(self):
+    with self.assertRaises(ValueError) as errorCtx:
+      date_time_utils.parseDatetime(
+        str((date_time_utils._MAX_UNIX_SECONDS + 1) * 1000),
+        "#t")
+
+    self.assertIn("Unable to parse", errorCtx.exception.args[0])
+
+
+  def testNegativeTimestampRaisesValueError(self):
+    with self.assertRaises(ValueError) as errorCtx:
+      date_time_utils.parseDatetime("-1465257536142.103", "#t")
+
+    self.assertIn("Expected non-negative Unix Timestamp",
+                  errorCtx.exception.args[0])
+
+
+  def testNonNumericTimestampRaisesValueError(self):
+    with self.assertRaises(ValueError) as errorCtx:
+      date_time_utils.parseDatetime("xyz", "#t")
 
     self.assertIn("xyz", errorCtx.exception.args[0])
 
@@ -832,7 +889,7 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-02T02:30:00"
     ),
 
-     # Format "%m/%d/%y %H:%M:%S"
+    # Format "%m/%d/%y %H:%M:%S"
     (
       "%m/%d/%y %H:%M:%S",
       "01/2/16 2:30:34",
@@ -874,7 +931,7 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-02T00:00:00"
     ),
 
-     # Format "%m/%d/%y %H:%M"
+    # Format "%m/%d/%y %H:%M"
     (
       "%m/%d/%y %H:%M",
       "1/2/16 2:30",
