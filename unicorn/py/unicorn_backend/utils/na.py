@@ -27,4 +27,4 @@ NA_STRINGS = ['nan','none', 'null', 'n/a', 'na', '']
   field: string to test 
 '''
 def isNA(field):
-  return NA_STRINGS.__contains__(field.lower())
+  return field.lower() in NA_STRINGS
