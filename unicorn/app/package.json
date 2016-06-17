@@ -44,8 +44,7 @@
   ],
   "scripts": {
     "postinstall": "npm run install:backend",
-    "install:backend": "npm run clean:backend && python ../py/setup.py install",
-    "clean:backend": "python -m pip uninstall unicorn_backend -y || true"
+    "install:backend": "python ../py/setup.py install"
   },
   "dependencies": {
     "babel-core": "6.7.2",
