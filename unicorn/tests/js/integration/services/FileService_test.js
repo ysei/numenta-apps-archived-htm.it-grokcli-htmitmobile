@@ -31,7 +31,8 @@ import {
   DBFileSchema, DBMetricSchema
 } from '../../../../app/database/schema';
 import {
-  UNIX_TIMESTAMP_MOMENT_FORMAT
+  UNIX_TIMESTAMP_SEC_MOMENT_FORMAT,
+  UNIX_TIMESTAMP_MILLISEC_MOMENT_FORMAT
 } from '../../../../app/common/timestamp';
 
 
@@ -130,11 +131,35 @@ const EXPECTED_FIELDS_UNIX_TIMESTAMP_AS_SECONDS_FILE = [
     index: 0,
     name: 'TIMESTAMP',
     type: 'date',
-    format: UNIX_TIMESTAMP_MOMENT_FORMAT
+    format: UNIX_TIMESTAMP_SEC_MOMENT_FORMAT
   }),
   Object.assign({}, METRIC_INSTANCE, {
     uid: generateMetricId(UNIX_TIMESTAMP_AS_SECONDS_FILE, 'v1'),
     file_uid: UNIX_TIMESTAMP_AS_SECONDS_FILE_ID,
+    index: 1,
+    name: 'v1',
+    type: 'number'
+  })
+];
+
+const UNIX_MILLISECOND_TIMESTAMP_FILE = path.join(
+  FIXTURES,
+  'unix-millisecond-timestamp.csv'
+);
+const UNIX_MILLISECOND_TIMESTAMP_FILE_ID = generateFileId(
+  UNIX_MILLISECOND_TIMESTAMP_FILE);
+const EXPECTED_FIELDS_UNIX_MILLISECOND_TIMESTAMP_FILE = [
+  Object.assign({}, METRIC_INSTANCE, {
+    uid: generateMetricId(UNIX_MILLISECOND_TIMESTAMP_FILE, 'TIMESTAMP'),
+    file_uid: UNIX_MILLISECOND_TIMESTAMP_FILE_ID,
+    index: 0,
+    name: 'TIMESTAMP',
+    type: 'date',
+    format: UNIX_TIMESTAMP_MILLISEC_MOMENT_FORMAT
+  }),
+  Object.assign({}, METRIC_INSTANCE, {
+    uid: generateMetricId(UNIX_MILLISECOND_TIMESTAMP_FILE, 'v1'),
+    file_uid: UNIX_MILLISECOND_TIMESTAMP_FILE_ID,
     index: 1,
     name: 'v1',
     type: 'number'
@@ -269,12 +294,21 @@ describe('FileService', () => {
         done();
       });
     });
-    it('should get fields from file with unix timestamp', (done) => {
+    it('should get fields from file with unix sec timestamp', (done) => {
       service.getFields(UNIX_TIMESTAMP_AS_SECONDS_FILE, (error, results) => {
         assert.ifError(error);
         assert.equal(results.offset, 1);
         assert.deepEqual(results.fields,
                          EXPECTED_FIELDS_UNIX_TIMESTAMP_AS_SECONDS_FILE);
+        done();
+      });
+    });
+    it('should get fields from file with unix millisec timestamp', (done) => {
+      service.getFields(UNIX_MILLISECOND_TIMESTAMP_FILE, (error, results) => {
+        assert.ifError(error);
+        assert.equal(results.offset, 1);
+        assert.deepEqual(results.fields,
+                         EXPECTED_FIELDS_UNIX_MILLISECOND_TIMESTAMP_FILE);
         done();
       });
     });

@@ -35,7 +35,10 @@ import {
 } from '../database/schema';
 import TimeAggregator from './TimeAggregator';
 import {
-  COMPOUND_TIMESTAMP_FORMATS, UNIX_TIMESTAMP_MOMENT_FORMAT
+  COMPOUND_TIMESTAMP_FORMATS,
+  MAX_UNIX_TIMESTAMP_IN_SECONDS,
+  UNIX_TIMESTAMP_SEC_MOMENT_FORMAT,
+  UNIX_TIMESTAMP_MILLISEC_MOMENT_FORMAT
 } from '../common/timestamp';
 import {
   generateFileId, generateMetricId
@@ -60,6 +63,11 @@ SCHEMAS.forEach((schema) => {
 // Substrings of column names that are hints that the column might contain a
 // timestamp
 const TIMESTAMP_HEADER_SUBSTRINGS = ['time', 'date'];
+
+const UNIX_TIMESTAMP_FORMATS = [
+  UNIX_TIMESTAMP_SEC_MOMENT_FORMAT,
+  UNIX_TIMESTAMP_MILLISEC_MOMENT_FORMAT
+];
 
 
 /**
@@ -339,12 +347,26 @@ export class FileService {
               // fields could be a unix timestamp by examining their field names
               for (let i in fields) {
                 let field = fields[i];
+                let valueStr = values[field.index].trim();
                 if (field.type === 'number' &&  // eslint-disable-line max-depth
-                    Number(values[field.index].trim()) >= 0 &&
+                    Number(valueStr) >= 0 &&
                     fieldNameCouldBeTimestamp(field.name)) {
                   // Convert field to timestamp
                   field.type = 'date';
-                  field.format = UNIX_TIMESTAMP_MOMENT_FORMAT;
+                  // Check to see if the timestamp is beyond the range of
+                  // MAX_UNIX_TIMESTAMP_IN_SECONDS. If it is, interpret is as a
+                  // ms timestamp. To be clear we are taking the convention that
+                  // we only support unix timestamps in seconds that are between
+                  // 0 and strictly below 253402300800.0 (
+                  // 10000-01-01T00:00:00+00:00). And we support unix timestamps
+                  // in milliseconds that are at or above 253402300800 (unix
+                  // timestamp in ms) which is 1978-01-11T21:31:40+00:00.
+                  if (Number(valueStr) <= // eslint-disable-line max-depth
+                      MAX_UNIX_TIMESTAMP_IN_SECONDS) {
+                    field.format = UNIX_TIMESTAMP_SEC_MOMENT_FORMAT;
+                  } else {
+                    field.format = UNIX_TIMESTAMP_MILLISEC_MOMENT_FORMAT;
+                  }
                 }
               }
 
@@ -668,7 +690,7 @@ export class FileService {
                            `'${field.format}'. For example: '${current}'`;
               }
               let isValid;
-              if (field.format === UNIX_TIMESTAMP_MOMENT_FORMAT) {
+              if (UNIX_TIMESTAMP_FORMATS.indexOf(field.format) >= 0) {
                 // Work around moment's failure to validate floating point
                 // Unix Timestamp in strict mode
                 isValid = moment.utc(value, field.format, false).isValid();
