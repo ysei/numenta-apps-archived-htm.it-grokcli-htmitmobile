@@ -138,7 +138,9 @@ export default class CreateModelDialog extends React.Component {
                 );
 
     let paramFinderError = Boolean(this.props.paramFinderError);
-    if (modelRunnerParams && !this.state.progress) {
+    // FIXME: UNI-557: modelRunnerParams may be initialized before param_finder results become available.
+    if (modelRunnerParams && modelRunnerParams.modelInfo &&
+      !this.state.progress) {
       let modelRunnerPayload = {
         metricId,
         inputOpts,
