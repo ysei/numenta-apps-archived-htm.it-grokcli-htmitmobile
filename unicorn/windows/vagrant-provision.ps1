@@ -55,3 +55,8 @@ choco install vcpython27
 choco install git
 
 chocolatey feature disable -n=allowGlobalConfirmation
+
+# Mount shared folder to 'x:' drive
+# Must match shared folder name in vagrant file
+# See 'config.vm.synced_folder')
+net use x: \\VBOXSVR\shared /PERSISTENT:YES
