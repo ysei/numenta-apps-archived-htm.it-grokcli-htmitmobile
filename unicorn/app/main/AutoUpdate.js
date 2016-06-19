@@ -21,7 +21,7 @@ import {
 import config from './ConfigService';
 import os from 'os';
 import path from 'path';
-import spawn from 'child_process';
+import childProcess from 'child_process';
 import log from './Logger'
 
 // Squirrel Windows update process name
@@ -34,7 +34,7 @@ const UPDATE_EXE =
  */
 function _updateWin32(args) {
   try {
-    spawn(UPDATE_EXE, args, {detached: true})
+    childProcess.spawn(UPDATE_EXE, args, {detached: true})
       .on('close', app.quit);
   } catch (err) {
     log.error({err, args}, 'Update Error');
@@ -125,17 +125,17 @@ export default class AppUpdater {
         // No update event was passed at start up
         return false;
       }
+      let target = path.basename(process.execPath);
 
       const squirrelEvent = process.argv[1];
       switch (squirrelEvent) {
       case '--squirrel-install': // fallthrough
       case '--squirrel-updated':
-        let target = path.basename(process.execPath);
-        _updateWin32([`--createShortcut=${target}`]);
+        _updateWin32(['--createShortcut', target]);
         return true;
 
       case '--squirrel-uninstall':
-        _updateWin32([`--removeShortcut=${target}`], app.quit);
+        _updateWin32(['--removeShortcut', target]);
         return true;
 
       case '--squirrel-obsolete':
