@@ -51,7 +51,12 @@ export default class AppUpdater {
   constructor(browserWindow) {
     this._window = browserWindow;
     let updateUrl = config.get('update:url');
-    let feedUrl = `${updateUrl}/${os.platform()}/update.${app.getVersion()}.json`; // eslint-disable-line
+    let feedUrl = `${updateUrl}/${os.platform()}`;
+    // Squirrel.Windows appends '/RELEASES' to the url
+    if (os.platform() === 'darwin') {
+      // Squirrel.Mac expects JSON response with update information
+      feedUrl += `/update.${app.getVersion()}.json`;
+    }
     autoUpdater.setFeedURL(feedUrl);
 
     autoUpdater.addListener('error', (event, error) => {
