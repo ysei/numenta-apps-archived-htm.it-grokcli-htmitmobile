@@ -136,6 +136,20 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
+const shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
+  // Someone tried to run a second instance, we should focus our window.
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.focus();
+  }
+});
+
+if (shouldQuit) {
+  app.quit();
+}
+
 // Electron finished init and ready to create browser window
 app.on('ready', () => {
   // set main menu
