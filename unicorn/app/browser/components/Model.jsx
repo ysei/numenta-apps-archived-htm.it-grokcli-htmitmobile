@@ -417,8 +417,8 @@ export default class Model extends React.Component {
         <ol>
           <li>Explore the chart to understand your results in context</li>
           <li>Export the results to preserve and present your findings</li>
-          <li>Engage with a more scalable HTM project in the NuPIC community or
-            contact us for a license
+          <li>If you would like to explore adding HTM anomaly detection
+            technology to your application click <a href="http://numenta.com/htm-studio/#faq">here</a> for more information.
           </li>
         </ol>
         {MoreSection}
