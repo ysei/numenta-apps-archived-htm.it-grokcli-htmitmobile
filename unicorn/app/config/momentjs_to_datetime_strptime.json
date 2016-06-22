@@ -109,7 +109,7 @@
     }
   },
   {
-    "category": "US Date, time (excel default)",
+    "category": "US Date, time (excel default on OSX)",
     "mappings": {
       "MM/DD/YY H:mm": "%m/%d/%y %H:%M",
       "MM/DD/YY H:mm:SS": "%m/%d/%y %H:%M:%S",
@@ -138,6 +138,38 @@
       "M/D/YY H": "%m/%d/%y %H",
       "M/D/YY HH": "%m/%d/%y %H",
       "M/D/YY": "%m/%d/%y"
+    }
+  },
+  {
+    "category": "US Date, time (excel default on Windows)",
+    "mappings": {
+      "MM/DD/YYYY H:mm": "%m/%d/%Y %H:%M",
+      "MM/DD/YYYY H:mm:SS": "%m/%d/%Y %H:%M:%S",
+      "MM/DD/YYYY HH:mm": "%m/%d/%Y %H:%M",
+      "MM/DD/YYYY HH:mm:SS": "%m/%d/%Y %H:%M:%S",
+      "MM/DD/YYYY H": "%m/%d/%Y %H",
+      "MM/DD/YYYY HH": "%m/%d/%Y %H",
+      "MM/D/YYYY H:mm": "%m/%d/%Y %H:%M",
+      "MM/D/YYYY H:mm:SS": "%m/%d/%Y %H:%M:%S",
+      "MM/D/YYYY HH:mm": "%m/%d/%Y %H:%M",
+      "MM/D/YYYY HH:mm:SS": "%m/%d/%Y %H:%M:%S",
+      "MM/D/YYYY H": "%m/%d/%Y %H",
+      "MM/D/YYYY HH": "%m/%d/%Y %H",
+      "MM/D/YYYY": "%m/%d/%Y",
+      "M/DD/YYYY H:mm": "%m/%d/%Y %H:%M",
+      "M/DD/YYYY H:mm:SS": "%m/%d/%Y %H:%M:%S",
+      "M/DD/YYYY HH:mm": "%m/%d/%Y %H:%M",
+      "M/DD/YYYY HH:mm:SS": "%m/%d/%Y %H:%M:%S",
+      "M/DD/YYYY H": "%m/%d/%Y %H",
+      "M/DD/YYYY HH": "%m/%d/%Y %H",
+      "M/DD/YYYY": "%m/%d/%Y",
+      "M/D/YYYY H:mm": "%m/%d/%Y %H:%M",
+      "M/D/YYYY H:mm:SS": "%m/%d/%Y %H:%M:%S",
+      "M/D/YYYY HH:mm": "%m/%d/%Y %H:%M",
+      "M/D/YYYY HH:mm:SS": "%m/%d/%Y %H:%M:%S",
+      "M/D/YYYY H": "%m/%d/%Y %H",
+      "M/D/YYYY HH": "%m/%d/%Y %H",
+      "M/D/YYYY": "%m/%d/%Y"
     }
   }
 ]
