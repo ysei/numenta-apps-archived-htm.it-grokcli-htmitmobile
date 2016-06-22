@@ -108,6 +108,7 @@ export class ModelService extends EventEmitter {
     }
 
     let params = [
+      '-E',
       '-m', 'unicorn_backend.model_runner_2',
       '--input', JSON.stringify(inputOpt),
       '--model', JSON.stringify(modelOpt)
