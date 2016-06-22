@@ -49,7 +49,7 @@
       },
       "delete": {
         "title": "Delete File",
-        "message": "Deleting this dataset will delete the associated models. Are you sure you want to delete this file?"
+        "message": "Removing this file from HTM Studio will delete the associated models. Are you sure you want to delete this file?"
       }
     },
     "model": {
