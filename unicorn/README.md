@@ -187,7 +187,6 @@ git clone https://github.com/numenta/numenta-apps
 cd numenta-apps/unicorn
 python py/setup.py install
 npm install
-unset PYTHONPATH  # force usage of our custom internal Python
 ```
 
 
