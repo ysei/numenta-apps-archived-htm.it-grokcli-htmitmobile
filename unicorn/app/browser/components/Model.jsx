@@ -30,7 +30,7 @@ import FlatButton from 'material-ui/lib/flat-button';
 let path = require('path');
 import RaisedButton from 'material-ui/lib/raised-button';
 import React from 'react';
-import {remote} from 'electron';
+import {remote, shell} from 'electron';
 import Snackbar from 'material-ui/lib/snackbar';
 
 import ChartUpdateViewpoint from '../actions/ChartUpdateViewpoint';
@@ -194,6 +194,11 @@ export default class Model extends React.Component {
           fontSize: 12,
           fontWeight: muiTheme.rawTheme.font.weight.light
         }
+      },
+      here: {
+        cursor: 'pointer',
+        textDecoration: 'underline',
+        color: 'grey'
       }
     };
   }
@@ -275,6 +280,10 @@ export default class Model extends React.Component {
       this._config.get('dialog:model:delete:title'),
       this._config.get('dialog:model:delete:message'),
       dialogActions);
+  }
+
+  _onHereClick() {
+    shell.openExternal('http://numenta.com/htm-studio#faq');
   }
 
   _exportModelResults(modelId, timestampFormat) {
@@ -418,7 +427,7 @@ export default class Model extends React.Component {
           <li>Explore the chart to understand your results in context</li>
           <li>Export the results to preserve and present your findings</li>
           <li>If you would like to explore adding HTM anomaly detection
-            technology to your application click <a href="http://numenta.com/htm-studio/#faq">here</a> for more information.
+            technology to your application click <a style={this._styles.here} onClick={this._onHereClick}>here</a> for more information
           </li>
         </ol>
         {MoreSection}
