@@ -92,7 +92,12 @@ export default class ModelDataStore extends BaseStore {
       // In this case, we've already stored this model.
       this._fetchNewResultsSoon(modelId);
     } else {
-      throw new Error('Listen for new results before querying.', modelId);
+      // Normally this means there's a bug in the code.
+      //
+      // This can also happen when LOAD_MODEL_DATA and HIDE_MODEL events occur
+      // in a strange order, e.g. when you rapidly show and hide a model while
+      // another model is running. So just warn, don't throw an exception.
+      console.warn(`Showed a model without first listening for new results. ${modelId}`); // eslint-disable-line
     }
 
     this.emitChange();
