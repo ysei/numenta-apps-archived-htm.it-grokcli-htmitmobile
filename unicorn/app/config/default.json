@@ -48,8 +48,8 @@
         "title": "Add new data file"
       },
       "delete": {
-        "title": "Delete File",
-        "message": "Removing this file from HTM Studio will delete the associated models. Are you sure you want to delete this file?"
+        "title": "Remove File",
+        "message": "Removing this file from HTM Studio will delete the associated HTM models. Are you sure you want to remove the file? Your original file will not be touched."
       }
     },
     "model": {
@@ -110,7 +110,7 @@
   },
   "menu": {
     "file": {
-      "delete": "Delete File",
+      "delete": "Remove File",
       "details": "File Details"
     }
   },
