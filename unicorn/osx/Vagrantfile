@@ -26,8 +26,15 @@ require 'json'
 package = JSON.parse(File.read(File.expand_path "../package.json"))
 NODE_VERSION = package["engines"]["node"]
 
+# Linked clones requires version 1.8
+Vagrant.require_version ">= 1.8"
+
 Vagrant.configure(2) do |config|
   config.vm.box = "AndrewDryga/vagrant-box-osx"
+  config.vm.provider "virtualbox" do |vb|
+    # Use linked clones instead of importing hard-disk
+    vb.linked_clone = true
+  end
 
   # Additional provisioning for requirements not satisfied by image alone.
   # Arguments:
