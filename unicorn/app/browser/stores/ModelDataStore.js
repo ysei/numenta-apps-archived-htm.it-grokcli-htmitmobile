@@ -66,22 +66,33 @@ export default class ModelDataStore extends BaseStore {
     let {modelId, data} = payload;
 
     let pendingModel = this._pendingModels.get(modelId);
-    if (!pendingModel) {
-      throw new Error('Listen for new results before querying.', modelId);
-    }
-    this._pendingModels.delete(modelId);
+    if (pendingModel) {
+      this._pendingModels.delete(modelId);
+      let model = {
+        modelId,
+        data,
+        modified: new Date(),
+        lastFetchTime: 0,
+        fetchTimeoutId: null
+      };
 
-    let model = {
-      modelId,
-      data,
-      modified: new Date(),
-      lastFetchTime: 0,
-      fetchTimeoutId: null
-    };
-    this._models.set(modelId, model);
+      this._models.set(modelId, model);
 
-    if (pendingModel.shouldFetch) {
+      if (pendingModel.shouldFetch) {
+        this._fetchNewResultsSoon(modelId);
+      }
+    } else if (this._models.get(modelId)) {
+      // Multiple LOAD_MODEL_DATA events can happen back-to-back if you rapidly show and hide a model.
+      // If you rapidly show and hide the model, the event order might be:
+      //   PREPARE_FOR_MODEL_RESULTS
+      //   PREPARE_FOR_MODEL_RESULTS
+      //   LOAD_MODEL_DATA
+      //   LOAD_MODEL_DATA
+      //
+      // In this case, we've already stored this model.
       this._fetchNewResultsSoon(modelId);
+    } else {
+      throw new Error('Listen for new results before querying.', modelId);
     }
 
     this.emitChange();
