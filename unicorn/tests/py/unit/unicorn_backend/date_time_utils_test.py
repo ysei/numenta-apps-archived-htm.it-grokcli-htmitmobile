@@ -33,14 +33,11 @@ import unittest
 
 from unicorn_backend.utils import date_time_utils
 
-
-
 g_log = logging.getLogger(__name__)
 
 
 
 class UnixSecTimestampTestCase(unittest.TestCase):
-
   def testPositiveFloatingPointTimestamp(self):
     result = date_time_utils.parseDatetime("1465257536.142103", "#T")
     self.assertEqual(result, datetime(2016, 6, 6, 23, 58, 56, 142103))
@@ -51,7 +48,7 @@ class UnixSecTimestampTestCase(unittest.TestCase):
     self.assertEqual(result, datetime(1970, 1, 1, 0, 0))
 
 
-  def testMaxTimestampDoesNotRaise(self): # pylint: disable=R0201
+  def testMaxTimestampDoesNotRaise(self):  # pylint: disable=R0201
     date_time_utils.parseDatetime(str(date_time_utils._MAX_UNIX_SECONDS), "#T")
 
 
@@ -80,7 +77,6 @@ class UnixSecTimestampTestCase(unittest.TestCase):
 
 
 class UnixMillisecTimestampTestCase(unittest.TestCase):
-
   def testPositiveFloatingPointTimestamp(self):
     result = date_time_utils.parseDatetime("1465257536142.103", "#t")
     self.assertEqual(result, datetime(2016, 6, 6, 23, 58, 56, 142103))
@@ -91,7 +87,7 @@ class UnixMillisecTimestampTestCase(unittest.TestCase):
     self.assertEqual(result, datetime(1970, 1, 1, 0, 0))
 
 
-  def testMaxTimestampDoesNotRaise(self): # pylint: disable=R0201
+  def testMaxTimestampDoesNotRaise(self):  # pylint: disable=R0201
     date_time_utils.parseDatetime(str(date_time_utils._MAX_UNIX_SECONDS * 1000),
                                   "#t")
 
@@ -122,7 +118,6 @@ class UnixMillisecTimestampTestCase(unittest.TestCase):
 
 
 class ExtendedStrptimeTestCase(unittest.TestCase):
-
   # Each element is a three-tuple: format, input, result of datetime.isoformat
   _GOOD_SAMPLES = [
     #
@@ -246,14 +241,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-14:00",
     ),
 
-
     # Format "%Y-%m-%dT%H:%M:%S.%f"
     (
       "%Y-%m-%dT%H:%M:%S.%f",
       "2016-01-29T23:00:00.1",
       "2016-01-29T23:00:00.100000",
     ),
-
 
     # Format "%Y-%m-%dT%H:%M:%S%z"
     (
@@ -262,7 +255,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-08:00",
     ),
 
-
     # Format "%Y-%m-%dT%H:%M:%S"
     (
       "%Y-%m-%dT%H:%M:%S",
@@ -270,14 +262,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00",
     ),
 
-
     # Format "%Y-%m-%dT%H:%M%z"
     (
       "%Y-%m-%dT%H:%M%z",
       "2016-01-29T23:00-08",
       "2016-01-29T23:00:00-08:00",
     ),
-
 
     # Format "%Y-%m-%dT%H:%M"
     (
@@ -293,14 +283,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-08:00",
     ),
 
-
     # Format "%Y-%m-%dT%H"
     (
       "%Y-%m-%dT%H",
       "2016-01-29T23",
       "2016-01-29T23:00:00",
     ),
-
 
     #
     # "ISO 8601 no T"
@@ -313,14 +301,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00.123000+08:00",
     ),
 
-
     # Format "%Y-%m-%d %H:%M:%S.%f"
     (
       "%Y-%m-%d %H:%M:%S.%f",
       "2016-01-29 23:00:00.1",
       "2016-01-29T23:00:00.100000",
     ),
-
 
     # Format "%Y-%m-%d %H:%M:%S%z"
     (
@@ -329,14 +315,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-08:00",
     ),
 
-
     # Format "%Y-%m-%d %H:%M:%S"
     (
       "%Y-%m-%d %H:%M:%S",
       "2016-01-29 23:00:00",
       "2016-01-29T23:00:00",
     ),
-
 
     # Format "%Y-%m-%d %H:%M%z"
     (
@@ -345,14 +329,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-08:00",
     ),
 
-
     # Format "%Y-%m-%d %H:%M"
     (
       "%Y-%m-%d %H:%M",
       "2016-01-29 23:00",
       "2016-01-29T23:00:00",
     ),
-
 
     # Format "%Y-%m-%d %H%z"
     (
@@ -361,7 +343,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-08:00",
     ),
 
-
     # Format "%Y-%m-%d %H"
     (
       "%Y-%m-%d %H",
@@ -369,14 +350,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00",
     ),
 
-
     # Format "%Y-%m-%d"
     (
       "%Y-%m-%d",
       "2016-01-29",
       "2016-01-29T00:00:00",
     ),
-
 
     #
     # "US Date, 12h AM/PM time"
@@ -410,7 +389,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:01:00"
     ),
 
-
     #
     # "US Date, 24h time"
     #
@@ -435,7 +413,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "01-29-2016 23:00",
       "2016-01-29T23:00:00",
     ),
-
 
     #
     # "US Date, no time"
@@ -576,14 +553,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-14:00",
     ),
 
-
     # Format "%Y/%m/%dT%H:%M:%S.%f"
     (
       "%Y/%m/%dT%H:%M:%S.%f",
       "2016/01/29T23:00:00.1",
       "2016-01-29T23:00:00.100000",
     ),
-
 
     # Format "%Y/%m/%dT%H:%M:%S%z"
     (
@@ -592,7 +567,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-08:00",
     ),
 
-
     # Format "%Y/%m/%dT%H:%M:%S"
     (
       "%Y/%m/%dT%H:%M:%S",
@@ -600,14 +574,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00",
     ),
 
-
     # Format "%Y/%m/%dT%H:%M%z"
     (
       "%Y/%m/%dT%H:%M%z",
       "2016/01/29T23:00-08",
       "2016-01-29T23:00:00-08:00",
     ),
-
 
     # Format "%Y/%m/%dT%H:%M"
     (
@@ -623,14 +595,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-08:00",
     ),
 
-
     # Format "%Y/%m/%dT%H"
     (
       "%Y/%m/%dT%H",
       "2016/01/29T23",
       "2016-01-29T23:00:00",
     ),
-
 
     #
     # "Variation of ISO 8601 no T"
@@ -643,14 +613,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00.123000+08:00",
     ),
 
-
     # Format "%Y/%m/%d %H:%M:%S.%f"
     (
       "%Y/%m/%d %H:%M:%S.%f",
       "2016/01/29 23:00:00.1",
       "2016-01-29T23:00:00.100000",
     ),
-
 
     # Format "%Y/%m/%d %H:%M:%S%z"
     (
@@ -659,7 +627,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-08:00",
     ),
 
-
     # Format "%Y/%m/%d %H:%M:%S"
     (
       "%Y/%m/%d %H:%M:%S",
@@ -667,14 +634,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00",
     ),
 
-
     # Format "%Y/%m/%d %H:%M%z"
     (
       "%Y/%m/%d %H:%M%z",
       "2016/01/29 23:00-08",
       "2016-01-29T23:00:00-08:00",
     ),
-
 
     # Format "%Y/%m/%d %H:%M"
     (
@@ -690,7 +655,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00-08:00",
     ),
 
-
     # Format "%Y/%m/%d %H"
     (
       "%Y/%m/%d %H",
@@ -698,14 +662,12 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00",
     ),
 
-
     # Format "%Y/%m/%d"
     (
       "%Y/%m/%d",
       "2016/01/29",
       "2016-01-29T00:00:00",
     ),
-
 
     #
     # "US Date, 12h AM/PM time"
@@ -739,7 +701,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:01:00"
     ),
 
-
     #
     # "US Date, 24h time"
     #
@@ -765,7 +726,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "2016-01-29T23:00:00",
     ),
 
-
     #
     # "US Date, no time"
     #
@@ -785,7 +745,7 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
     ),
 
     #
-    # "US Date, time (excel default)"
+    # "US Date, time (excel default for OSX)"
     #  These all use the same format but these tests ensure the format
     #  matches all of the possible datetime formats that the default
     #  excel format can take on.
@@ -845,7 +805,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "1/29/16 2:30:34",
       "2016-01-29T02:30:34"
     ),
-
 
     # Format "%m/%d/%y %H:%M"
     (
@@ -978,7 +937,203 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "%m/%d/%y",
       "1/2/16",
       "2016-01-02T00:00:00"
+    ),
+
+    #
+    # "US Date, time (excel default for Windows)"
+    #  These all use the same format but these tests ensure the format
+    #  matches all of the possible datetime formats that the default
+    #  excel format can take on.
+
+    # Format "%m/%d/%Y %H:%M"
+    (
+      "%m/%d/%Y %H:%M",
+      "01/29/2016 2:30",
+      "2016-01-29T02:30:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H:%M:%S",
+      "01/29/2016 2:30:34",
+      "2016-01-29T02:30:34"
+    ),
+
+    # Format "%m/%d/%Y %H:%M"
+    (
+      "%m/%d/%Y %H:%M",
+      "01/29/2016 12:30",
+      "2016-01-29T12:30:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H:%M:%S",
+      "01/29/2016 12:30:34",
+      "2016-01-29T12:30:34"
+    ),
+
+    # Format "%m/%d/%Y %H"
+    (
+      "%m/%d/%Y %H",
+      "01/29/2016 1",
+      "2016-01-29T01:00:00"
+    ),
+
+    # Format "%m/%d/%Y %H"
+    (
+      "%m/%d/%Y %H",
+      "01/29/2016 12",
+      "2016-01-29T12:00:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M"
+    (
+      "%m/%d/%Y %H:%M",
+      "1/29/2016 2:30",
+      "2016-01-29T02:30:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H:%M:%S",
+      "1/29/2016 2:30:34",
+      "2016-01-29T02:30:34"
+    ),
+
+    # Format "%m/%d/%Y %H:%M"
+    (
+      "%m/%d/%Y %H:%M",
+      "1/29/2016 12:30",
+      "2016-01-29T12:30:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H:%M:%S",
+      "1/29/2016 12:30:34",
+      "2016-01-29T12:30:34"
+    ),
+
+    # Format "%m/%d/%Y %H"
+    (
+      "%m/%d/%Y %H",
+      "1/29/2016 1",
+      "2016-01-29T01:00:00"
+    ),
+
+    # Format "%m/%d/%Y %H"
+    (
+      "%m/%d/%Y %H",
+      "1/29/2016 12",
+      "2016-01-29T12:00:00"
+    ),
+
+    # Format "%m/%d/%Y"
+    (
+      "%m/%d/%Y",
+      "1/29/2016",
+      "2016-01-29T00:00:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M"
+    (
+      "%m/%d/%Y %H:%M",
+      "01/2/2016 2:30",
+      "2016-01-02T02:30:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H:%M:%S",
+      "01/2/2016 2:30:34",
+      "2016-01-02T02:30:34"
+    ),
+
+    # Format "%m/%d/%Y %H:%M"
+    (
+      "%m/%d/%Y %H:%M",
+      "01/2/2016 12:30",
+      "2016-01-02T12:30:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H:%M:%S",
+      "01/2/2016 12:30:34",
+      "2016-01-02T12:30:34"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H",
+      "01/2/2016 1",
+      "2016-01-02T01:00:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H",
+      "01/2/2016 12",
+      "2016-01-02T12:00:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y",
+      "01/2/2016",
+      "2016-01-02T00:00:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M"
+    (
+      "%m/%d/%Y %H:%M",
+      "1/2/2016 2:30",
+      "2016-01-02T02:30:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M"
+    (
+      "%m/%d/%Y %H:%M:%S",
+      "1/2/2016 2:30:34",
+      "2016-01-02T02:30:34"
+    ),
+
+    # Format "%m/%d/%Y %H:%M"
+    (
+      "%m/%d/%Y %H:%M",
+      "1/2/2016 12:30",
+      "2016-01-02T12:30:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H:%M:%S",
+      "1/2/2016 12:30:34",
+      "2016-01-02T12:30:34"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H",
+      "1/2/2016 1",
+      "2016-01-02T01:00:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y %H",
+      "1/2/2016 12",
+      "2016-01-02T12:00:00"
+    ),
+
+    # Format "%m/%d/%Y %H:%M:%S"
+    (
+      "%m/%d/%Y",
+      "1/2/2016",
+      "2016-01-02T00:00:00"
     )
+
   ]
 
 
@@ -1017,8 +1172,7 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
         isoEncoded, expectedIso,
         msg=(
           "ISO result {!r} didn't match expected {!r}; ts={!r} using fmt={!r}"
-          .format(isoEncoded, expectedIso, timestamp, fmt)))
-
+            .format(isoEncoded, expectedIso, timestamp, fmt)))
 
     # Make sure all timestamp formats from
     # unicorn/app/config/momentjs_to_datetime_strptime.json are covered by our
@@ -1035,10 +1189,8 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "momentjs_to_datetime_strptime.json"
     )
 
-
     with open(mappingsPath) as mappingsFile:
       mapList = json.load(mappingsFile)
-
 
     formatsToCategoryMap = dict()
 
@@ -1083,7 +1235,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "time data '2016-01-29T23:00:00.123+000' does not match format "
       "'%Y-%m-%dT%H:%M:%S.%f%z'")
 
-
     with self.assertRaises(ValueError) as excCtx:
       date_time_utils.parseDatetime("2016-01-29T23:00:00.123+00:60",
                                     "%Y-%m-%dT%H:%M:%S.%f%z")
@@ -1092,7 +1243,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       excCtx.exception.args[0],
       "time data '2016-01-29T23:00:00.123+00:60' does not match format "
       "'%Y-%m-%dT%H:%M:%S.%f%z': UTC offset minutes exceed 59")
-
 
     with self.assertRaises(ValueError) as excCtx:
       date_time_utils.parseDatetime("2016-01-29T23:00:00.123+25:00",
@@ -1104,7 +1254,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "'%Y-%m-%dT%H:%M:%S.%f%z': UTC offset +25:0 is out of bounds; must be in "
       "-24:59 .. +24:59")
 
-
     with self.assertRaises(ValueError) as excCtx:
       date_time_utils.parseDatetime("2016-01-29T23:00:00.123+00:0",
                                     "%Y-%m-%dT%H:%M:%S.%f%z")
@@ -1113,7 +1262,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       excCtx.exception.args[0],
       "time data '2016-01-29T23:00:00.123+00:0' does not match format "
       "'%Y-%m-%dT%H:%M:%S.%f%z'")
-
 
     with self.assertRaises(ValueError) as excCtx:
       date_time_utils.parseDatetime("2016-01-29T23:00:00.123+0",
@@ -1124,8 +1272,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "time data '2016-01-29T23:00:00.123+0' does not match format "
       "'%Y-%m-%dT%H:%M:%S.%f%z'")
 
-
-
     with self.assertRaises(ValueError) as excCtx:
       date_time_utils.parseDatetime("2016-01-29T23:00:00.123+:00",
                                     "%Y-%m-%dT%H:%M:%S.%f%z")
@@ -1135,7 +1281,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       "time data '2016-01-29T23:00:00.123+:00' does not match format "
       "'%Y-%m-%dT%H:%M:%S.%f%z'")
 
-
     with self.assertRaises(ValueError) as excCtx:
       date_time_utils.parseDatetime("2016-01-29T23:00:00.123+:",
                                     "%Y-%m-%dT%H:%M:%S.%f%z")
@@ -1144,7 +1289,6 @@ class ExtendedStrptimeTestCase(unittest.TestCase):
       excCtx.exception.args[0],
       "time data '2016-01-29T23:00:00.123+:' does not match format "
       "'%Y-%m-%dT%H:%M:%S.%f%z'")
-
 
     with self.assertRaises(ValueError) as excCtx:
       date_time_utils.parseDatetime("2016-01-29T23:00:00.123+",

@@ -375,11 +375,10 @@ def _resampleData(timestamps, values, newSamplingInterval):
     assert timestamps.dtype == numpy.dtype("datetime64[ms]")
     assert newSamplingInterval.dtype == numpy.dtype("timedelta64[ms]")
   
-    totalDuration = (timestamps[-1] - timestamps[0])
+    totalDuration = numpy.abs(timestamps[-1] - timestamps[0])
   
     nSampleNew = numpy.floor(totalDuration / newSamplingInterval) + 1
     nSampleNew = nSampleNew.astype("int")
-  
     newTimeStamps = numpy.empty(nSampleNew, dtype="datetime64[ms]")
     for sampleI in xrange(nSampleNew):
       newTimeStamps[sampleI] = timestamps[0] + sampleI * newSamplingInterval
