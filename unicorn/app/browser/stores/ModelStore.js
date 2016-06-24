@@ -142,8 +142,11 @@ export default class ModelStore extends BaseStore {
    */
   _showModel(modelId) {
     let model = this._models.get(modelId);
-    if (model) {
+    if (model && !model.visible) {
       model.visible = true;
+
+      // Make sure multiple SHOW_MODEL events don't cause the model to get added
+      // to this list twice. Check whether the model is visible first.
       this._visibleModelStack.unshift(model);
       this.emitChange();
     }
