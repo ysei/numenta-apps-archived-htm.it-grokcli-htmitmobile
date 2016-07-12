@@ -534,53 +534,52 @@ def _determineEncoderTypes(cwtVar, timeScale):
   cwtVar = cwtVar[selectedIdx]
   timeScale = timeScale[selectedIdx]
 
-  # Detect all local minima and maxima when the first difference reverse sign
-  signOfFirstDifference = numpy.sign(numpy.diff(cwtVar))
-  localMin = (numpy.diff(signOfFirstDifference) > 0).nonzero()[0] + 1
-  localMax = (numpy.diff(signOfFirstDifference) < 0).nonzero()[0] + 1
-
-  baselineValue = numpy.mean(cwtVar)
-
-  cwtVarAtDayPeriod = numpy.interp(_ONE_DAY_IN_SEC, timeScale, cwtVar)
-  cwtVarAtWeekPeriod = numpy.interp(_ONE_WEEK_IN_SEC, timeScale, cwtVar)
-
   useTimeOfDay = False
   useDayOfWeek = False
+  if len(cwtVar) > 0 and len(timeScale) > 0:
+    # Detect all local minima and maxima when the first difference reverse sign
+    signOfFirstDifference = numpy.sign(numpy.diff(cwtVar))
+    localMin = (numpy.diff(signOfFirstDifference) > 0).nonzero()[0] + 1
+    localMax = (numpy.diff(signOfFirstDifference) < 0).nonzero()[0] + 1
 
-  strongLocalMax = []
-  for i in xrange(len(localMax)):
-    leftLocalMin = numpy.where(numpy.less(localMin, localMax[i]))[0]
-    if len(leftLocalMin) == 0:
-      leftLocalMin = 0
-      leftLocalMinValue = cwtVar[0]
-    else:
-      leftLocalMin = localMin[leftLocalMin[-1]]
-      leftLocalMinValue = cwtVar[leftLocalMin]
+    baselineValue = numpy.mean(cwtVar)
+    cwtVarAtDayPeriod = numpy.interp(_ONE_DAY_IN_SEC, timeScale, cwtVar)
+    cwtVarAtWeekPeriod = numpy.interp(_ONE_WEEK_IN_SEC, timeScale, cwtVar)
 
-    rightLocalMin = numpy.where(numpy.greater(localMin, localMax[i]))[0]
-    if len(rightLocalMin) == 0:
-      rightLocalMin = len(cwtVar) - 1
-      rightLocalMinValue = cwtVar[-1]
-    else:
-      rightLocalMin = localMin[rightLocalMin[0]]
-      rightLocalMinValue = cwtVar[rightLocalMin]
+    strongLocalMax = []
+    for i in xrange(len(localMax)):
+      leftLocalMin = numpy.where(numpy.less(localMin, localMax[i]))[0]
+      if len(leftLocalMin) == 0:
+        leftLocalMin = 0
+        leftLocalMinValue = cwtVar[0]
+      else:
+        leftLocalMin = localMin[leftLocalMin[-1]]
+        leftLocalMinValue = cwtVar[leftLocalMin]
 
-    localMaxValue = cwtVar[localMax[i]]
-    nearestLocalMinValue = numpy.max(leftLocalMinValue, rightLocalMinValue)
+        rightLocalMin = numpy.where(numpy.greater(localMin, localMax[i]))[0]
+        if len(rightLocalMin) == 0:
+          rightLocalMin = len(cwtVar) - 1
+          rightLocalMinValue = cwtVar[-1]
+        else:
+          rightLocalMin = localMin[rightLocalMin[0]]
+          rightLocalMinValue = cwtVar[rightLocalMin]
 
-    if ((localMaxValue - nearestLocalMinValue) / localMaxValue > 0.1 and
-            localMaxValue > baselineValue):
-      strongLocalMax.append(localMax[i])
+          localMaxValue = cwtVar[localMax[i]]
+          nearestLocalMinValue = numpy.max(leftLocalMinValue, rightLocalMinValue)
 
-      if (timeScale[leftLocalMin] < _ONE_DAY_IN_SEC < timeScale[rightLocalMin]
-          and cwtVarAtDayPeriod > localMaxValue * 0.5):
-        useTimeOfDay = True
+          if ((localMaxValue - nearestLocalMinValue) / localMaxValue > 0.1 and
+              localMaxValue > baselineValue):
+            strongLocalMax.append(localMax[i])
 
-      if not DISABLE_DAY_OF_WEEK_ENCODER:
-        if (timeScale[leftLocalMin] < _ONE_WEEK_IN_SEC <
-              timeScale[rightLocalMin] and
-                cwtVarAtWeekPeriod > localMaxValue * 0.5):
-          useDayOfWeek = True
+            if (timeScale[leftLocalMin] < _ONE_DAY_IN_SEC < timeScale[rightLocalMin]
+                and cwtVarAtDayPeriod > localMaxValue * 0.5):
+              useTimeOfDay = True
+
+              if not DISABLE_DAY_OF_WEEK_ENCODER:
+                if (timeScale[leftLocalMin] < _ONE_WEEK_IN_SEC <
+                    timeScale[rightLocalMin] and
+                    cwtVarAtWeekPeriod > localMaxValue * 0.5):
+                  useDayOfWeek = True
 
   return useTimeOfDay, useDayOfWeek
 
