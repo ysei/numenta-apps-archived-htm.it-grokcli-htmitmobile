@@ -826,7 +826,8 @@ export default class Chart extends React.Component {
       valueRange: this._yScale.domain(),
       axisLineColor: muiTheme.rawTheme.palette.accent4Color,
       connectSeparatedPoints: true,  // required for raw+agg overlay
-      highlightCircleSize: 0,
+      highlightCircleSize: 3, // also configures the 'point between gaps' size
+      drawHighlightPointCallback: () => {}, // disable highlight points
       interactionModel: {}, // we handle all of the interaction
       showLabelsOnHighlight: false,
       labelsDiv: document.createElement('div'), // put its labels into the abyss
