@@ -34,7 +34,7 @@ echo "==> System version: $OSX_VERSION"
 PYTHON_SH="Miniconda-latest-MacOSX-x86_64.sh"
 CAPNP="capnproto-c++-0.5.3"
 WORKING_DIR=${PWD}
-SCRIPT_PATH=$(cd "$(dirname "$0")"; pwd)
+SCRIPT_PATH=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)
 UNICORN_BACKEND_REQUIREMENTS_TXT=${SCRIPT_PATH}/../../py/requirements.txt
 NUPIC_CORE=${WORKING_DIR}/nupic.core
 NUPIC=${WORKING_DIR}/nupic
