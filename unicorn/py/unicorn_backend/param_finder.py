@@ -555,35 +555,34 @@ def _determineEncoderTypes(cwtVar, timeScale):
       else:
         leftLocalMin = localMin[leftLocalMin[-1]]
         leftLocalMinValue = cwtVar[leftLocalMin]
-
-        rightLocalMin = numpy.where(numpy.greater(localMin, localMax[i]))[0]
-        if len(rightLocalMin) == 0:
-          rightLocalMin = len(cwtVar) - 1
-          rightLocalMinValue = cwtVar[-1]
-        else:
-          rightLocalMin = localMin[rightLocalMin[0]]
-          rightLocalMinValue = cwtVar[rightLocalMin]
-
-          localMaxValue = cwtVar[localMax[i]]
-          nearestLocalMinValue = numpy.max(leftLocalMinValue, rightLocalMinValue)
-
-          if ((localMaxValue - nearestLocalMinValue) / localMaxValue > 0.1 and
+  
+      rightLocalMin = numpy.where(numpy.greater(localMin, localMax[i]))[0]
+      if len(rightLocalMin) == 0:
+        rightLocalMin = len(cwtVar) - 1
+        rightLocalMinValue = cwtVar[-1]
+      else:
+        rightLocalMin = localMin[rightLocalMin[0]]
+        rightLocalMinValue = cwtVar[rightLocalMin]
+  
+      localMaxValue = cwtVar[localMax[i]]
+      nearestLocalMinValue = numpy.max(leftLocalMinValue, rightLocalMinValue)
+  
+      if ((localMaxValue - nearestLocalMinValue) / localMaxValue > 0.1 and
               localMaxValue > baselineValue):
-            strongLocalMax.append(localMax[i])
+        strongLocalMax.append(localMax[i])
+  
+        if (timeScale[leftLocalMin] < _ONE_DAY_IN_SEC < timeScale[rightLocalMin]
+            and cwtVarAtDayPeriod > localMaxValue * 0.5):
+          useTimeOfDay = True
+  
+        if not DISABLE_DAY_OF_WEEK_ENCODER:
+          if (timeScale[leftLocalMin] < _ONE_WEEK_IN_SEC <
+                timeScale[rightLocalMin] and
+                  cwtVarAtWeekPeriod > localMaxValue * 0.5):
+            useDayOfWeek = True
 
-            if (timeScale[leftLocalMin] < _ONE_DAY_IN_SEC < timeScale[rightLocalMin]
-                and cwtVarAtDayPeriod > localMaxValue * 0.5):
-              useTimeOfDay = True
-
-              if not DISABLE_DAY_OF_WEEK_ENCODER:
-                if (timeScale[leftLocalMin] < _ONE_WEEK_IN_SEC <
-                    timeScale[rightLocalMin] and
-                    cwtVarAtWeekPeriod > localMaxValue * 0.5):
-                  useDayOfWeek = True
-
-  return useTimeOfDay, useDayOfWeek
-
-
+  return useTimeOfDay, useDayOfWeek  
+ 
 
 def _getAggregationFunction(values):
   """
