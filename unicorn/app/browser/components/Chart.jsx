@@ -263,7 +263,7 @@ export default class Chart extends React.Component {
   }
 
   _yScaleUpdate() {
-    let paddingPx = 2;
+    let paddingPx = 3;
     let height = this._styles.root.height - RANGE_SELECTOR_HEIGHT - 3;
     let range = [height - paddingPx, paddingPx];
 
