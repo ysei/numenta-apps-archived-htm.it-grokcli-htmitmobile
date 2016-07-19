@@ -297,6 +297,16 @@ export default class Chart extends React.Component {
       }
     }
 
+    if (yExtentVisible[0] === yExtentVisible[1]) {
+      // The y scale needs to have a min that's not equal to the max.
+      if (yExtentVisible[0] === 0) {
+        yExtentVisible[1] = 1;
+      } else {
+        yExtentVisible[0] *= 0.9;
+        yExtentVisible[1] *= 1.1;
+      }
+    }
+
     if (this.props.modelData.length > 0) {
       // Add space for green anomaly bars.
       range[0] -= anomalyScale(0) * height;
