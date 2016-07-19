@@ -34,9 +34,9 @@ const {DATA_INDEX_TIME, DATA_INDEX_VALUE} = DATA_FIELD_INDEX;
  * Heuristic for gap threshold:
  *
  * (1) Compute all the time-deltas between points.
- * (2) Find the 10th percentile of non-zero time-deltas and multiply it by the
+ * (2) Find the 30th percentile of non-zero time-deltas and multiply it by the
  *     maximum number of missing anomaly bars (i.e. timestamp gaps in model
- *     results). Using the 10th percentile instead of the min time-delta value
+ *     results). Using the 30th percentile instead of the min time-delta value
  *     allows to be less sensitive to very small outliers.
  *
  * The result is the gap threshold.
@@ -56,9 +56,9 @@ function computeGapThreshold(data) {
   }
   deltas.sort((a, b) => a - b);
 
-  let percentile = 0.1;
+  let percentile = 0.3;
   let smallTimestampGap = deltas[Math.floor(deltas.length * percentile)];
-  let maxMissingBars = 2;
+  let maxMissingBars = 10;
   let gapThreshold = (1 + maxMissingBars) * smallTimestampGap;
   return gapThreshold;
 }
