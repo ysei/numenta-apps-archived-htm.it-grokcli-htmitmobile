@@ -1,3 +1,9 @@
+**DEPRECATION WARNING** - This repository is not under active development
+and represents an archive created for posterity following the removal of
+htm.it, grok-cli, and htm-it-mobile from the main numenta/numenta-apps
+repository.  Please visit http://www.numenta.com for the latest information
+regarding licensing.
+
 This is the umbrella project for all of the components that make up the
 Numenta product-line.
 
