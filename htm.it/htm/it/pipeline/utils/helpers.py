@@ -34,7 +34,7 @@ def checkIfSaneProductionParams(htmitRemote, htmitBranch):
     :rtype: bool
   """
   if (htmitRemote == "git@github.com:Numenta/numenta-apps.git" and
-      htmitBranch == "master"):
+      htmitBranch == "main"):
     return True
   else:
     return False

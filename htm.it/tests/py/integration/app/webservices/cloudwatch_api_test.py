@@ -48,12 +48,12 @@ from htm.it import logging_support
 
 
 # We need any valid EC2 instanceId as test data. Currently we
-# are using jenkins-master's InstanceId and other details for validation.
+# are using jenkins-main's InstanceId and other details for validation.
 # which is running production releases. In case this node is replaced please
 # update testdata which new stable node details (e.g rpmbuilder etc)
 VALID_EC2_INSTANCE = {"InstanceId": "i-f52075fe",
-                      "Name": "jenkins-master.groksolutions.com",
-                      "Description": "Jenkin Master(Python 2.7)"}
+                      "Name": "jenkins-main.groksolutions.com",
+                      "Description": "Jenkin Main(Python 2.7)"}
 
 
 
@@ -324,14 +324,14 @@ class CWInstanceHandlerTest(unittest.TestCase):
     Test for Get
     '/_metrics/cloudwatch/<region-name>/AWS/<namespace>/instances/<InstancdId>'
     response is validated for appropriate headers, body and status
-    Test is currently using ec2 box for jenkins-master, this test also
+    Test is currently using ec2 box for jenkins-main, this test also
     validates for retriving all supported metrics with dimensions
     """
     supportedMetrics = (
       createCloudwatchDatasourceAdapter().describeSupportedMetrics())
     ec2Metrics = supportedMetrics[ResourceTypeNames.EC2_INSTANCE].keys()
 
-    # Instance used for following test is jenkins-master node
+    # Instance used for following test is jenkins-main node
     response = self.app.get("/us-west-2/AWS/EC2/instances/%s"
         % VALID_EC2_INSTANCE["InstanceId"], headers=self.headers)
     assertions.assertSuccess(self, response)

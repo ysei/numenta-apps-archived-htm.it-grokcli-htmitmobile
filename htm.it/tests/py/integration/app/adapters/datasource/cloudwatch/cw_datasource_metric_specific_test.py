@@ -75,7 +75,7 @@ class CloudwatchDatasourceAdapterMetricsTest(TestCaseBase):
     aws_base.ResourceTypeNames.RDS_DBINSTANCE:
       ("available", "backing-up", "creating", "deleted", "deleting", "failed",
        "incompatible-restore", "incompatible-parameters", "modifying",
-       "rebooting", "resetting-master-credentials", "storage-full")
+       "rebooting", "resetting-main-credentials", "storage-full")
   }
 
   @classmethod

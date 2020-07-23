@@ -73,8 +73,8 @@ class AutostackDatasourceAdapterTest(unittest.TestCase):
       "datasource": "autostack",
       "metricSpec": {
         "autostackId": "9y2wn39y823nw9y8",
-        "slaveDatasource": "cloudwatch",
-        "slaveMetric": {
+        "subordinateDatasource": "cloudwatch",
+        "subordinateMetric": {
           "namespace": "AWS/EC2",
           "metric": "CPUUtilization",
           "dimensions": {

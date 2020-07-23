@@ -68,7 +68,7 @@ def preBuildSetup(env, pipelineConfig):
       {
         "buildWorkspace": "/path/to/build/in",
         "htmitRemote": "git@github.com:Numenta/numenta-apps.git",
-        "htmitBranch": "master",
+        "htmitBranch": "main",
         "htmItSha": "HEAD",
         "pipelineParams": "{dict of parameters}",
         "pipelineJson": "/path/to/json/file"
@@ -107,7 +107,7 @@ def addAndParseArgs(jsonArgs):
       {
         "buildWorkspace": "/path/to/build/in",
         "htmitRemote": "git@github.com:Numenta/numenta-apps.git",
-        "htmitBranch": "master",
+        "htmitBranch": "main",
         "htmItSha": "HEAD",
         "pipelineParams": "{dict of parameters}",
         "pipelineJson": "/path/to/json/file"
@@ -162,7 +162,7 @@ def addAndParseArgs(jsonArgs):
   pipelineConfig = {
     "buildWorkspace": None,
     "htmitRemote": "git@github.com:Numenta/numenta-apps.git",
-    "htmitBranch": "master",
+    "htmitBranch": "main",
     "htmItSha": "HEAD",
     "pipelineParams": pipelineParams,
     "pipelineJson": None

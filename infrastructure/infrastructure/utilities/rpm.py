@@ -176,7 +176,7 @@ def gitCloneIntoFakeroot(fakeroot,
   debugging information.
 
   @returns the SHA of the resulting git clone. We may not have been invoked
-  with a specific SHA (we normally build tip of master, for example), but we
+  with a specific SHA (we normally build tip of main, for example), but we
   always want to include the exact SHA packaged in our RPM descriptions.
   """
   logger.debug("Prepping fakeroot in %s", fakeroot)
@@ -196,6 +196,6 @@ def gitCloneIntoFakeroot(fakeroot,
         logger.debug("Checking out SHA %s in %s", sha, workDirectory)
         git.checkout(pathspec=sha, logger=logger)
       else:
-        logger.debug("No SHA specified, using head of master")
+        logger.debug("No SHA specified, using head of main")
       return git.getCurrentSha(logger=logger)
 

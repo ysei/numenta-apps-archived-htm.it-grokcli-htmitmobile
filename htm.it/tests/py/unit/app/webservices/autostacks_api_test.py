@@ -221,7 +221,7 @@ class TestAutostackInstancesHandler(unittest.TestCase):
           tags={
             "Type": "Jenkins",
             "Name": "Bogus",
-            "Description": "Jenkin Master(Python 2.7)"
+            "Description": "Jenkin Main(Python 2.7)"
           }
         )
       ]
@@ -245,7 +245,7 @@ class TestAutostackInstancesHandler(unittest.TestCase):
     self.assertDictEqual(instance["tags"], {"Type": "Jenkins",
                                             "Name": "Bogus",
                                             "Description": (
-                                              "Jenkin Master(Python 2.7)")})
+                                              "Jenkin Main(Python 2.7)")})
 
 
   @patch(
@@ -263,7 +263,7 @@ class TestAutostackInstancesHandler(unittest.TestCase):
           tags={
             "Type": "Jenkins",
             "Name": "Bogus",
-            "Description": "Jenkin Master(Python 2.7)"
+            "Description": "Jenkin Main(Python 2.7)"
           }
         )
       ]
@@ -289,7 +289,7 @@ class TestAutostackInstancesHandler(unittest.TestCase):
     self.assertDictEqual(instance["tags"], {"Type": "Jenkins",
                                             "Name": "Bogus",
                                             "Description": (
-                                              "Jenkin Master(Python 2.7)")})
+                                              "Jenkin Main(Python 2.7)")})
 
 
 
@@ -388,14 +388,14 @@ class TestAutostackMetricsHandler(unittest.TestCase):
     metricSpec = (
       adapterMock.return_value.monitorMetric
       .call_args_list[0][0][0]["metricSpec"])
-    self.assertEqual(metricSpec["slaveMetric"]["metric"], "CPUUtilization")
-    self.assertEqual(metricSpec["slaveMetric"]["namespace"], "AWS/EC2")
+    self.assertEqual(metricSpec["subordinateMetric"]["metric"], "CPUUtilization")
+    self.assertEqual(metricSpec["subordinateMetric"]["namespace"], "AWS/EC2")
 
     metricSpec = (
       adapterMock.return_value.monitorMetric
       .call_args_list[1][0][0]["metricSpec"])
-    self.assertEqual(metricSpec["slaveMetric"]["metric"], "NetworkIn")
-    self.assertEqual(metricSpec["slaveMetric"]["namespace"], "AWS/EC2")
+    self.assertEqual(metricSpec["subordinateMetric"]["metric"], "NetworkIn")
+    self.assertEqual(metricSpec["subordinateMetric"]["namespace"], "AWS/EC2")
 
 
 

@@ -309,17 +309,17 @@ class ModelHandler(AuthenticatedBaseHandler):
       # Already up-to-date
       return modelSpec
 
-    slaveDatasource = "cloudwatch"
+    subordinateDatasource = "cloudwatch"
     if modelSpec["metric"]["namespace"] == "Autostacks":
-      slaveDatasource = "autostack"
+      subordinateDatasource = "autostack"
 
     newSpec = {
         "datasource": "autostack",
         "modelSpec": {
             "datasource": "autostack",
             "metricSpec": {
-                "slaveDatasource": slaveDatasource,
-                "slaveMetric": {
+                "subordinateDatasource": subordinateDatasource,
+                "subordinateMetric": {
                     "metric": modelSpec["metric"]["metric"],
                     "namespace": modelSpec["metric"]["namespace"]
                 }

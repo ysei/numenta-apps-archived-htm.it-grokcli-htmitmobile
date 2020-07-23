@@ -150,7 +150,7 @@ class NumentaRPM(object):
 
     :returns: (iteration, fakerootSHA) where iteration is the total commit count
     in the repository and fakerootSHA is the SHA in the fakeroot. If we're
-    packaging a branch or tip of master, we're still going to want to know what
+    packaging a branch or tip of main, we're still going to want to know what
     the SHA was so we can include it in the RPM description.
 
     :rtype: tuple
@@ -212,7 +212,7 @@ class NumentaRPM(object):
 
     :returns: (iteration, fakerootSHA) where iteration is the total commit count
     in the repository and fakerootSHA is the SHA in the fakeroot. If we're
-    packaging a branch or tip of master, we're still going to want to know what
+    packaging a branch or tip of main, we're still going to want to know what
     the SHA was so we can include it in the RPM description.
 
     :rtype: tuple
@@ -278,7 +278,7 @@ class NumentaRPM(object):
 
     :returns: (iteration, fakerootSHA) where iteration is the total commit count
     in the repository and fakerootSHA is the SHA in the fakeroot. If we're
-    packaging a branch or tip of master, we're still going to want to know what
+    packaging a branch or tip of main, we're still going to want to know what
     the SHA was so we can include it in the RPM description.
 
     :rtype: tuple
@@ -354,7 +354,7 @@ class NumentaRPM(object):
 
     :returns: (iteration, actualSHA) where iteration is the total commit count
     in the repository and fakerootSHA is the SHA in the fakeroot. If we're
-    packaging a branch or tip of master, we're still going to want to know what
+    packaging a branch or tip of main, we're still going to want to know what
     the SHA was so we can include it in the RPM description.
 
     :rtype: tuple

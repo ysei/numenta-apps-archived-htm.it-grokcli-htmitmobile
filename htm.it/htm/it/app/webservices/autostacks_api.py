@@ -238,7 +238,7 @@ class AutostackInstancesHandler(AuthenticatedBaseHandler):
 
       ::
 
-          region=us-west-2&filters={"tag:Name":["jenkins-master"]}
+          region=us-west-2&filters={"tag:Name":["jenkins-main"]}
 
       :return: List of instance details.  See
                AutostackInstancesHandler.formatInstance() for implementation.
@@ -256,8 +256,8 @@ class AutostackInstancesHandler(AuthenticatedBaseHandler):
               "launchTime": "2013-09-24T02:02:48Z",
               "tags": {
                 "Type": "Jenkins",
-                "Description": "Jenkins Master",
-                "Name": "jenkins-master"
+                "Description": "Jenkins Main",
+                "Name": "jenkins-main"
               }
             },
             {
@@ -268,8 +268,8 @@ class AutostackInstancesHandler(AuthenticatedBaseHandler):
               "launchTime": "2013-12-19T12:02:31Z",
               "tags": {
                 "Type": "Jenkins",
-                "Name": "jenkins-master",
-                "Description": "Jenkin Master(Python 2.7)"
+                "Name": "jenkins-main",
+                "Description": "Jenkin Main(Python 2.7)"
               }
             }
           ]
@@ -429,9 +429,9 @@ class AutostackMetricsHandler(AuthenticatedBaseHandler):
       for nativeMetric in data:
         try:
           if nativeMetric["namespace"] == "Autostacks":
-            slaveDatasource = "autostack"
+            subordinateDatasource = "autostack"
           else:
-            slaveDatasource = "cloudwatch"  # only support cloudwatch for now
+            subordinateDatasource = "cloudwatch"  # only support cloudwatch for now
 
           modelParams = {}
           if "min" and "max" in nativeMetric:
@@ -442,8 +442,8 @@ class AutostackMetricsHandler(AuthenticatedBaseHandler):
             "datasource": "autostack",
             "metricSpec": {
               "autostackId": autostackRow.uid,
-              "slaveDatasource": slaveDatasource,
-              "slaveMetric": nativeMetric
+              "subordinateDatasource": subordinateDatasource,
+              "subordinateMetric": nativeMetric
             },
             "modelParams": modelParams
           }

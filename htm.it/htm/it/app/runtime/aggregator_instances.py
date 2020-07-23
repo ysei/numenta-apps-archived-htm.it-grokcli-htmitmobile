@@ -52,7 +52,7 @@ def _getLogger():
 # instanceType: EC2 Instance type; string; e.g., "m1.medium"
 # launchTime: UTC launch time of the instance; datetime.datetime
 # tags: EC2 Instance tags; dict; e.g.,
-#   {"Type":"Jenkins", "Name":"jenkins-master"})
+#   {"Type":"Jenkins", "Name":"jenkins-main"})
 InstanceInfo = namedtuple(
   "InstanceInfo",
   "instanceID regionName state stateCode instanceType "

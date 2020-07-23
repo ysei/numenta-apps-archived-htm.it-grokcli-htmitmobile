@@ -80,7 +80,7 @@ class TestNginxInstallation(unittest.TestCase):
 
   def testNginxIsRunning(self):
     self.assertTrue(agamotto.process.is_running(
-      "nginx: master process /usr/sbin/nginx -p . -c %s/htm-it-api.conf"
+      "nginx: main process /usr/sbin/nginx -p . -c %s/htm-it-api.conf"
       % CONF_D))
     self.assertTrue(agamotto.process.is_running("nginx: worker process"))
 

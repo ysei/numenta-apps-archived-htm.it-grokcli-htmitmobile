@@ -56,7 +56,7 @@ class AutostackMetricAdapterBase(object):
     :rtype: string
     """
     params = json.loads(metric.parameters)
-    return params["metricSpec"]["slaveDatasource"]
+    return params["metricSpec"]["subordinateDatasource"]
 
 
   @classmethod
@@ -91,13 +91,13 @@ class AutostackMetricAdapterBase(object):
 
 
   @classmethod
-  def getMetricName(cls, slaveMetric):
-    """ Get the metric name given a slave metric
+  def getMetricName(cls, subordinateMetric):
+    """ Get the metric name given a subordinate metric
 
     NOTE: derived classes must override this method
 
-    :param slaveMetric: See _AutostackDatasourceAdapter.monitorMetric
-    :type slaveMetric: dict
+    :param subordinateMetric: See _AutostackDatasourceAdapter.monitorMetric
+    :type subordinateMetric: dict
 
     :returns: metric name
     :rtype: string
@@ -106,13 +106,13 @@ class AutostackMetricAdapterBase(object):
 
 
   @classmethod
-  def getMetricDescription(cls, slaveMetric, autostack):
-    """ Get the metric name given a slave metric
+  def getMetricDescription(cls, subordinateMetric, autostack):
+    """ Get the metric name given a subordinate metric
 
     NOTE: derived classes must override this method
 
-    :param slaveMetric: See _AutostackDatasourceAdapter.monitorMetric
-    :type slaveMetric: dict
+    :param subordinateMetric: See _AutostackDatasourceAdapter.monitorMetric
+    :type subordinateMetric: dict
 
     :param autostack: Autostack that metric belongs to
     :type autostack: Autostack
@@ -169,25 +169,25 @@ class CloudwatchAutostackMetricAdapter(AutostackMetricAdapterBase):
   }
 
   @classmethod
-  def getMetricName(cls, slaveMetric):
-    """ Get the metric name given a slave metric
+  def getMetricName(cls, subordinateMetric):
+    """ Get the metric name given a subordinate metric
 
-    :param slaveMetric: See _AutostackDatasourceAdapter.monitorMetric
-    :type slaveMetric: dict
+    :param subordinateMetric: See _AutostackDatasourceAdapter.monitorMetric
+    :type subordinateMetric: dict
 
     :returns: metric name
     :rtype: string
     """
-    return "{0}/{1}".format(slaveMetric["namespace"],
-                            slaveMetric["metric"])
+    return "{0}/{1}".format(subordinateMetric["namespace"],
+                            subordinateMetric["metric"])
 
 
   @classmethod
-  def getMetricDescription(cls, slaveMetric, autostack):
-    """ Get the metric name given a slave metric
+  def getMetricDescription(cls, subordinateMetric, autostack):
+    """ Get the metric name given a subordinate metric
 
-    :param slaveMetric: See _AutostackDatasourceAdapter.monitorMetric
-    :type slaveMetric: dict
+    :param subordinateMetric: See _AutostackDatasourceAdapter.monitorMetric
+    :type subordinateMetric: dict
 
     :param autostack: Autostack that metric belongs to
     :type autostack: Autostack
@@ -196,7 +196,7 @@ class CloudwatchAutostackMetricAdapter(AutostackMetricAdapterBase):
     :rtype: string
     """
     return "{0} on HTM-IT Autostack {1} in {2} region".format(
-      slaveMetric["metric"], autostack.name, autostack.region
+      subordinateMetric["metric"], autostack.name, autostack.region
     )
 
 
@@ -218,25 +218,25 @@ class DerivedAutostackMetricAdapter(AutostackMetricAdapterBase):
   }
 
   @classmethod
-  def getMetricName(cls, slaveMetric):
-    """ Get the metric name given a slave metric
+  def getMetricName(cls, subordinateMetric):
+    """ Get the metric name given a subordinate metric
 
-    :param slaveMetric: See _AutostackDatasourceAdapter.monitorMetric
-    :type slaveMetric: dict
+    :param subordinateMetric: See _AutostackDatasourceAdapter.monitorMetric
+    :type subordinateMetric: dict
 
     :returns: metric name
     :rtype: string
     """
-    return "{0}/{1}".format(slaveMetric["namespace"],
-                            slaveMetric["metric"])
+    return "{0}/{1}".format(subordinateMetric["namespace"],
+                            subordinateMetric["metric"])
 
 
   @classmethod
-  def getMetricDescription(cls, slaveMetric, autostack):
-    """ Get the metric name given a slave metric
+  def getMetricDescription(cls, subordinateMetric, autostack):
+    """ Get the metric name given a subordinate metric
 
-    :param slaveMetric: See _AutostackDatasourceAdapter.monitorMetric
-    :type slaveMetric: dict
+    :param subordinateMetric: See _AutostackDatasourceAdapter.monitorMetric
+    :type subordinateMetric: dict
 
     :param autostack: Autostack that metric belongs to
     :type autostack: Autostack
@@ -245,5 +245,5 @@ class DerivedAutostackMetricAdapter(AutostackMetricAdapterBase):
     :rtype: string
     """
     return "{0} on HTM-IT Autostack {1} in {2} region".format(
-      slaveMetric["metric"], autostack.name, autostack.region
+      subordinateMetric["metric"], autostack.name, autostack.region
     )

@@ -187,7 +187,7 @@ def createShaFile(nameOfRpmCreated, sha):
 
 def moveRpmsToRpmbuild(rpmName, config, logger):
   """
-  Copies an rpm from slave to rpmbuild.groksolutions.com
+  Copies an rpm from subordinate to rpmbuild.groksolutions.com
 
   :param rpmName: The rpm which is to be moved
   :param config: This is a dict of configuration data.

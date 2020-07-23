@@ -68,8 +68,8 @@ class AutostackDatasourceAdapterTest(TestCaseBase):
       "datasource": "autostack",
       "metricSpec": {
         "autostackId": None,  # to be filled by getModelSpec
-        "slaveDatasource": "cloudwatch",
-        "slaveMetric": {
+        "subordinateDatasource": "cloudwatch",
+        "subordinateMetric": {
           "namespace": "AWS/EC2",
           "metric": None  # to be filled by getModelSpec
         }
@@ -79,8 +79,8 @@ class AutostackDatasourceAdapterTest(TestCaseBase):
       "datasource": "autostack",
       "metricSpec": {
         "autostackId": None,  # to be filled by getModelSpec
-        "slaveDatasource": "autostack",
-        "slaveMetric": {
+        "subordinateDatasource": "autostack",
+        "subordinateMetric": {
           "namespace": "Autostacks",
           "metric": None  # to be filled by getModelSpec
         }
@@ -92,7 +92,7 @@ class AutostackDatasourceAdapterTest(TestCaseBase):
   @classmethod
   def getModelSpec(cls, datasource, metricName, autostack):
     modelSpec = dict(cls.modelSpecTemplates[datasource])
-    modelSpec["metricSpec"]["slaveMetric"]["metric"] = metricName
+    modelSpec["metricSpec"]["subordinateMetric"]["metric"] = metricName
     modelSpec["metricSpec"]["autostackId"] = autostack.uid
     return modelSpec
 

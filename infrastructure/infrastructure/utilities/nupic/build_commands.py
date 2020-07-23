@@ -435,7 +435,7 @@ def executeBuildProcess(env, buildWorkspace, nupicRemote, nupicBranch, nupicSha,
     :param str buildWorkspace: /path/to/buildWorkspace
     :param str nupicRemote: location of nupic remote, e.g.,
                             https://github.com/numenta/nupic
-    :param str nupicBranch: which branch to build, e.g., master
+    :param str nupicBranch: which branch to build, e.g., main
     :param str nupicSha: which nupic commit SHA to build
     :param str nupicCoreRemote: location of nupic.core remote, e.g.,
                                 https://github.com/numenta/nupic.core

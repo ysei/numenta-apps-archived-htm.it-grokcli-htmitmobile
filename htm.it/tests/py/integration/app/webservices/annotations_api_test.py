@@ -54,11 +54,11 @@ from htm.it.test_utils.app.webservices import (
 )
 
 # We need any valid EC2 instanceId as test data. Currently we
-# are using jenkins-master's InstanceId and other details for validation.
+# are using jenkins-main's InstanceId and other details for validation.
 # which is running production releases. In case this node is replaced please
 # update testdata which new stable node details (e.g rpmbuilder etc)
 VALID_EC2_INSTANCES = {
-    "name": "jenkins-master",
+    "name": "jenkins-main",
     "instanceId":"i-f52075fe",
     "region":"us-west-2"
 }
