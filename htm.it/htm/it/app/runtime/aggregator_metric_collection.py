@@ -696,9 +696,9 @@ class EC2InstanceMetricGetter(object):
       autostack = request.autostack
       metric = request.metric
       period = metric.poll_interval
-      slaveDatasource = AutostackMetricAdapterBase.getMetricDatasource(metric)
+      subordinateDatasource = AutostackMetricAdapterBase.getMetricDatasource(metric)
 
-      if slaveDatasource == "autostacks":
+      if subordinateDatasource == "autostacks":
         timeRange = cls._getMetricCollectionTimeSliceForAutostackMetric(
           period=period)
       else:
@@ -711,7 +711,7 @@ class EC2InstanceMetricGetter(object):
       region = autostack.region
 
       metricAdapter = AutostackMetricAdapterBase.getMetricAdapter(
-        slaveDatasource)
+        subordinateDatasource)
       queryParams = metricAdapter.getQueryParams(metric.name)
       metricName = metric.name.split("/")[-1]
       stats = queryParams["statistics"]

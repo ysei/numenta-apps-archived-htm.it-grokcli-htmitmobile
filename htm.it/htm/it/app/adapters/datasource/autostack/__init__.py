@@ -163,10 +163,10 @@ class _AutostackDatasourceAdapter(DatasourceAdapterIface):
             # TODO [MER-3533]: This should be autostack name instead
             "autostackId": "a858c6990a444cd8a07466ec7f3cae16",
 
-            "slaveDatasource": "cloudwatch",
+            "subordinateDatasource": "cloudwatch",
 
-            "slaveMetric": {
-              # specific to slaveDatasource
+            "subordinateMetric": {
+              # specific to subordinateDatasource
               "namespace": "AWS/EC2",
               "metric": "CPUUtilization"
             },
@@ -174,7 +174,7 @@ class _AutostackDatasourceAdapter(DatasourceAdapterIface):
             "period": 300  # aggregation period; seconds
           },
 
-          "modelParams": { # optional; specific to slave metric
+          "modelParams": { # optional; specific to subordinate metric
             "min": 0,  # optional
             "max": 100  # optional
           }
@@ -196,14 +196,14 @@ class _AutostackDatasourceAdapter(DatasourceAdapterIface):
     with self.connectionFactory() as conn:
       autostack = repository.getAutostack(conn, autostackId)
 
-    slaveDatasource = metricSpec["slaveDatasource"]
-    slaveMetric = metricSpec["slaveMetric"]
+    subordinateDatasource = metricSpec["subordinateDatasource"]
+    subordinateMetric = metricSpec["subordinateMetric"]
 
     canonicalResourceName = self.getInstanceNameForModelSpec(modelSpec)
 
-    metricAdapter = AutostackMetricAdapterBase.getMetricAdapter(slaveDatasource)
-    nameColumnValue = metricAdapter.getMetricName(slaveMetric)
-    metricDescription = metricAdapter.getMetricDescription(slaveMetric,
+    metricAdapter = AutostackMetricAdapterBase.getMetricAdapter(subordinateDatasource)
+    nameColumnValue = metricAdapter.getMetricName(subordinateMetric)
+    metricDescription = metricAdapter.getMetricDescription(subordinateMetric,
                                                            autostack)
     queryParams = metricAdapter.getQueryParams(nameColumnValue)
 
@@ -361,10 +361,10 @@ class _AutostackDatasourceAdapter(DatasourceAdapterIface):
             "datasource": "autostack",
 
             "metricSpec": {
-              "slaveDatasource": "cloudwatch",
+              "subordinateDatasource": "cloudwatch",
 
-              "slaveMetric": {
-                # specific to slaveDatasource
+              "subordinateMetric": {
+                # specific to subordinateDatasource
                 "namespace": "AWS/EC2",
                 "metric": "CPUUtilization"
               },
@@ -372,7 +372,7 @@ class _AutostackDatasourceAdapter(DatasourceAdapterIface):
               "period": 300  # aggregation period; seconds
             },
 
-            "modelParams": { # optional; specific to slave metric
+            "modelParams": { # optional; specific to subordinate metric
               "min": 0,  # optional
               "max": 100  # optional
             }

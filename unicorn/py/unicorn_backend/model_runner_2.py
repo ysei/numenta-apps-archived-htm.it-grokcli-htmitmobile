@@ -27,7 +27,7 @@ Date format resources:
 
 * http://www.uai.cl/images/sitio/biblioteca/citas/ISO_8601_2004en.pdf
 
-* NOTE: dateutil parser doesn't support decimal comma yet (in master, but not
+* NOTE: dateutil parser doesn't support decimal comma yet (in main, but not
 released)
 
 * https://www.ietf.org/rfc/rfc3339.txt

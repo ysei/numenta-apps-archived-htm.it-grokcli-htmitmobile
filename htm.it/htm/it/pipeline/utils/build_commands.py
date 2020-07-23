@@ -39,7 +39,7 @@ def buildHtmIt(env, pipelineConfig, logger):
       {
         "buildWorkspace": "/path/to/build/in",
         "htmitRemote": "git@github.com:Numenta/numenta-apps.git",
-        "htmitBranch": "master",
+        "htmitBranch": "main",
         "htmItSha": "HEAD",
         "pipelineParams": "{dict of parameters}",
         "pipelineJson": "/path/to/json/file"

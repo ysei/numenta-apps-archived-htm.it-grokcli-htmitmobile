@@ -175,8 +175,8 @@ class AggregatorService(object):
 def getAggregationFn(metric):
   fn = None
 
-  slaveDatasource = AutostackMetricAdapterBase.getMetricDatasource(metric)
-  metricAdapter = AutostackMetricAdapterBase.getMetricAdapter(slaveDatasource)
+  subordinateDatasource = AutostackMetricAdapterBase.getMetricDatasource(metric)
+  metricAdapter = AutostackMetricAdapterBase.getMetricAdapter(subordinateDatasource)
   query = metricAdapter.getQueryParams(metric.name)
 
   if "statistics" in query and query["statistics"] == "Sum":

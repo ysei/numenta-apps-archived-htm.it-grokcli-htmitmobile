@@ -112,7 +112,7 @@ class InstancesHandler(AuthenticatedBaseHandler):
             {
                 "location": "us-west-2",
                 "message": null,
-                "name": "jenkins-master",
+                "name": "jenkins-main",
                 "namespace": "AWS/EC2",
                 "server": "i-12345678",
                 "status": 2

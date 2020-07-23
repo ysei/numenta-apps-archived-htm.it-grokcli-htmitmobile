@@ -47,14 +47,14 @@ from htm.it.test_utils.app.sqlalchemy_test_utils import ManagedTempRepository
 
 
 # We need any valid EC2 instanceId as test data. Curretnly we
-# are using jenkins-master's testLifecycleForSingleInstanceInstanceId and other details for validation.
+# are using jenkins-main's testLifecycleForSingleInstanceInstanceId and other details for validation.
 # which is running production releases. In case this node is replaced please
 # update testdata which new stable node details (e.g rpmbuilder etc)
 # As a positive test for posting multiple instance, we need two instances
 # belonging to same region currently its us-west-2. Keep this in mind
 # while updating replacing testdata for rpm-builder, grok-docs
 VALID_EC2_INSTANCES = {
-  "jenkins-master":{
+  "jenkins-main":{
     "instanceId":"i-f52075fe",
     "region":"us-west-2"
   },
@@ -112,10 +112,10 @@ class InstancesApiSingleTest(unittest.TestCase):
     self.assertItemsEqual(initialGetResult, [])
 
     # Post single instance details to add under monitor
-    region = VALID_EC2_INSTANCES["jenkins-master"]["region"]
+    region = VALID_EC2_INSTANCES["jenkins-main"]["region"]
     namespace = "EC2"
     instanceId = "%s/AWS/%s/%s" % (
-      region, namespace, VALID_EC2_INSTANCES["jenkins-master"]["instanceId"])
+      region, namespace, VALID_EC2_INSTANCES["jenkins-main"]["instanceId"])
     postResponse = self.app.post("/" + instanceId, headers=self.headers)
     assertions.assertSuccess(self, postResponse)
     postResult = app_utils.jsonDecode(postResponse.body)
@@ -156,7 +156,7 @@ class InstancesApiSingleTest(unittest.TestCase):
     """
     region = "fake-region"
     namespace = "EC2"
-    instanceId = VALID_EC2_INSTANCES["jenkins-master"]["instanceId"]
+    instanceId = VALID_EC2_INSTANCES["jenkins-main"]["instanceId"]
     response = self.app.post("/%s/AWS/%s/%s" % (region, namespace, instanceId),
       headers=self.headers, status="*")
     assertions.assertBadRequest(self, response, "json")
@@ -172,7 +172,7 @@ class InstancesApiSingleTest(unittest.TestCase):
     """
     region = "us-west-2"
     namespace = "foo"
-    instanceId = VALID_EC2_INSTANCES["jenkins-master"]["instanceId"]
+    instanceId = VALID_EC2_INSTANCES["jenkins-main"]["instanceId"]
     response = self.app.post("/%s/AWS/%s/%s" % (region, namespace, instanceId),
       headers=self.headers, status="*")
     assertions.assertBadRequest(self, response, "json")
@@ -189,7 +189,7 @@ class InstancesApiSingleTest(unittest.TestCase):
     """
     region = "us-west-2"
     namespace = "EC2"
-    instanceId = VALID_EC2_INSTANCES["jenkins-master"]["instanceId"]
+    instanceId = VALID_EC2_INSTANCES["jenkins-main"]["instanceId"]
     response = self.app.post("/%s/foo/%s/%s" % (region, namespace, instanceId),
       headers=self.headers, status="*")
     assertions.assertBadRequest(self, response, "json")
@@ -424,7 +424,7 @@ class InstancesApiMultipleInstanceTest(unittest.TestCase):
     response is validated for appropriate headers, body and status
     invoke post with valid instance id to incorrect region
     """
-    params = [VALID_EC2_INSTANCES["jenkins-master"]]
+    params = [VALID_EC2_INSTANCES["jenkins-main"]]
     response = self.app.post("/us-east-1/AWS/EC2",
       params=app_utils.jsonEncode(params), headers=self.headers, status="*")
     assertions.assertBadRequest(self, response, "json")

@@ -831,7 +831,7 @@ class TestModelExportHandler(unittest.TestCase):
       status=MetricStatus.ACTIVE,
       message=None,
       collector_error=None,
-      tag_name=u'jenkins-master',
+      tag_name=u'jenkins-main',
       last_rowid=1440L,
       datasource="cloudwatch")
     metric.name = u'AWS/EC2/CPUUtilization'
@@ -871,7 +871,7 @@ class TestModelExportHandler(unittest.TestCase):
                   poll_interval=300L,
                   status=1L,
                   message=None,
-                  tag_name="jenkins-master",
+                  tag_name="jenkins-main",
                   model_params={},
                   last_rowid=1440L)
     metric.name = "AWS/EC2/CPUUtilization"

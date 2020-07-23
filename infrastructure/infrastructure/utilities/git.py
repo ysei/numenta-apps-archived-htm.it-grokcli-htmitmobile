@@ -432,7 +432,7 @@ def fetch(repository, refspec, logger):
 
   :param str repository: Name of git repository (e.g origin)
 
-  :param str refspec: Name of the refspec (e.g. master)
+  :param str refspec: Name of the refspec (e.g. main)
 
   :param logger: logger for additional debug info
 
@@ -591,7 +591,7 @@ def getShaFromRemoteBranch(gitRemoteRepo, gitRemoteBranch, logger):
 
   :param str gitRemoteRepo: The URL of the remote repo,
     e.g., git@github.com:numenta/nupic.git
-  :param str gitRemoteBranch: The name of the remote branch, e.g., master
+  :param str gitRemoteBranch: The name of the remote branch, e.g., main
 
   :param logger: logger for additional debug info
 
@@ -604,7 +604,7 @@ def getShaFromRemoteBranch(gitRemoteRepo, gitRemoteBranch, logger):
   """
   command = ("git", "ls-remote", gitRemoteRepo)
   shaList = executeCommand(command=command, logger=logger)
-  if gitRemoteBranch == "master":
+  if gitRemoteBranch == "main":
     return shaList.split("\t")[0]
   else:
     formattedBranchName = "refs/heads/%s" % gitRemoteBranch

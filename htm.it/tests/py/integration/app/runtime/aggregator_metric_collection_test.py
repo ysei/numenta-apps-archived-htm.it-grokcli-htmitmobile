@@ -155,8 +155,8 @@ class AggregatorMetricCollectionTestCase(unittest.TestCase):
 
     modelSpec = {"modelParams": {},
                  "datasource": "autostack",
-                 "metricSpec": {"slaveDatasource": "cloudwatch" if name.startswith("AWS/EC2") else "autostack",
-                                "slaveMetric": {"metric": name,
+                 "metricSpec": {"subordinateDatasource": "cloudwatch" if name.startswith("AWS/EC2") else "autostack",
+                                "subordinateMetric": {"metric": name,
                                                 "namespace": "AWS/EC2"},
                                 "autostackId": autostackObj.uid}}
 
@@ -359,8 +359,8 @@ class AggregatorMetricCollectionTestCase(unittest.TestCase):
 
       modelSpec = {"modelParams": {},
                    "datasource": "autostack",
-                   "metricSpec": {"slaveDatasource": "cloudwatch",
-                                  "slaveMetric": {"metric": "CPUUtilization",
+                   "metricSpec": {"subordinateDatasource": "cloudwatch",
+                                  "subordinateMetric": {"metric": "CPUUtilization",
                                                   "namespace": "AWS/EC2"},
                                   "autostackId": autostackDict["uid"]}}
 
